@@ -1,7 +1,11 @@
 {
   "name": "personal-finance-dashboard",
   "private": true,
-  "workspaces": ["apps/client", "apps/api"],
+  "workspaces": [
+    "apps/client",
+    "apps/api"
+  ],
+  "packageManager": "bun@1.3.1",
   "license": "GPL-3.0-only",
   "scripts": {
     "dev:client": "cd apps/client && bun dev",
@@ -10,9 +14,13 @@
     "build:client": "cd apps/client && bun run build",
     "build:api": "cd apps/api && bun run build",
     "build": "bun run build:client && bun run build:api",
-    "bump": "bunx npm-check-updates -u -ws -root && bun install",
-    "bump:interactive": "bunx npm-check-updates -i -ws -root && bun install",
-    "bump:minor": "bunx npm-check-updates -u -ws -root --target minor && bun install",
-    "bump:patch": "bunx npm-check-updates -u -ws -root --target patch && bun install"
+    "bump": "bunx npm-check-updates -u -ws -root && bun install && bun run update:bun",
+    "bump:interactive": "bunx npm-check-updates -i -ws -root && bun install && bun run update:bun",
+    "bump:minor": "bunx npm-check-updates -u -ws -root --target minor && bun install && bun run update:bun",
+    "bump:patch": "bunx npm-check-updates -u -ws -root --target patch && bun install && bun run update:bun",
+    "update:bun": "bun run bin/update-bun.js"
+  },
+  "devDependencies": {
+    "turbo": "^2.6.0"
   }
 }
