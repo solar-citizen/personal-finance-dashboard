@@ -1,5 +1,14 @@
 {
-    "cSpell.words": [
-        "bunx"
-    ]
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "cSpell.words": [
+    "bunx",
+    "dpage",
+    "extname",
+    "extversion",
+    "healthcheck",
+    "initdb",
+    "isready",
+    "pgadmin"
+  ]
 }
