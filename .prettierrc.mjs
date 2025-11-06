@@ -3,7 +3,7 @@ export default {
   jsxSingleQuote: true,
   printWidth: 100,
   tabWidth: 2,
-  trailingComma: 'all',
+  trailingComma: "all",
   semi: true,
-  arrowParens: 'avoid',
+  arrowParens: "avoid",
 };
