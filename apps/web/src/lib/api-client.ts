@@ -5,10 +5,8 @@ import axios, {
 } from "axios";
 import { isError } from "lodash-es";
 
-export const baseURL = process.env.NEXT_PUBLIC_API_URL;
-
 export const axiosAgent = axios.create({
-  baseURL,
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
   withCredentials: true,
 });
 

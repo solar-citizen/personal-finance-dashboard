@@ -1,7 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
 
-export const initSwagger = (app: INestApplication): OpenAPIObject => {
+export function initSwagger(app: INestApplication): OpenAPIObject {
   const config = new DocumentBuilder()
     .setTitle('PFD API')
     .setDescription('API documentation')
@@ -17,4 +17,4 @@ export const initSwagger = (app: INestApplication): OpenAPIObject => {
   SwaggerModule.setup('api', app, document);
 
   return document;
-};
+}
