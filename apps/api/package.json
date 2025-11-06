@@ -4,7 +4,7 @@
   "license": "GPL-3.0-only",
   "postinstall": "prisma generate",
   "scripts": {
-    "dev": "bun start:dev",
+    "dev": "bun start:dev && bun run openapi:generate",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
@@ -18,7 +18,8 @@
     "db:seed": "bun run prisma/seed.ts",
     "db:reset": "prisma db push && prisma generate && prisma db seed",
     "db:force-reset": "prisma db push --force-reset && prisma generate && prisma db seed",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "openapi:generate": "nest build && node dist/bin/generate-openapi.script.js"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.8",
@@ -27,6 +28,7 @@
     "@nestjs/jwt": "^11.0.1",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.1.8",
+    "@nestjs/swagger": "^11.2.1",
     "@prisma/adapter-pg": "^6.19.0",
     "@prisma/client": "^6.19.0",
     "axios": "^1.13.2",
@@ -44,6 +46,8 @@
     "@eslint/js": "^9.39.1",
     "@nestjs/cli": "^11.0.10",
     "@nestjs/schematics": "^11.0.9",
+    "@openapi-codegen/cli": "^3.1.0",
+    "@openapi-codegen/typescript": "^11.1.0",
     "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.5",
     "@types/node": "^24.10.0",

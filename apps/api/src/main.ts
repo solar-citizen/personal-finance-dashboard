@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from './config/config.service';
+import { initSwagger } from './lib/swagger.config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -11,6 +12,9 @@ async function bootstrap() {
     origin: [webUrl],
   });
 
+  initSwagger(app);
+
   await app.listen(port);
 }
+
 bootstrap().catch((e: unknown) => console.error(e));
