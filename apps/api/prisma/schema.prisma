@@ -52,9 +52,9 @@ model Account {
 model Category {
   id    String @id @default(cuid())
   name  String @unique
-  mcc   Int?   @unique // Merchant Category Code
-  icon  String?
-  color String?
+  mcc   Int    @unique // Merchant Category Code
+  icon  String
+  color String
   
   transactions Transaction[]
   
