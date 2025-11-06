@@ -1,7 +1,9 @@
-import { PrismaClient } from '@prisma/client';
 import { hash } from 'bcrypt';
+import { prisma } from './client';
 
-const prisma = new PrismaClient();
+const adminName = process.env.SEED_ADMIN_NAME;
+const adminPassword = process.env.SEED_ADMIN_PASSWORD;
+const adminEmail = process.env.SEED_ADMIN_EMAIL;
 
 const categories = [
   { name: 'Продукти', mcc: 5411, icon: '🛒', color: '#10b981' },
@@ -26,9 +28,8 @@ const categories = [
 
 async function main() {
   console.log('🌱 Seeding database...');
-
-  // Create categories
   console.log('📦 Creating categories...');
+
   for (const category of categories) {
     await prisma.category.upsert({
       where: { mcc: category.mcc },
@@ -36,23 +37,31 @@ async function main() {
       create: category,
     });
   }
+
   console.log(`✅ Created ${categories.length} categories`);
-
-  // Create admin user
   console.log('👤 Creating admin user...');
-  const passwordHash = await hash('admin123', 10);
 
-  const admin = await prisma.user.upsert({
-    where: { email: 'admin@finance.ua' },
+  if (!adminPassword) {
+    throw new Error('SEED_ADMIN_PASSWORD env variable is missing.');
+  }
+
+  const passwordHash = await hash(adminPassword, 10);
+
+  if (!adminEmail) {
+    throw new Error('SEED_ADMIN_EMAIL env variable is missing.');
+  }
+
+  const { email } = await prisma.user.upsert({
+    where: { email: adminEmail },
     update: {},
     create: {
-      email: 'admin@finance.ua',
+      email: adminEmail,
       passwordHash,
-      name: 'Admin User',
+      name: adminName,
     },
   });
 
-  console.log(`✅ Admin created: ${admin.email} / password: admin123`);
+  console.log(`✅ Admin created: ${email} / password: ${adminPassword}`);
   console.log('🎉 Seeding completed!');
 }
 
