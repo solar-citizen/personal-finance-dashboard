@@ -7,7 +7,7 @@ const envs = ['development', 'production'] as const;
 const validationObject = z.object({
   APP_ENV: z.enum(envs),
   APP_PORT: z.coerce.number().int().min(0).max(65535),
-  CLIENT_URL: z.url(),
+  WEB_URL: z.url(),
 });
 
 @Injectable()
@@ -31,7 +31,7 @@ export class ConfigService {
     return Number(this.configService.get('APP_PORT'));
   }
 
-  get clientUrl(): string {
-    return this.configService.get<string>('CLIENT_URL');
+  get webUrl(): string {
+    return this.configService.get<string>('WEB_URL');
   }
 }

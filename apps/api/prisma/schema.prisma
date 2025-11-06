@@ -1,0 +1,115 @@
+generator client {
+  provider        = "prisma-client-js"
+  engineType      = "client"
+  output          = "../src/@generated/prisma"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String?
+  
+  accounts     Account[]
+  
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Account {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // MonoBank specific
+  accountId String   // MonoBank's account ID
+  iban      String?
+  type      String   // 'black', 'white', 'platinum', 'iron', 'fop', 'yellow'
+  currency  String   // 'UAH', 'USD', 'EUR' (ISO 4217 code)
+  balance   BigInt   // in minimal units (kopiykas)
+  creditLimit BigInt @default(0)
+  
+  // Sync metadata
+  monoToken    String?  // encrypted token
+  lastSyncedAt DateTime?
+  webHookUrl   String?
+  
+  transactions Transaction[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([userId, accountId])
+  @@index([userId])
+}
+
+model Category {
+  id    String @id @default(cuid())
+  name  String @unique
+  mcc   Int?   @unique // Merchant Category Code
+  icon  String?
+  color String?
+  
+  transactions Transaction[]
+  
+  createdAt DateTime @default(now())
+}
+
+model Transaction {
+  id         String   @id @default(cuid())
+  accountId  String
+  account    Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  
+  // MonoBank data
+  externalId  String   // MonoBank's transaction ID
+  time        DateTime // transaction time
+  description String
+  
+  mcc         Int
+  originalMcc Int?
+  hold        Boolean  @default(false)
+  
+  amount            BigInt // in minimal units (kopiykas)
+  operationAmount   BigInt
+  currencyCode      Int    // ISO 4217
+  
+  commissionRate    BigInt @default(0)
+  cashbackAmount    BigInt @default(0)
+  balance           BigInt // balance after transaction
+  
+  comment           String?
+  receiptId         String?
+  invoiceId         String?
+  
+  counterEdrpou     String?
+  counterIban       String?
+  counterName       String?
+  
+  // Our categorization
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([accountId, externalId])
+  @@index([accountId, time])
+  @@index([categoryId])
+}
+
+model KnowledgeBase {
+  id        String                 @id @default(cuid())
+  content   String
+  metadata  Json?
+  embedding Unsupported("vector(768)") // nomic-embed-text dimension
+  
+  createdAt DateTime @default(now())
+  
+  @@index([embedding], name: "knowledge_base_embedding_idx")
+}
