@@ -3,6 +3,9 @@
   "workspaces": {
     "": {
       "name": "personal-finance-dashboard",
+      "dependencies": {
+        "zod": "^4.1.12",
+      },
       "devDependencies": {
         "turbo": "^2.6.0",
       },
