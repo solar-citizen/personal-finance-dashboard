@@ -3,22 +3,25 @@
   "ui": "stream",
   "tasks": {
     "dev": {
-      "dependsOn": ["^dev"],
+      "dependsOn": ["^openapi:generate"],
       "cache": false,
       "persistent": true
     },
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
-    "lint": {},
+    "openapi:generate": {
+      "outputs": ["openapi.json"],
+      "cache": false
+    },
+    "gen:api": {
+      "dependsOn": ["^openapi:generate"],
+      "cache": false
+    },
     "start:dev": {
       "cache": false,
       "persistent": true
-    },
-    "db:start:docker": {},
-    "ci:build:production": {
-      "dependsOn": ["^build"]
     }
   }
 }
