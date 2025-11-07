@@ -1,16 +1,16 @@
 {
   "name": "web",
-  "version": "0.1.0",
   "private": true,
   "license": "GPL-3.0-only",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "bun run gen:api && next dev",
+    "build": "bun run gen:api && next build",
     "start": "next start",
     "lint": "eslint",
     "gen:api": "openapi-codegen gen pfd && bun ./bin/customize-fetcher.script.ts"
   },
   "dependencies": {
+    "api": "workspace:*",
     "@tanstack/react-query": "^5.90.7",
     "next": "16.0.1",
     "react": "19.2.0",
