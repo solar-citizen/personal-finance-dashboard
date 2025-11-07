@@ -4,8 +4,8 @@
   "license": "GPL-3.0-only",
   "postinstall": "prisma generate",
   "scripts": {
-    "dev": "bun start:dev && bun run openapi:generate",
-    "build": "nest build",
+    "dev": "bun start:dev",
+    "build": "bun run openapi:generate && nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -19,7 +19,7 @@
     "db:reset": "prisma db push && prisma generate && prisma db seed",
     "db:force-reset": "prisma db push --force-reset && prisma generate && prisma db seed",
     "db:studio": "prisma studio",
-    "openapi:generate": "nest build && node dist/bin/generate-openapi.script.js"
+    "openapi:generate": "bun run bin/generate-openapi.script.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.8",
