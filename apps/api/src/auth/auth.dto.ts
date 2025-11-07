@@ -1,9 +1,7 @@
 export class RegisterDto {
   email!: string;
   password!: string;
-
-  // FIXME: Check optionality
-  name?: string;
+  name!: string;
 }
 
 export class LoginDto {
