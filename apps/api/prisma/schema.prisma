@@ -10,6 +10,23 @@ datasource db {
   extensions = [vector]
 }
 
+// ISO 4217 literal code
+enum Currency {
+  uah
+  usd
+  eur
+}
+
+enum Card {
+  black
+  white
+  platinum
+  iron
+  fop
+  yellow
+  eAid
+}
+
 model User {
   id           String    @id @default(cuid())
   email        String    @unique
@@ -28,10 +45,10 @@ model Account {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   // MonoBank specific
-  accountId String   // MonoBank's account ID
+  accountId String
   iban      String?
-  type      String   // 'black', 'white', 'platinum', 'iron', 'fop', 'yellow'
-  currency  String   // 'UAH', 'USD', 'EUR' (ISO 4217 code)
+  type      Card
+  currency  Currency
   balance   BigInt   // in minimal units (kopiykas)
   creditLimit BigInt @default(0)
   
@@ -67,7 +84,7 @@ model Transaction {
   account    Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
   
   // MonoBank data
-  externalId  String   // MonoBank's transaction ID
+  externalId  String   // transaction ID
   time        DateTime // transaction time
   description String
   
@@ -77,7 +94,7 @@ model Transaction {
   
   amount            BigInt // in minimal units (kopiykas)
   operationAmount   BigInt
-  currencyCode      Int    // ISO 4217
+  currencyCode      Int    // ISO 4217 numeric code
   
   commissionRate    BigInt @default(0)
   cashbackAmount    BigInt @default(0)

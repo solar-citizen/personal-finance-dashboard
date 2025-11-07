@@ -6,9 +6,10 @@ import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { ConfigModule } from './config/config.module';
 import { PrismaModule } from './db/prisma.module';
+import { MonoBankModule } from './monobank/monobank.module';
 
 @Module({
-  imports: [ConfigModule, PrismaModule, AuthModule],
+  imports: [ConfigModule, PrismaModule, AuthModule, MonoBankModule],
   controllers: [AppController],
   providers: [
     AppService,
