@@ -8,7 +8,7 @@ import { MonoBankService } from './monobank.service';
 @Module({
   imports: [
     HttpModule.register({
-      timeout: 30000, // 30 seconds
+      timeout: 30000, // 30 seconds in ms
       maxRedirects: 5,
     }),
     ConfigModule,
