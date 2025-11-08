@@ -41,3 +41,8 @@ export class SyncProgressResponseDto {
   @ApiProperty({ enum: SyncJobStatus })
   status!: SyncJobStatus;
 }
+
+export class SyncJobResponseDto {
+  jobId!: string;
+  message!: string;
+}

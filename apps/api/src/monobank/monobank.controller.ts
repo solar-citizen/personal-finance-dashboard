@@ -5,6 +5,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import {
   ConnectMonoBankDto,
   MonoBankAccountResponseDto,
+  SyncJobResponseDto,
   SyncProgressResponseDto,
   SyncResultResponseDto,
   SyncTransactionsDto,
@@ -39,7 +40,7 @@ export class MonoBankController {
     @CurrentUser('id') userId: string,
     @Param('accountId') accountId: string,
     @Body() dto?: SyncTransactionsDto,
-  ): Promise<SyncResultResponseDto | { jobId: string; message: string }> {
+  ): Promise<SyncResultResponseDto | SyncJobResponseDto> {
     return this.monoBankService.syncTransactions(userId, accountId, dto);
   }
 

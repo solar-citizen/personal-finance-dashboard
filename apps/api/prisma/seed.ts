@@ -21,9 +21,11 @@ async function main() {
     console.error('⚠️  Duplicate names found:');
     duplicates.forEach(([name, count]) => {
       console.log(`  - "${name}": ${count} times`);
+
       const mccs = mccCategories
         .filter((c) => c.name === name)
-        .map((c) => c.mcc);
+        .map(({ mcc }) => mcc);
+
       console.log(`    MCCs: ${mccs.join(', ')}`);
     });
   }

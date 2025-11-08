@@ -30,7 +30,7 @@ export class TransactionProcessor {
     ).length;
     const errors = results
       .filter((r) => !r.success)
-      .map((r) => r.error)
+      .map(({ error }) => error)
       .filter((e): e is string => e !== undefined);
 
     return { newTransactions, updatedTransactions, errors };
