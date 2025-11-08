@@ -58,6 +58,7 @@ model SyncJob {
   newCount      Int      @default(0)
   updatedCount  Int      @default(0)
   errorMessage  String?
+  
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
@@ -101,6 +102,7 @@ model Category {
   transactions Transaction[]
   
   createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 }
 
 model Transaction {

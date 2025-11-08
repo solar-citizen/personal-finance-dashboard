@@ -1,5 +1,5 @@
 import { isAxiosError } from 'axios';
-import type { MonoBankErrorResponse } from './types';
+import type { MonoBankErrorResponse } from './monobank-types';
 
 export function isAxiosErrorWithResponse(error: unknown): error is {
   response: {
