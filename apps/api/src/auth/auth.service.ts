@@ -4,7 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
+import { compare, hash } from 'bcrypt';
 import { PrismaService } from '../db/prisma.service';
 import { AuthResponseDto, LoginDto, RegisterDto } from './auth.dto';
 import { JwtPayloadDto } from './strategies/jwt.strategy.dto';
@@ -12,7 +12,7 @@ import { JwtPayloadDto } from './strategies/jwt.strategy.dto';
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly prismaService: PrismaService,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -21,7 +21,7 @@ export class AuthService {
     password,
     name,
   }: RegisterDto): Promise<AuthResponseDto> {
-    const existingUser = await this.prisma.user.findUnique({
+    const existingUser = await this.prismaService.user.findUnique({
       where: { email },
     });
 
@@ -29,9 +29,9 @@ export class AuthService {
       throw new ConflictException('User with this email already exists');
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
+    const passwordHash = await hash(password, 10);
 
-    const user = await this.prisma.user.create({
+    const user = await this.prismaService.user.create({
       data: {
         email,
         passwordHash,
@@ -57,7 +57,7 @@ export class AuthService {
   }
 
   async login({ email, password }: LoginDto): Promise<AuthResponseDto> {
-    const user = await this.prisma.user.findUnique({
+    const user = await this.prismaService.user.findUnique({
       where: { email },
     });
 
@@ -65,7 +65,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email');
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+    const isPasswordValid = await compare(password, user.passwordHash);
 
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid password');
