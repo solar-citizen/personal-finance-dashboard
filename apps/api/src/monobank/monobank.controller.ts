@@ -10,9 +10,13 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ConnectMonoBankDto, SyncTransactionsDto } from './monobank.dto';
+import {
+  ConnectMonoBankDto,
+  MonoBankAccountResponseDto,
+  SyncResultResponseDto,
+  SyncTransactionsDto,
+} from './monobank.dto';
 import { MonoBankService } from './monobank.service';
-import type { MonoBankAccountResponse, SyncResultResponse } from './lib/types';
 
 @ApiTags('Mono')
 @Controller('api/mono')
@@ -24,7 +28,7 @@ export class MonoBankController {
   async connectAccount(
     @CurrentUser('id') userId: string,
     @Body() dto: ConnectMonoBankDto,
-  ): Promise<{ accounts: MonoBankAccountResponse[] }> {
+  ): Promise<{ accounts: MonoBankAccountResponseDto[] }> {
     const accounts = await this.monoBankService.connectAccount(userId, dto);
     return { accounts };
   }
@@ -32,7 +36,7 @@ export class MonoBankController {
   @Get('accounts')
   async getAccounts(
     @CurrentUser('id') userId: string,
-  ): Promise<{ accounts: MonoBankAccountResponse[] }> {
+  ): Promise<{ accounts: MonoBankAccountResponseDto[] }> {
     const accounts = await this.monoBankService.getUserAccounts(userId);
     return { accounts };
   }
@@ -42,7 +46,7 @@ export class MonoBankController {
     @CurrentUser('id') userId: string,
     @Param('accountId') accountId: string,
     @Query() dto: SyncTransactionsDto,
-  ): Promise<SyncResultResponse> {
+  ): Promise<SyncResultResponseDto> {
     return this.monoBankService.syncTransactions(userId, accountId, dto);
   }
 }

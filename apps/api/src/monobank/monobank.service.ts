@@ -12,14 +12,14 @@ import { ConfigService } from 'src/config/config.service';
 import { getErrorMessage } from 'src/lib/error-utils';
 import { PrismaService } from '../db/prisma.service';
 import { getCurrencyFromCode } from './lib/currency-utils';
+import type { MonoBankClientInfo, MonoBankTransaction } from './lib/types';
 import { isAxiosErrorWithResponse } from './lib/utils';
-import { ConnectMonoBankDto, SyncTransactionsDto } from './monobank.dto';
-import type {
-  MonoBankAccountResponse,
-  MonoBankClientInfo,
-  MonoBankTransaction,
-  SyncResultResponse,
-} from './lib/types';
+import {
+  ConnectMonoBankDto,
+  MonoBankAccountResponseDto,
+  SyncResultResponseDto,
+  SyncTransactionsDto,
+} from './monobank.dto';
 
 @Injectable()
 export class MonoBankService {
@@ -39,7 +39,7 @@ export class MonoBankService {
   async connectAccount(
     userId: string,
     { token }: ConnectMonoBankDto,
-  ): Promise<MonoBankAccountResponse[]> {
+  ): Promise<MonoBankAccountResponseDto[]> {
     this.logger.log(`Connecting MonoBank account for user: ${userId}`);
 
     const clientInfo = await this.getClientInfo(token);
@@ -48,7 +48,7 @@ export class MonoBankService {
       throw new BadRequestException('No accounts found for this token');
     }
 
-    const savedAccounts: MonoBankAccountResponse[] = [];
+    const savedAccounts: MonoBankAccountResponseDto[] = [];
 
     for (const account of clientInfo.accounts) {
       const currency = getCurrencyFromCode(account.currencyCode);
@@ -92,7 +92,7 @@ export class MonoBankService {
     return savedAccounts;
   }
 
-  async getUserAccounts(userId: string): Promise<MonoBankAccountResponse[]> {
+  async getUserAccounts(userId: string): Promise<MonoBankAccountResponseDto[]> {
     const accounts = await this.prismaService.account.findMany({
       where: { userId },
       orderBy: { createdAt: 'asc' },
@@ -105,7 +105,7 @@ export class MonoBankService {
     userId: string,
     accountId: string,
     dto?: SyncTransactionsDto,
-  ): Promise<SyncResultResponse> {
+  ): Promise<SyncResultResponseDto> {
     this.logger.log(`Syncing transactions for account: ${accountId}`);
 
     const account = await this.prismaService.account.findFirst({
@@ -346,7 +346,7 @@ export class MonoBankService {
     balance,
     creditLimit,
     lastSyncedAt,
-  }: Account): MonoBankAccountResponse {
+  }: Account): MonoBankAccountResponseDto {
     return {
       id,
       accountId,

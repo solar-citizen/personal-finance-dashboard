@@ -58,28 +58,7 @@ export type MonoBankTransaction = {
   counterName?: string; // Counterparty name
 };
 
-/**
- * Error response from MonoBank API
- */
+// Error response from MonoBank API
 export type MonoBankErrorResponse = {
   errorDescription: string;
-};
-
-export type MonoBankAccountResponse = {
-  id: string;
-  accountId: string;
-  iban: string;
-  type: string;
-  currency: string;
-  balance: string; // Converted to decimal string
-  creditLimit: string;
-  lastSyncedAt: Date | null;
-};
-
-export type SyncResultResponse = {
-  success: boolean;
-  synced: number;
-  newTransactions: number;
-  updatedTransactions: number;
-  errors?: string[];
 };
