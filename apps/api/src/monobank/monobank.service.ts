@@ -6,7 +6,7 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
-import { Account } from '@prisma/client';
+import { Account, SyncJobStatus } from '@prisma/client';
 import { firstValueFrom } from 'rxjs';
 import { ConfigService } from 'src/config/config.service';
 import { getErrorMessage } from 'src/lib/error-utils';
@@ -17,6 +17,7 @@ import { isAxiosErrorWithResponse } from './lib/utils';
 import {
   ConnectMonoBankDto,
   MonoBankAccountResponseDto,
+  SyncProgressResponseDto,
   SyncResultResponseDto,
   SyncTransactionsDto,
 } from './monobank.dto';
@@ -105,7 +106,7 @@ export class MonoBankService {
     userId: string,
     accountId: string,
     dto?: SyncTransactionsDto,
-  ): Promise<SyncResultResponseDto> {
+  ): Promise<SyncResultResponseDto | { jobId: string; message: string }> {
     this.logger.log(`Syncing transactions for account: ${accountId}`);
 
     const account = await this.prismaService.account.findFirst({
@@ -122,20 +123,48 @@ export class MonoBankService {
 
     const to = dto?.to ? new Date(dto.to) : new Date();
 
-    const from = dto?.from
-      ? new Date(dto.from)
-      : account.lastSyncedAt
-        ? new Date(account.lastSyncedAt)
-        : new Date(to.getTime() - 31 * 24 * 60 * 60 * 1000);
+    let from: Date;
+    if (dto?.from) {
+      from = new Date(dto.from);
+    } else if (dto?.fullHistory) {
+      // Full history: go back maximum 5 years from 'to' date
+      from = new Date(to.getTime() - 5 * 365 * 24 * 60 * 60 * 1000);
+
+      this.logger.log(
+        `Full history requested for account ${accountId}: syncing from ${from.toISOString()} to ${to.toISOString()}`,
+      );
+    } else if (account.lastSyncedAt) {
+      // Has previous sync: get transactions since then, but cap at 31 days
+      const lastSync = new Date(account.lastSyncedAt);
+      const maxFrom = new Date(to.getTime() - 31 * 24 * 60 * 60 * 1000);
+      from = lastSync > maxFrom ? lastSync : maxFrom;
+
+      console.log('from lastSyncedAt', from);
+
+      if (lastSync < maxFrom) {
+        this.logger.warn(
+          `Account ${accountId}: Gap detected. Last sync: ${lastSync.toISOString()}, syncing from: ${from.toISOString()}. Use fullHistory: true to sync all missing transactions.`,
+        );
+      }
+    } else {
+      // Never synced: default to last 31 days
+      from = new Date(to.getTime() - 31 * 24 * 60 * 60 * 1000);
+    }
+
+    console.log('final from', from);
 
     const daysDiff = Math.ceil(
       (to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24),
     );
 
+    this.logger.log(`Account ${accountId}: daysDiff = ${daysDiff} days`);
+
+    // For large date ranges, use background job
     if (daysDiff > 31) {
-      throw new BadRequestException('Date range cannot exceed 31 days');
+      return this.createBackgroundSyncJob(account, from, to);
     }
 
+    // For small date ranges, do immediate sync
     const transactions = await this.getStatement(
       account.monoToken,
       account.accountId,
@@ -147,6 +176,194 @@ export class MonoBankService {
       `Fetched ${transactions.length} transactions from MonoBank`,
     );
 
+    const result = await this.saveTransactions(account.id, transactions);
+
+    await this.prismaService.account.update({
+      where: { id: account.id },
+      data: { lastSyncedAt: new Date() },
+    });
+
+    this.logger.log(
+      `Sync complete: ${result.newTransactions} new, ${result.updatedTransactions} updated, ${result.errors.length} errors`,
+    );
+
+    return {
+      success: true,
+      synced: transactions.length,
+      newTransactions: result.newTransactions,
+      updatedTransactions: result.updatedTransactions,
+      errors: result.errors.length > 0 ? result.errors : undefined,
+    };
+  }
+
+  async getSyncJobStatus(jobId: string): Promise<SyncProgressResponseDto> {
+    const job = await this.prismaService.syncJob.findUnique({
+      where: { id: jobId },
+    });
+
+    if (!job) {
+      throw new BadRequestException('Sync job not found');
+    }
+
+    return {
+      jobId: job.id,
+      status: job.status,
+      progress: job.progress,
+      total: job.total,
+      newTransactions: job.newCount,
+      updatedTransactions: job.updatedCount,
+      errorMessage: job.errorMessage || undefined,
+    };
+  }
+
+  private async createBackgroundSyncJob(
+    account: Account,
+    from: Date,
+    to: Date,
+  ): Promise<{ jobId: string; message: string }> {
+    const totalDays = Math.ceil(
+      (to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24),
+    );
+    const chunks = Math.ceil(totalDays / 31);
+
+    const syncJob = await this.prismaService.syncJob.create({
+      data: {
+        accountId: account.id,
+        status: SyncJobStatus.pending,
+        from,
+        to,
+        total: chunks,
+        progress: 0,
+      },
+    });
+
+    this.processSyncJob(syncJob.id, account, from, to).catch((error) => {
+      this.logger.error(`Background sync job ${syncJob.id} failed:`, error);
+    });
+
+    const estimatedTime = chunks * 60;
+
+    return {
+      jobId: syncJob.id,
+      message: `Date range exceeds 31 days. Background sync started. Estimated time: ~${Math.ceil(estimatedTime / 60)} minutes. Track progress at GET /api/mono/sync-status/${syncJob.id}`,
+    };
+  }
+
+  private async processSyncJob(
+    jobId: string,
+    account: Account,
+    from: Date,
+    to: Date,
+  ): Promise<void> {
+    try {
+      await this.prismaService.syncJob.update({
+        where: { id: jobId },
+        data: { status: SyncJobStatus.running },
+      });
+
+      const allTransactions = await this.fetchAllTransactionsWithProgress(
+        jobId,
+        account.monoToken!,
+        account.accountId,
+        from,
+        to,
+      );
+
+      this.logger.log(
+        `Job ${jobId}: Fetched ${allTransactions.length} total transactions`,
+      );
+
+      const result = await this.saveTransactions(account.id, allTransactions);
+
+      await this.prismaService.account.update({
+        where: { id: account.id },
+        data: { lastSyncedAt: new Date() },
+      });
+
+      await this.prismaService.syncJob.update({
+        where: { id: jobId },
+        data: {
+          status: SyncJobStatus.completed,
+          newCount: result.newTransactions,
+          updatedCount: result.updatedTransactions,
+          errorMessage:
+            result.errors.length > 0 ? result.errors.join('; ') : null,
+        },
+      });
+
+      this.logger.log(`Job ${jobId}: Completed successfully`);
+    } catch (error) {
+      this.logger.error(`Job ${jobId}: Failed with error:`, error);
+
+      await this.prismaService.syncJob.update({
+        where: { id: jobId },
+        data: {
+          status: SyncJobStatus.failed,
+          errorMessage: getErrorMessage(error),
+        },
+      });
+    }
+  }
+
+  private async fetchAllTransactionsWithProgress(
+    jobId: string,
+    token: string,
+    accountId: string,
+    from: Date,
+    to: Date,
+  ): Promise<MonoBankTransaction[]> {
+    const allTransactions: MonoBankTransaction[] = [];
+    const maxDaysPerRequest = 31;
+
+    let currentFrom = new Date(from);
+    const finalTo = new Date(to);
+    let chunkIndex = 0;
+
+    while (currentFrom < finalTo) {
+      const currentTo = new Date(
+        Math.min(
+          currentFrom.getTime() + maxDaysPerRequest * 24 * 60 * 60 * 1000,
+          finalTo.getTime(),
+        ),
+      );
+
+      this.logger.log(
+        `Job ${jobId}: Fetching chunk ${chunkIndex + 1} from ${currentFrom.toISOString()} to ${currentTo.toISOString()}`,
+      );
+
+      const transactions = await this.getStatement(
+        token,
+        accountId,
+        currentFrom,
+        currentTo,
+      );
+
+      allTransactions.push(...transactions);
+      chunkIndex++;
+
+      await this.prismaService.syncJob.update({
+        where: { id: jobId },
+        data: { progress: chunkIndex },
+      });
+
+      this.logger.log(
+        `Job ${jobId}: Chunk ${chunkIndex} completed, fetched ${transactions.length} transactions`,
+      );
+
+      currentFrom = new Date(currentTo.getTime() + 1000);
+    }
+
+    return allTransactions;
+  }
+
+  private async saveTransactions(
+    accountId: string,
+    transactions: MonoBankTransaction[],
+  ): Promise<{
+    newTransactions: number;
+    updatedTransactions: number;
+    errors: string[];
+  }> {
     const results = await Promise.all(
       transactions.map(async (tx) => {
         try {
@@ -155,12 +372,12 @@ export class MonoBankService {
           const saved = await this.prismaService.transaction.upsert({
             where: {
               accountId_externalId: {
-                accountId: account.id,
+                accountId,
                 externalId: tx.id,
               },
             },
             create: {
-              accountId: account.id,
+              accountId,
               externalId: tx.id,
               time: new Date(tx.time * 1000),
               description: tx.description,
@@ -210,23 +427,7 @@ export class MonoBankService {
       .map((r) => r.error)
       .filter((e): e is string => e !== undefined);
 
-    // Update last synced timestamp
-    await this.prismaService.account.update({
-      where: { id: account.id },
-      data: { lastSyncedAt: new Date() },
-    });
-
-    this.logger.log(
-      `Sync complete: ${newTransactions} new, ${updatedTransactions} updated, ${errors.length} errors`,
-    );
-
-    return {
-      success: true,
-      synced: transactions.length,
-      newTransactions,
-      updatedTransactions,
-      errors: errors.length > 0 ? errors : undefined,
-    };
+    return { newTransactions, updatedTransactions, errors };
   }
 
   private async getClientInfo(token: string): Promise<MonoBankClientInfo> {

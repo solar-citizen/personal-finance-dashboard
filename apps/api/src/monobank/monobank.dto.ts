@@ -1,3 +1,6 @@
+import { ApiProperty } from '@nestjs/swagger';
+import { SyncJobStatus } from '@prisma/client';
+
 export class ConnectMonoBankDto {
   token!: string;
 }
@@ -5,6 +8,7 @@ export class ConnectMonoBankDto {
 export class SyncTransactionsDto {
   from?: string;
   to?: string;
+  fullHistory?: boolean;
 }
 
 export class MonoBankAccountResponseDto {
@@ -24,4 +28,16 @@ export class SyncResultResponseDto {
   newTransactions!: number;
   updatedTransactions!: number;
   errors?: string[];
+}
+
+export class SyncProgressResponseDto {
+  jobId!: string;
+  progress!: number;
+  total!: number;
+  newTransactions!: number;
+  updatedTransactions!: number;
+  errorMessage?: string;
+
+  @ApiProperty({ enum: SyncJobStatus })
+  status!: SyncJobStatus;
 }
