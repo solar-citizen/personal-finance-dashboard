@@ -1,18 +1,12 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import {
   ConnectMonoBankDto,
   MonoBankAccountResponseDto,
+  SyncJobResponseDto,
+  SyncProgressResponseDto,
   SyncResultResponseDto,
   SyncTransactionsDto,
 } from './monobank.dto';
@@ -45,8 +39,15 @@ export class MonoBankController {
   async syncTransactions(
     @CurrentUser('id') userId: string,
     @Param('accountId') accountId: string,
-    @Query() dto: SyncTransactionsDto,
-  ): Promise<SyncResultResponseDto> {
+    @Body() dto?: SyncTransactionsDto,
+  ): Promise<SyncResultResponseDto | SyncJobResponseDto> {
     return this.monoBankService.syncTransactions(userId, accountId, dto);
+  }
+
+  @Get('sync-status/:jobId')
+  async getSyncStatus(
+    @Param('jobId') jobId: string,
+  ): Promise<SyncProgressResponseDto> {
+    return this.monoBankService.getSyncJobStatus(jobId);
   }
 }

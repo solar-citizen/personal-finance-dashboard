@@ -4,6 +4,9 @@ import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from '../db/prisma.module';
 import { MonoBankController } from './monobank.controller';
 import { MonoBankService } from './monobank.service';
+import { MonoBankApiClient } from './services/monobank-api-client.service';
+import { SyncJobManager } from './services/sync-job-manager.service';
+import { TransactionProcessor } from './services/transaction-processor.service';
 
 @Module({
   imports: [
@@ -15,7 +18,12 @@ import { MonoBankService } from './monobank.service';
     PrismaModule,
   ],
   controllers: [MonoBankController],
-  providers: [MonoBankService],
+  providers: [
+    MonoBankService,
+    MonoBankApiClient,
+    SyncJobManager,
+    TransactionProcessor,
+  ],
   exports: [MonoBankService],
 })
 export class MonoBankModule {}

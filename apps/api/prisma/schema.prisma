@@ -27,6 +27,13 @@ enum Card {
   eAid
 }
 
+enum SyncJobStatus {
+  pending
+  running
+  completed
+  failed
+}
+
 model User {
   id           String    @id @default(cuid())
   email        String    @unique
@@ -37,6 +44,23 @@ model User {
   
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+}
+
+model SyncJob {
+  id            String   @id @default(cuid())
+  accountId     String
+  account       Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  status        SyncJobStatus
+  progress      Int      @default(0)
+  total         Int      @default(0)
+  from          DateTime
+  to            DateTime
+  newCount      Int      @default(0)
+  updatedCount  Int      @default(0)
+  errorMessage  String?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model Account {
@@ -56,6 +80,8 @@ model Account {
   monoToken    String?  // encrypted token
   lastSyncedAt DateTime?
   webHookUrl   String?
+
+  syncJobs  SyncJob[]
   
   transactions Transaction[]
   
@@ -76,6 +102,7 @@ model Category {
   transactions Transaction[]
   
   createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 }
 
 model Transaction {
