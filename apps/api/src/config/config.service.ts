@@ -9,6 +9,7 @@ const validationObject = z.object({
   APP_PORT: z.coerce.number().int().min(0).max(65535),
   WEB_URL: z.url(),
   JWT_SECRET: z.string(),
+  MONOBANK_API_URL: z.url(),
 });
 
 @Injectable()
@@ -38,5 +39,9 @@ export class ConfigService {
 
   get jwtSecret(): string {
     return this.configService.get<string>('JWT_SECRET');
+  }
+
+  get monoApiUrl(): string {
+    return this.configService.get<string>('MONOBANK_API_URL');
   }
 }

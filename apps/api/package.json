@@ -19,9 +19,11 @@
     "db:reset": "prisma db push && prisma generate && prisma db seed",
     "db:force-reset": "prisma db push --force-reset && prisma generate && prisma db seed",
     "db:studio": "prisma studio",
-    "openapi:generate": "bun run bin/generate-openapi.script.ts"
+    "openapi:generate": "bun run bin/generate-openapi.script.ts",
+    "mcc": "bun run prisma/scripts/analyze-mcc.script.ts"
   },
   "dependencies": {
+    "@nestjs/axios": "^4.0.1",
     "@nestjs/common": "^11.1.8",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.8",
@@ -35,6 +37,7 @@
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
+    "decimal.js": "^10.6.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "prisma": "^6.19.0",
