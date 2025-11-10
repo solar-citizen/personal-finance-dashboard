@@ -1,6 +1,10 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { AuthResponseDto, LoginDto, RegisterDto } from './auth.dto';
+import {
+  AuthResponseDto,
+  LoginDto,
+  RegisterDto,
+} from 'src/@generated/zod/pfd-dtos';
 import { AuthService } from './auth.service';
 import { Public } from './decorators/public.decorator';
 

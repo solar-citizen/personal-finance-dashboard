@@ -1,15 +1,15 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../db/prisma.service';
-import { formatAccountResponse } from './lib/account-utils';
-import { getCurrencyFromCode } from './lib/currency-utils';
-import { calculateSyncDateRange } from './lib/date-utils';
 import {
   ConnectMonoBankDto,
   MonoBankAccountResponseDto,
   SyncProgressResponseDto,
   SyncResultResponseDto,
   SyncTransactionsDto,
-} from './monobank.dto';
+} from 'src/@generated/zod/pfd-dtos';
+import { PrismaService } from '../db/prisma.service';
+import { formatAccountResponse } from './lib/account-utils';
+import { getCurrencyFromCode } from './lib/currency-utils';
+import { calculateSyncDateRange } from './lib/date-utils';
 import { MonoBankApiClient } from './services/monobank-api-client.service';
 import { SyncJobManager } from './services/sync-job-manager.service';
 import { TransactionProcessor } from './services/transaction-processor.service';

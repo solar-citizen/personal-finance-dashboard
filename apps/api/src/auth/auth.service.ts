@@ -5,8 +5,12 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { compare, hash } from 'bcrypt';
+import {
+  AuthResponseDto,
+  LoginDto,
+  RegisterDto,
+} from 'src/@generated/zod/pfd-dtos';
 import { PrismaService } from '../db/prisma.service';
-import { AuthResponseDto, LoginDto, RegisterDto } from './auth.dto';
 import { JwtPayloadDto } from './strategies/jwt.strategy.dto';
 
 @Injectable()
