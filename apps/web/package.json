@@ -3,11 +3,12 @@
   "private": true,
   "license": "GPL-3.0-only",
   "scripts": {
-    "dev": "bun run gen:api && next dev",
-    "build": "bun run gen:api && next build",
+    "dev": "next dev",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "gen:api": "openapi-codegen gen pfd && bun ./bin/customize-fetcher.script.ts"
+    "gen:api": "openapi-codegen gen pfd && bun ./bin/customize-fetcher.script.ts",
+    "codegen": "bun run gen:api"
   },
   "dependencies": {
     "api": "workspace:*",

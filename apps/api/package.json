@@ -4,8 +4,8 @@
   "license": "GPL-3.0-only",
   "postinstall": "prisma generate",
   "scripts": {
-    "dev": "bun run codegen && bun start:dev",
-    "build": "bun run codegen && nest build",
+    "dev": "bun start:dev",
+    "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
