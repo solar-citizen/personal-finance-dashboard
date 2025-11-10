@@ -8,7 +8,7 @@ async function generateOpenAPISpec() {
   console.log('Generating OpenAPI specification...');
 
   const app = await NestFactory.create(AppModule, {
-    logger: false, // Disable logging for cleaner output
+    logger: ['error'],
   });
 
   const document = initSwagger(app);

@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Account, SyncJobStatus } from '@prisma/client';
+import { SyncProgressResponseDto } from 'src/@generated/zod/pfd-dtos';
 import { PrismaService } from 'src/db/prisma.service';
 import { getErrorMessage } from 'src/lib/error-utils';
 import {
@@ -7,7 +8,6 @@ import {
   splitDateRangeIntoChunks,
 } from '../lib/date-utils';
 import { MonoBankTransaction } from '../lib/monobank-types';
-import { SyncProgressResponseDto } from '../monobank.dto';
 import { MonoBankApiClient } from './monobank-api-client.service';
 import { TransactionProcessor } from './transaction-processor.service';
 

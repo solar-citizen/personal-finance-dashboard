@@ -4,8 +4,8 @@
   "license": "GPL-3.0-only",
   "postinstall": "prisma generate",
   "scripts": {
-    "dev": "bun start:dev",
-    "build": "bun run openapi:generate && nest build",
+    "dev": "bun run codegen && bun start:dev",
+    "build": "bun run codegen && nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -20,6 +20,8 @@
     "db:force-reset": "prisma db push --force-reset && prisma generate && prisma db seed",
     "db:studio": "prisma studio",
     "openapi:generate": "bun run bin/generate-openapi.script.ts",
+    "dtos:generate": "bun run bin/generate-dtos.script.ts",
+    "codegen": "bun run dtos:generate && bun run openapi:generate",
     "mcc": "bun run prisma/scripts/analyze-mcc.script.ts"
   },
   "dependencies": {
@@ -38,9 +40,9 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "decimal.js": "^10.6.0",
+    "nestjs-zod": "^5.0.1",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
-    "prisma": "^6.19.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2"
   },
@@ -60,11 +62,12 @@
     "eslint-plugin-prettier": "^5.5.4",
     "globals": "^16.5.0",
     "prettier": "^3.6.2",
+    "prisma": "6.19.0",
     "source-map-support": "^0.5.21",
     "ts-loader": "^9.5.4",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.46.3"
+    "typescript-eslint": "^8.46.4"
   }
 }
