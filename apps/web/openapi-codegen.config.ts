@@ -21,6 +21,13 @@ export default defineConfig({
       const { schemasFiles } = await generateSchemaTypes(context, {
         filenamePrefix,
         filenameCase: "kebab",
+        formatFilename: (filename) => {
+          /**
+           * The filename comes as "pfd--schemas" (without extension)
+           * Replace "--schemas" with "-types"
+           */
+          return filename.replace("--schemas", "-types");
+        },
       });
 
       await generateFetchers(context, {

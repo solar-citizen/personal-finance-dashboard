@@ -1,7 +1,5 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import {
   ConnectMonoBankDto,
   MonoBankAccountResponseDto,
@@ -9,7 +7,9 @@ import {
   SyncProgressResponseDto,
   SyncResultResponseDto,
   SyncTransactionsDto,
-} from './monobank.dto';
+} from 'src/@generated/zod/pfd-dtos';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { MonoBankService } from './monobank.service';
 
 @ApiTags('Mono')
