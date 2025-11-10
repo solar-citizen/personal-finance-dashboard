@@ -10,12 +10,12 @@ export function initSwagger(app: INestApplication): OpenAPIObject {
     .addBearerAuth()
     .build();
 
-  let document = SwaggerModule.createDocument(app, config, {
-    operationIdFactory: (_controllerKey: string, methodKey: string) =>
-      methodKey,
-  });
-
-  document = cleanupOpenApiDoc(document);
+  const document = cleanupOpenApiDoc(
+    SwaggerModule.createDocument(app, config, {
+      operationIdFactory: (_controllerKey: string, methodKey: string) =>
+        methodKey,
+    }),
+  );
 
   SwaggerModule.setup('api', app, document);
 

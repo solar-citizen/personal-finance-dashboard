@@ -32,50 +32,51 @@ function findSchemaFiles(
 ): SchemaInfo[] {
   const entries = readdirSync(dir);
 
-  for (const entry of entries) {
+  return entries.flatMap((entry) => {
     const fullPath = join(dir, entry);
     const stat = statSync(fullPath);
 
     if (stat.isDirectory()) {
-      if (!['node_modules', 'dist', '@generated', '.git'].includes(entry)) {
-        findSchemaFiles(fullPath, schemas);
-      }
-    } else if (entry.endsWith('.schema.ts')) {
-      const content = readFileSync(fullPath, 'utf-8');
-      const schemaMatches = content.matchAll(/export const (\w+)Schema\s*=/g);
-
-      for (const match of schemaMatches) {
-        const schemaName = match[1];
-
-        // For schemas output: relative from root @generated/zod
-        let relativeFromSchemas = relative(rootGeneratedDir, fullPath)
-          .replace(/\.ts$/, '')
-          .replace(/\\/g, '/');
-
-        if (!relativeFromSchemas.startsWith('.')) {
-          relativeFromSchemas = './' + relativeFromSchemas;
-        }
-
-        // For DTOs output: relative from api/src/@generated
-        const dtosDir = dirname(dtosOutput);
-        let relativeFromDtos = relative(dtosDir, fullPath)
-          .replace(/\.ts$/, '')
-          .replace(/\\/g, '/');
-
-        if (!relativeFromDtos.startsWith('.')) {
-          relativeFromDtos = './' + relativeFromDtos;
-        }
-
-        schemas.push({
-          name: schemaName,
-          importPath: relativeFromSchemas,
-          sourceFilePath: fullPath,
-        });
-      }
+      return ['node_modules', 'dist', '@generated', '.git'].includes(entry)
+        ? []
+        : findSchemaFiles(fullPath, schemas);
     }
-  }
 
-  return schemas;
+    if (!entry.endsWith('.schema.ts')) {
+      return [];
+    }
+
+    const content = readFileSync(fullPath, 'utf-8');
+    const schemaMatches = Array.from(
+      content.matchAll(/export const (\w+)Schema\s*=/g),
+    );
+
+    return schemaMatches.map((match) => {
+      const schemaName = match[1];
+
+      let relativeFromSchemas = relative(rootGeneratedDir, fullPath)
+        .replace(/\.ts$/, '')
+        .replace(/\\/g, '/');
+
+      if (!relativeFromSchemas.startsWith('.')) {
+        relativeFromSchemas = './' + relativeFromSchemas;
+      }
+
+      const dtosDir = dirname(dtosOutput);
+      let relativeFromDtos = relative(dtosDir, fullPath)
+        .replace(/\.ts$/, '')
+        .replace(/\\/g, '/');
+      if (!relativeFromDtos.startsWith('.')) {
+        relativeFromDtos = './' + relativeFromDtos;
+      }
+
+      return {
+        name: schemaName,
+        importPath: relativeFromSchemas,
+        sourceFilePath: fullPath,
+      };
+    });
+  });
 }
 
 async function generateSchemas(schemas: SchemaInfo[]) {
