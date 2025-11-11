@@ -10,6 +10,10 @@ const validationObject = z.object({
   WEB_URL: z.url(),
   JWT_SECRET: z.string(),
   MONOBANK_API_URL: z.url(),
+  LLM_HOST: z.url(),
+  LLM_CHAT_MODEL: z.string(),
+  LLM_EMBEDDING_MODEL: z.string(),
+  LLM_MAX_HISTORY_MESSAGES: z.coerce.number().int().min(1).max(1000),
 });
 
 @Injectable()
@@ -43,5 +47,21 @@ export class ConfigService {
 
   get monoApiUrl(): string {
     return this.configService.get<string>('MONOBANK_API_URL');
+  }
+
+  get llmHost(): string {
+    return this.configService.get<string>('LLM_HOST');
+  }
+
+  get llmChatModel(): string {
+    return this.configService.get<string>('LLM_CHAT_MODEL');
+  }
+
+  get llmEmbeddingModel(): string {
+    return this.configService.get<string>('LLM_EMBEDDING_MODEL');
+  }
+
+  get llmMaxHistoryMessages(): number {
+    return this.configService.get<number>('LLM_MAX_HISTORY_MESSAGES');
   }
 }
