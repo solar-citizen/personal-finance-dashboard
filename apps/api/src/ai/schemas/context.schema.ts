@@ -1,5 +1,5 @@
+import { Card, Currency } from '@prisma/client';
 import { z } from 'zod';
-import { Currency, Card } from '@prisma/client';
 
 export const AccountSummarySchema = z.object({
   id: z.string(),

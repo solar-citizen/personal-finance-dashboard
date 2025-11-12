@@ -14,6 +14,34 @@ import { formatEmbeddingVector } from 'src/lib/vector.utils';
 import { PrismaService } from '../../db/prisma.service';
 import { OllamaClientService } from './ollama-client.service';
 
+type SimilarMessage = {
+  id: string;
+  content: string;
+  similarity: number;
+};
+
+type MessageHistoryItem = {
+  role: MessageRole;
+  content: string;
+};
+
+type LastMessagePreview = {
+  content: string;
+};
+
+type MessageCount = {
+  messages: number;
+};
+
+type ConversationWithMessagesAndCount = {
+  id: string;
+  title: string | null;
+  messages: LastMessagePreview[];
+  _count: MessageCount;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 @Injectable()
 export class ConversationManagerService {
   private readonly logger = new Logger(ConversationManagerService.name);
@@ -104,13 +132,11 @@ export class ConversationManagerService {
     conversationId: string,
     query: string,
     limit = 5,
-  ): Promise<Array<{ id: string; content: string; similarity: number }>> {
+  ): Promise<SimilarMessage[]> {
     const queryEmbedding = await this.ollamaClient.generateEmbedding(query);
     const embeddingVector = formatEmbeddingVector(queryEmbedding);
 
-    const results = await this.prismaService.$queryRaw<
-      Array<{ id: string; content: string; similarity: number }>
-    >`
+    const results = await this.prismaService.$queryRaw<SimilarMessage[]>`
       SELECT 
         id,
         content,
@@ -133,7 +159,7 @@ export class ConversationManagerService {
   async getConversationHistory(
     conversationId: string,
     userId: string,
-  ): Promise<Array<{ role: MessageRole; content: string }>> {
+  ): Promise<MessageHistoryItem[]> {
     const conversation = await this.prismaService.conversation.findFirst({
       where: { id: conversationId, userId },
       include: {
@@ -252,21 +278,21 @@ export class ConversationManagerService {
     }
   }
 
-  private mapToConversationListItemDto(conversation: {
-    id: string;
-    title: string | null;
-    messages: Array<{ content: string }>;
-    _count: { messages: number };
-    createdAt: Date;
-    updatedAt: Date;
-  }): ConversationListItemDto {
+  private mapToConversationListItemDto({
+    id,
+    title,
+    messages,
+    _count,
+    createdAt,
+    updatedAt,
+  }: ConversationWithMessagesAndCount): ConversationListItemDto {
     return {
-      id: conversation.id,
-      title: conversation.title ?? 'Untitled Conversation',
-      lastMessage: conversation.messages[0]?.content || null,
-      messageCount: conversation._count.messages,
-      createdAt: formatDateToIso(conversation.createdAt),
-      updatedAt: formatDateToIso(conversation.updatedAt),
+      id,
+      title: title ?? 'Untitled Conversation',
+      lastMessage: messages[0]?.content || null,
+      messageCount: _count.messages,
+      createdAt: formatDateToIso(createdAt),
+      updatedAt: formatDateToIso(updatedAt),
     };
   }
 }
