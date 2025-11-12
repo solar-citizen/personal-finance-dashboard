@@ -1,12 +1,26 @@
 import { Injectable, Logger } from '@nestjs/common';
+import dayjs from 'dayjs';
 import {
   AccountSummaryDto,
   CategorySummaryDto,
   FinancialContextDto,
   TransactionWithRelationsDto,
 } from 'src/@generated/zod/pfd-dtos';
+import { calculateTotal, formatCurrency } from 'src/lib/currency-utils';
+import { getDateRange } from 'src/lib/date-utils';
+import { formatEmbeddingVector } from 'src/lib/vector.utils';
 import { PrismaService } from '../../db/prisma.service';
 import { OllamaClientService } from './ollama-client.service';
+
+type CategoryRecord = Record<
+  NonNullable<TransactionWithRelationsDto['category']>['name'],
+  number
+>;
+
+type KnowledgeBaseEntry = {
+  content: string;
+  similarity: number;
+};
 
 @Injectable()
 export class ContextBuilderService {
@@ -42,7 +56,7 @@ export class ContextBuilderService {
       accountCount: accounts.length,
       transactionCount: recentTransactions.length,
       categories: categories.map(({ name }) => name),
-      dateRange: this.getDateRange(recentTransactions),
+      dateRange: getDateRange(recentTransactions),
       knowledgeBaseHits: relevantKnowledge.length,
     };
 
@@ -52,14 +66,12 @@ export class ContextBuilderService {
   private async findRelevantKnowledge(
     query: string,
     limit = 3,
-  ): Promise<Array<{ content: string; similarity: number }>> {
+  ): Promise<KnowledgeBaseEntry[]> {
     try {
       const queryEmbedding = await this.ollamaClient.generateEmbedding(query);
-      const embeddingVector = `[${queryEmbedding.join(',')}]`;
+      const embeddingVector = formatEmbeddingVector(queryEmbedding);
 
-      const results = await this.prismaService.$queryRaw<
-        Array<{ content: string; similarity: number }>
-      >`
+      const results = await this.prismaService.$queryRaw<KnowledgeBaseEntry[]>`
         SELECT 
           content,
           1 - (embedding <=> ${embeddingVector}::vector) as similarity
@@ -97,8 +109,7 @@ export class ContextBuilderService {
   private async getRecentTransactions(
     userId: string,
   ): Promise<TransactionWithRelationsDto[]> {
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const thirtyDaysAgo = dayjs().subtract(30, 'day').toDate();
 
     return this.prismaService.transaction.findMany({
       where: {
@@ -133,43 +144,28 @@ export class ContextBuilderService {
     accounts: AccountSummaryDto[],
     transactions: TransactionWithRelationsDto[],
     categories: CategorySummaryDto[],
-    knowledgeBase: Array<{ content: string; similarity: number }>,
+    knowledgeBase: KnowledgeBaseEntry[],
   ): string {
-    const totalBalance = accounts.reduce(
-      (sum, acc) => sum + Number(acc.balance),
-      0,
+    const totalBalance = calculateTotal(
+      accounts.map(({ balance }) => Number(balance)),
     );
-    const totalBalanceFormatted = (totalBalance / 100).toFixed(2);
+    const totalBalanceFormatted = formatCurrency(totalBalance, 'UAH');
 
     const accountsSummary = accounts
-      .map(
-        (acc) =>
-          `- ${acc.type} (${acc.currency.toUpperCase()}): ${(Number(acc.balance) / 100).toFixed(2)} ${acc.currency.toUpperCase()}`,
-      )
+      .map(({ balance, currency, type }) => {
+        const formattedBalance = formatCurrency(Number(balance), currency);
+        return `- ${type} (${currency.toUpperCase()}): ${formattedBalance}`;
+      })
       .join('\n');
 
     const categoryList = categories.map((c) => c.name).join(', ');
-    const topSpending = Object.entries(
-      this.calculateSpendingByCategory(transactions),
-    )
-      .sort(([, a], [, b]) => Math.abs(b) - Math.abs(a))
-      .slice(0, 5)
-      .map(
-        ([category, amount]) =>
-          `- ${category}: ${(amount / 100).toFixed(2)} UAH`,
-      )
-      .join('\n');
-
-    const knowledgeSection =
-      knowledgeBase.length > 0
-        ? `\n\nRelevant Information:
-${knowledgeBase.map(({ content, similarity }, i) => `${i + 1}. ${content} (relevance: ${(similarity * 100).toFixed(0)}%)`).join('\n')}`
-        : '';
+    const topSpending = this.formatTopSpending(transactions);
+    const knowledgeSection = this.formatKnowledgeSection(knowledgeBase);
 
     return `You are a helpful financial assistant for a personal finance dashboard. You have access to the user's financial data and can help them understand their spending, budgeting, and financial health.
 
 Current Financial Overview:
-- Total Balance: ${totalBalanceFormatted} UAH
+- Total Balance: ${totalBalanceFormatted}
 - Number of Accounts: ${accounts.length}
 - Recent Transactions: ${transactions.length} in the last 30 days
 
@@ -194,44 +190,49 @@ Guidelines:
 Remember: You have access to the last 30 days of transaction history. Be helpful, accurate, and supportive!`;
   }
 
-  private calculateSpendingByCategory(
+  private formatTopSpending(
     transactions: TransactionWithRelationsDto[],
-  ): Record<string, number> {
-    const spending: Record<string, number> = {};
+  ): string {
+    const spendingByCategory = this.calculateSpendingByCategory(transactions);
 
-    for (const transaction of transactions) {
-      const categoryName = transaction.category?.name || 'Uncategorized';
-      const amount = Number(transaction.amount);
-
-      if (!spending[categoryName]) {
-        spending[categoryName] = 0;
-      }
-
-      spending[categoryName] += amount;
-    }
-
-    return spending;
+    return Object.entries(spendingByCategory)
+      .sort(([, a], [, b]) => Math.abs(b) - Math.abs(a))
+      .slice(0, 5)
+      .map(
+        ([category, amount]) =>
+          `- ${category}: ${formatCurrency(amount, 'UAH')}`,
+      )
+      .join('\n');
   }
 
-  private getDateRange(transactions: TransactionWithRelationsDto[]): {
-    from: string;
-    to: string;
-  } {
-    if (transactions.length === 0) {
-      const now = new Date();
-      return {
-        from: now.toISOString(),
-        to: now.toISOString(),
-      };
+  private formatKnowledgeSection(knowledgeBase: KnowledgeBaseEntry[]): string {
+    if (knowledgeBase.length === 0) {
+      return '';
     }
 
-    const dates = transactions.map(({ time }) => new Date(time).getTime());
-    const earliest = new Date(Math.min(...dates));
-    const latest = new Date(Math.max(...dates));
+    const entries = knowledgeBase
+      .map(({ content, similarity }, index) => {
+        const relevancePercent = (similarity * 100).toFixed(0);
+        return `${index + 1}. ${content} (relevance: ${relevancePercent}%)`;
+      })
+      .join('\n');
 
-    return {
-      from: earliest.toISOString(),
-      to: latest.toISOString(),
-    };
+    return `\n\nRelevant Information:\n${entries}`;
+  }
+
+  private calculateSpendingByCategory(
+    transactions: TransactionWithRelationsDto[],
+  ): CategoryRecord {
+    return transactions.reduce<CategoryRecord>(
+      (spending, { amount, category }) => {
+        const categoryName = category?.name || 'Uncategorized';
+
+        return {
+          ...spending,
+          [categoryName]: (spending[categoryName] || 0) + Number(amount),
+        };
+      },
+      {},
+    );
   }
 }
