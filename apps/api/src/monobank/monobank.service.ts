@@ -6,6 +6,7 @@ import {
   SyncResultResponseDto,
   SyncTransactionsDto,
 } from 'src/@generated/zod/pfd-dtos';
+import { formatDateToIso } from 'src/lib/date-utils';
 import { PrismaService } from '../db/prisma.service';
 import { formatAccountResponse } from './lib/account-utils';
 import { getCurrencyFromCode } from './lib/currency-utils';
@@ -133,7 +134,7 @@ export class MonoBankService {
 
       if (lastSyncDaysDiff > 31) {
         this.logger.warn(
-          `Account ${accountId}: Gap detected. Last sync: ${account.lastSyncedAt.toISOString()}, syncing from: ${from.toISOString()}. Use fullHistory: true to sync all missing transactions.`,
+          `Account ${accountId}: Gap detected. Last sync: ${formatDateToIso(account.lastSyncedAt)}, syncing from: ${formatDateToIso(from)}. Use fullHistory: true to sync all missing transactions.`,
         );
       }
     }

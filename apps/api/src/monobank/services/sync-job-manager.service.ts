@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Account, SyncJobStatus } from '@prisma/client';
 import { SyncProgressResponseDto } from 'src/@generated/zod/pfd-dtos';
 import { PrismaService } from 'src/db/prisma.service';
+import { formatDateToIso } from 'src/lib/date-utils';
 import { getErrorMessage } from 'src/lib/error-utils';
 import {
   calculateChunkCount,
@@ -146,7 +147,7 @@ export class SyncJobManager {
       this.maxDaysPerRequest,
     )) {
       this.logger.log(
-        `Job ${jobId}: Fetching chunk ${chunk.chunkIndex + 1} from ${chunk.from.toISOString()} to ${chunk.to.toISOString()}`,
+        `Job ${jobId}: Fetching chunk ${chunk.chunkIndex + 1} from ${formatDateToIso(chunk.from)} to ${formatDateToIso(chunk.to)}`,
       );
 
       const transactions = await this.apiClient.getStatement(

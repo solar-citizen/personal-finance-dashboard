@@ -89,7 +89,7 @@ async function generateSchemas(schemas: SchemaInfo[]) {
 
   let output = `// Auto-generated Zod schemas - do not edit manually
 // Generated on ${timestamp}
-// Run 'bun run dtos:generate' to regenerate
+// Run 'bun run dtos:generate' or 'bun run codegen' to regenerate
 
 `;
 
@@ -143,7 +143,7 @@ async function generateDtos(schemas: SchemaInfo[]) {
 
   let output = `// Auto-generated DTOs - do not edit manually
 // Generated on ${timestamp}
-// Run 'bun run dtos:generate' to regenerate
+// Run 'bun run dtos:generate' or 'bun run codegen' to regenerate
 
 import { createZodDto } from 'nestjs-zod';
 

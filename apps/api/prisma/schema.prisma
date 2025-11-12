@@ -17,6 +17,7 @@ enum Currency {
   eur
 }
 
+// ToDo: Rename to AccountType
 enum Card {
   black
   white
@@ -34,16 +35,62 @@ enum SyncJobStatus {
   failed
 }
 
+enum MessageRole {
+  system
+  user
+  assistant
+}
+
+model Conversation {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  title     String?
+  
+  messages  Message[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId, createdAt])
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  role           MessageRole
+  content        String   // The actual message text
+  
+  // Store context that was used for this message
+  contextUsed    Json?    // { transactionCount: 5, categories: [...], dateRange: {...} }
+  
+  // Store embedding for semantic search of chat history
+  embedding      Unsupported("vector(768)")?
+  
+  // Performance metrics
+  tokensUsed     Int?
+  responseTimeMs Int?
+  
+  createdAt      DateTime @default(now())
+  
+  @@index([conversationId, createdAt])
+  @@index([embedding], name: "message_embedding_idx")
+}
+
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  passwordHash String
-  name         String?
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String
   
-  accounts     Account[]
+  accounts      Account[]
+  conversations Conversation[]
   
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 model SyncJob {
