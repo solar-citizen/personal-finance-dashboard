@@ -38,8 +38,7 @@ export class AiService {
       dto.message,
     );
 
-    const context = await this.contextBuilder.buildContext(userId);
-
+    const context = await this.contextBuilder.buildContext(userId, dto.message);
     const history = await this.conversationManager.getConversationHistory(
       conversationId,
       userId,
@@ -109,8 +108,10 @@ export class AiService {
           dto.message,
         );
 
-        const context = await this.contextBuilder.buildContext(userId);
-
+        const context = await this.contextBuilder.buildContext(
+          userId,
+          dto.message,
+        );
         const history = await this.conversationManager.getConversationHistory(
           conversationId,
           userId,
