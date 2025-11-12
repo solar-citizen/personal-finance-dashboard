@@ -1,6 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { createId } from '@paralleldrive/cuid2';
 import { MessageRole } from '@prisma/client';
+import dayjs from 'dayjs';
 import {
   ConversationDto,
   ConversationListItemDto,
@@ -8,6 +9,8 @@ import {
   MessageDto,
 } from 'src/@generated/zod/pfd-dtos';
 import { ConfigService } from 'src/config/config.service';
+import { formatDateToIso } from 'src/lib/date-utils';
+import { formatEmbeddingVector } from 'src/lib/vector.utils';
 import { PrismaService } from '../../db/prisma.service';
 import { OllamaClientService } from './ollama-client.service';
 
@@ -48,14 +51,7 @@ export class ConversationManagerService {
     firstMessage?: string,
   ): Promise<string> {
     if (conversationId) {
-      const exists = await this.prismaService.conversation.findFirst({
-        where: { id: conversationId, userId },
-      });
-
-      if (!exists) {
-        throw new NotFoundException('Conversation not found');
-      }
-
+      await this.validateConversationExists(conversationId, userId);
       return conversationId;
     }
 
@@ -71,8 +67,7 @@ export class ConversationManagerService {
     responseTimeMs?: number,
   ): Promise<string> {
     const embedding = await this.ollamaClient.generateEmbedding(content);
-    const embeddingVector = `[${embedding.join(',')}]`;
-
+    const embeddingVector = formatEmbeddingVector(embedding);
     const messageId = createId();
 
     await this.prismaService.$executeRaw`
@@ -95,7 +90,7 @@ export class ConversationManagerService {
 
     await this.prismaService.conversation.update({
       where: { id: conversationId },
-      data: { updatedAt: new Date() },
+      data: { updatedAt: dayjs().toDate() },
     });
 
     this.logger.log(
@@ -111,7 +106,7 @@ export class ConversationManagerService {
     limit = 5,
   ): Promise<Array<{ id: string; content: string; similarity: number }>> {
     const queryEmbedding = await this.ollamaClient.generateEmbedding(query);
-    const embeddingVector = `[${queryEmbedding.join(',')}]`;
+    const embeddingVector = formatEmbeddingVector(queryEmbedding);
 
     const results = await this.prismaService.$queryRaw<
       Array<{ id: string; content: string; similarity: number }>
@@ -157,7 +152,6 @@ export class ConversationManagerService {
       throw new NotFoundException('Conversation not found');
     }
 
-    // Reverse to get chronological order (oldest first)
     return conversation.messages.reverse();
   }
 
@@ -216,15 +210,8 @@ export class ConversationManagerService {
       },
     });
 
-    return conversations.map(
-      ({ id, title, messages, _count, createdAt, updatedAt }) => ({
-        id,
-        title,
-        lastMessage: messages[0]?.content || null,
-        messageCount: _count.messages,
-        createdAt: createdAt.toISOString(),
-        updatedAt: updatedAt.toISOString(),
-      }),
+    return conversations.map((conversation) =>
+      this.mapToConversationListItemDto(conversation),
     );
   }
 
@@ -232,13 +219,7 @@ export class ConversationManagerService {
     conversationId: string,
     userId: string,
   ): Promise<void> {
-    const conversation = await this.prismaService.conversation.findFirst({
-      where: { id: conversationId, userId },
-    });
-
-    if (!conversation) {
-      throw new NotFoundException('Conversation not found');
-    }
+    await this.validateConversationExists(conversationId, userId);
 
     await this.prismaService.conversation.delete({
       where: { id: conversationId },
@@ -255,6 +236,37 @@ export class ConversationManagerService {
       return cleaned;
     }
 
-    return cleaned.substring(0, maxLength).trim() + '...';
+    return `${cleaned.substring(0, maxLength).trim()}...`;
+  }
+
+  private async validateConversationExists(
+    conversationId: string,
+    userId: string,
+  ): Promise<void> {
+    const exists = await this.prismaService.conversation.findFirst({
+      where: { id: conversationId, userId },
+    });
+
+    if (!exists) {
+      throw new NotFoundException('Conversation not found');
+    }
+  }
+
+  private mapToConversationListItemDto(conversation: {
+    id: string;
+    title: string | null;
+    messages: Array<{ content: string }>;
+    _count: { messages: number };
+    createdAt: Date;
+    updatedAt: Date;
+  }): ConversationListItemDto {
+    return {
+      id: conversation.id,
+      title: conversation.title ?? 'Untitled Conversation',
+      lastMessage: conversation.messages[0]?.content || null,
+      messageCount: conversation._count.messages,
+      createdAt: formatDateToIso(conversation.createdAt),
+      updatedAt: formatDateToIso(conversation.updatedAt),
+    };
   }
 }
