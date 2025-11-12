@@ -42,9 +42,9 @@ export class AiController {
     return this.aiService.streamMessage(userId, dto).pipe(
       map(
         (data) =>
-          ({
+          new MessageEvent('message', {
             data: JSON.stringify(data),
-          }) as MessageEvent,
+          }),
       ),
     );
   }

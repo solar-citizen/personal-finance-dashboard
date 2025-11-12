@@ -1,5 +1,10 @@
 import dayjs from 'dayjs';
 
+type IsoDateRange = {
+  from: string;
+  to: string;
+};
+
 export function toUnixTimestamp(date: Date): number {
   return dayjs(date).unix();
 }
@@ -8,13 +13,13 @@ export function fromUnixTimestamp(timestamp: number): Date {
   return dayjs.unix(timestamp).toDate();
 }
 
-export const formatDateToIso = (date: Date): string => {
+export function formatDateToIso(date: Date): string {
   return dayjs(date).toISOString();
-};
+}
 
 export function getDateRange<T extends { time: Date | string }>(
   items: T[],
-): { from: string; to: string } {
+): IsoDateRange {
   if (items.length === 0) {
     const now = dayjs();
     return {

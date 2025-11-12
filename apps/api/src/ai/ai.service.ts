@@ -24,13 +24,11 @@ export class AiService {
     userId: string,
     dto: SendMessageDto,
   ): Promise<ChatResponseDto> {
-    const startTime = dayjs();
-
     const { conversationId, messages, context } =
       await this.prepareConversation(userId, dto);
 
     const { response, tokensUsed } = await this.ollamaClient.chat(messages);
-    const responseTimeMs = dayjs().diff(startTime, 'millisecond');
+    const responseTimeMs = dayjs().diff(dayjs(), 'millisecond');
 
     const messageId = await this.conversationManager.addMessage(
       conversationId,
@@ -65,7 +63,6 @@ export class AiService {
     responseTimeMs?: number;
   }> {
     return new Observable((subscriber) => {
-      const startTime = dayjs();
       let fullResponse = '';
 
       this.prepareConversation(userId, dto)
@@ -90,7 +87,7 @@ export class AiService {
               subscriber.error(error);
             },
             complete: () => {
-              const responseTimeMs = dayjs().diff(startTime, 'millisecond');
+              const responseTimeMs = dayjs().diff(dayjs(), 'millisecond');
 
               this.conversationManager
                 .addMessage(

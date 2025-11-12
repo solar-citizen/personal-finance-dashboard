@@ -39,7 +39,7 @@ export class OllamaClientService {
     const startTime = dayjs();
 
     try {
-      const response = await this.ollama.chat({
+      const { message, eval_count } = await this.ollama.chat({
         model: this.chatModel,
         messages,
         stream: false,
@@ -48,12 +48,13 @@ export class OllamaClientService {
       this.logDuration('Chat completed', startTime);
 
       return {
-        response: response.message.content,
-        tokensUsed: response.eval_count,
+        response: message.content,
+        tokensUsed: eval_count,
       };
     } catch (error) {
       this.logger.error('Ollama chat error:', error);
-      throw new Error('Failed to generate response from AI');
+
+      return { response: '', tokensUsed: undefined };
     }
   }
 

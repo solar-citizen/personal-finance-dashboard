@@ -212,11 +212,11 @@ export class ConversationManagerService {
           id,
           role,
           content,
-          createdAt: createdAt.toISOString(),
+          createdAt: formatDateToIso(createdAt),
         }),
       ),
-      createdAt: conversation.createdAt.toISOString(),
-      updatedAt: conversation.updatedAt.toISOString(),
+      createdAt: formatDateToIso(conversation.createdAt),
+      updatedAt: formatDateToIso(conversation.updatedAt),
     };
   }
 

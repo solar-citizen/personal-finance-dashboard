@@ -1,6 +1,7 @@
 import { Account } from '@prisma/client';
 import { MonoBankAccountResponseDto } from 'src/@generated/zod/pfd-dtos';
 import { formatAmount } from 'src/lib/currency-utils';
+import { formatDateToIso } from 'src/lib/date-utils';
 
 export function formatAccountResponse({
   id,
@@ -20,6 +21,6 @@ export function formatAccountResponse({
     currency,
     balance: formatAmount(balance),
     creditLimit: formatAmount(creditLimit),
-    lastSyncedAt: lastSyncedAt?.toISOString() ?? null,
+    lastSyncedAt: lastSyncedAt ? formatDateToIso(lastSyncedAt) : null,
   };
 }
