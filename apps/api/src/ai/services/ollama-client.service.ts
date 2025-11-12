@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import dayjs from 'dayjs';
 import { Ollama } from 'ollama';
 import { Observable } from 'rxjs';
 import { ConfigService } from 'src/config/config.service';
@@ -35,7 +36,7 @@ export class OllamaClientService {
     response: string;
     tokensUsed?: number;
   }> {
-    const startTime = Date.now();
+    const startTime = dayjs();
 
     try {
       const response = await this.ollama.chat({
@@ -44,8 +45,7 @@ export class OllamaClientService {
         stream: false,
       });
 
-      const duration = Date.now() - startTime;
-      this.logger.log(`Chat completed in ${duration}ms`);
+      this.logDuration('Chat completed', startTime);
 
       return {
         response: response.message.content,
@@ -59,7 +59,7 @@ export class OllamaClientService {
 
   chatStream(messages: OllamaChatMessage[]): Observable<string> {
     return new Observable((subscriber) => {
-      const startTime = Date.now();
+      const startTime = dayjs();
 
       (async () => {
         const stream = await this.ollama.chat({
@@ -74,8 +74,7 @@ export class OllamaClientService {
           }
 
           if (chunk.done) {
-            const duration = Date.now() - startTime;
-            this.logger.log(`Stream completed in ${duration}ms`);
+            this.logDuration('Stream completed', startTime);
             subscriber.complete();
           }
         }
@@ -109,5 +108,10 @@ export class OllamaClientService {
       this.logger.error('Ollama health check failed:', error);
       return false;
     }
+  }
+
+  private logDuration(message: string, startTime: dayjs.Dayjs): void {
+    const duration = dayjs().diff(startTime);
+    this.logger.log(`${message} in ${duration}ms`);
   }
 }
