@@ -14,6 +14,8 @@ const validationObject = z.object({
   LLM_CHAT_MODEL: z.string(),
   LLM_EMBEDDING_MODEL: z.string(),
   LLM_MAX_HISTORY_MESSAGES: z.coerce.number().int().min(1).max(1000),
+  GEMINI_API_KEY: z.string(),
+  GEMINI_MODEL: z.string(),
 });
 
 @Injectable()
@@ -63,5 +65,13 @@ export class ConfigService {
 
   get llmMaxHistoryMessages(): number {
     return this.configService.get<number>('LLM_MAX_HISTORY_MESSAGES');
+  }
+
+  get geminiApiKey(): string {
+    return this.configService.get<string>('GEMINI_API_KEY');
+  }
+
+  get geminiModel(): string {
+    return this.configService.get<string>('GEMINI_MODEL');
   }
 }

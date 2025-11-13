@@ -14,6 +14,7 @@ import {
   ChatResponseDto,
   ConversationDto,
   ConversationListItemDto,
+  HealthStatusDto,
   SendMessageDto,
 } from 'src/@generated/zod/pfd-dtos';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -71,12 +72,18 @@ export class AiController {
   }
 
   @Get('health')
-  async healthCheck(): Promise<{ status: string; ollama: boolean }> {
-    const ollamaHealthy = await this.aiService.healthCheck();
+  async healthCheck(): Promise<HealthStatusDto> {
+    const { gemini, ollama } = await this.aiService.healthCheck();
 
     return {
-      status: ollamaHealthy ? 'healthy' : 'unhealthy',
-      ollama: ollamaHealthy,
+      status: gemini && ollama ? 'healthy' : 'unhealthy',
+      ollama,
+      gemini,
     };
+  }
+
+  @Get('gemini/models')
+  async listGeminiModels() {
+    return await this.aiService.listGeminiModels();
   }
 }

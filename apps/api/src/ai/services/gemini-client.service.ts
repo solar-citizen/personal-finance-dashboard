@@ -1,0 +1,213 @@
+import { GenerativeModel, GoogleGenerativeAI } from '@google/generative-ai';
+import { Injectable, Logger } from '@nestjs/common';
+import dayjs from 'dayjs';
+import { Observable } from 'rxjs';
+import { ConfigService } from 'src/config/config.service';
+import {
+  AvailableModelsErrorResponse,
+  AvailableModelsResponse,
+  GeminiModel,
+  GeminiModelsListResponse,
+} from './lib/gemini-client.types';
+
+export type GeminiChatMessage = {
+  role: 'user' | 'model';
+  parts: { text: string }[];
+};
+
+@Injectable()
+export class GeminiClientService {
+  private readonly logger = new Logger(GeminiClientService.name);
+  private readonly genAI: GoogleGenerativeAI;
+  private readonly model: GenerativeModel;
+
+  constructor(private readonly configService: ConfigService) {
+    const apiKey = this.configService.geminiApiKey;
+
+    if (!apiKey) {
+      this.logger.warn('GEMINI_API_KEY not set - Gemini features disabled');
+      return;
+    }
+
+    const model = this.configService.geminiModel;
+
+    if (!model) {
+      this.logger.warn('GEMINI_MODEL not set - Gemini features disabled');
+      return;
+    }
+
+    this.genAI = new GoogleGenerativeAI(apiKey);
+    this.model = this.genAI.getGenerativeModel({
+      model,
+      generationConfig: {
+        temperature: 0.7,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 2048,
+      },
+    });
+
+    this.logger.log(`Gemini client initialized: ${model}`);
+  }
+
+  async chat(
+    systemPrompt: string,
+    messages: GeminiChatMessage[],
+  ): Promise<{
+    response: string;
+    tokensUsed?: number;
+  }> {
+    if (!this.isAvailable()) {
+      throw new Error(
+        'Gemini client not initialized - check GEMINI_MODEL env variable',
+      );
+    }
+
+    const startTime = dayjs();
+
+    try {
+      const chat = this.model.startChat({
+        history: messages.slice(0, -1).map(({ role, parts }) => ({
+          role,
+          parts,
+        })),
+        systemInstruction: {
+          role: 'system',
+          parts: [{ text: systemPrompt }],
+        },
+      });
+
+      const lastMessage = messages[messages.length - 1];
+      const result = await chat.sendMessage(lastMessage.parts[0].text);
+      const response = result.response;
+
+      this.logDuration('Chat completed', startTime);
+
+      return {
+        response: response.text(),
+        tokensUsed: response.usageMetadata?.totalTokenCount,
+      };
+    } catch (error) {
+      this.logger.error('Gemini chat error:', error);
+      throw error;
+    }
+  }
+
+  chatStream(
+    systemPrompt: string,
+    messages: GeminiChatMessage[],
+  ): Observable<string> {
+    if (!this.isAvailable()) {
+      throw new Error(
+        'Gemini client not initialized - check GEMINI_MODEL env variable',
+      );
+    }
+
+    return new Observable((subscriber) => {
+      const startTime = dayjs();
+
+      (async () => {
+        const chat = this.model.startChat({
+          history: messages.slice(0, -1),
+          systemInstruction: {
+            role: 'system',
+            parts: [{ text: systemPrompt }],
+          },
+        });
+
+        const lastMessage = messages[messages.length - 1];
+        const result = await chat.sendMessageStream(lastMessage.parts[0].text);
+
+        for await (const chunk of result.stream) {
+          const text = chunk.text();
+
+          if (text) {
+            subscriber.next(text);
+          }
+        }
+
+        this.logDuration('Stream completed', startTime);
+        subscriber.complete();
+      })().catch((error) => {
+        this.logger.error('Uncaught Gemini stream error:', error);
+        subscriber.error(error);
+      });
+    });
+  }
+
+  async healthCheck(): Promise<boolean> {
+    if (!this.isAvailable()) {
+      return false;
+    }
+
+    try {
+      return !!(await this.model.generateContent('test')).response.text();
+    } catch (error) {
+      this.logger.error('Gemini health check failed:', error);
+      return false;
+    }
+  }
+
+  async listAvailableModels(): Promise<
+    AvailableModelsResponse | AvailableModelsErrorResponse
+  > {
+    const apiKey = this.configService.geminiApiKey;
+
+    if (!apiKey) {
+      return { error: 'GEMINI_API_KEY not configured' };
+    }
+
+    try {
+      const response: Response = await fetch(
+        `https://generativelanguage.googleapis.com/v1/models?key=${apiKey}`,
+      );
+
+      if (!response.ok) {
+        const error = await response.text();
+        this.logger.error('Failed to list models:', error);
+
+        return { error: `HTTP ${response.status}: ${error}` };
+      }
+
+      const data = (await response.json()) as GeminiModelsListResponse;
+
+      // Filter to only show models that support generateContent
+      const contentGenerationModels: GeminiModel[] =
+        data.models?.filter((model: GeminiModel) =>
+          model.supportedGenerationMethods?.includes('generateContent'),
+        ) || [];
+
+      this.logger.log(
+        `Found ${contentGenerationModels.length} models supporting generateContent`,
+      );
+
+      return {
+        total: data.models?.length || 0,
+        contentGenerationModels: contentGenerationModels.map(
+          ({ name, displayName, description, supportedGenerationMethods }) => ({
+            name,
+            displayName,
+            description,
+            supportedMethods: supportedGenerationMethods,
+          }),
+        ),
+        allModels: data.models?.map(({ name }) => name) || [],
+      };
+    } catch (error) {
+      this.logger.error('Error listing models:', error);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+
+      return { error: errorMessage };
+    }
+  }
+
+  isAvailable(): boolean {
+    return !!this.model;
+  }
+
+  private logDuration(message: string, startTime: dayjs.Dayjs): void {
+    const duration = dayjs().diff(startTime);
+    this.logger.log(`${message} in ${duration}ms`);
+  }
+}

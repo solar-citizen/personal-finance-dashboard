@@ -42,6 +42,9 @@ export const FinancialContextMetadataSchema = z.object({
     from: z.string(),
     to: z.string(),
   }),
+  knowledgeBaseHits: z.number().optional(),
+  modelUsed: z.string().optional(),
+  modelReason: z.string().optional(),
 });
 
 export const FinancialContextSchema = z.object({
