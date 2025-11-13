@@ -10,6 +10,7 @@ import { calculateTotal, formatCurrency } from 'src/lib/currency-utils';
 import { getDateRange } from 'src/lib/date-utils';
 import { formatEmbeddingVector } from 'src/lib/vector.utils';
 import { PrismaService } from '../../db/prisma.service';
+import { rejectPatterns } from './lib/reject-patterns';
 import { OllamaClientService } from './ollama-client.service';
 
 type CategoryRecord = Record<
@@ -161,33 +162,35 @@ export class ContextBuilderService {
     const categoryList = categories.map((c) => c.name).join(', ');
     const topSpending = this.formatTopSpending(transactions);
     const knowledgeSection = this.formatKnowledgeSection(knowledgeBase);
+    const { defaultReject } = rejectPatterns;
 
     return `You are a helpful financial assistant for a personal finance dashboard. You have access to the user's financial data and can help them understand their spending, budgeting, and financial health.
 
-Current Financial Overview:
-- Total Balance: ${totalBalanceFormatted}
-- Number of Accounts: ${accounts.length}
-- Recent Transactions: ${transactions.length} in the last 30 days
+      Current Financial Overview:
+      - Total Balance: ${totalBalanceFormatted}
+      - Number of Accounts: ${accounts.length}
+      - Recent Transactions: ${transactions.length} in the last 30 days
 
-Accounts:
-${accountsSummary || 'No accounts connected yet'}
+      Accounts:
+      ${accountsSummary || 'No accounts connected yet'}
 
-Available Categories: ${categoryList}
+      Available Categories: ${categoryList}
 
-Top Spending Categories (Last 30 Days):
-${topSpending || 'No spending data available'}${knowledgeSection}
+      Top Spending Categories (Last 30 Days):
+      ${topSpending || 'No spending data available'}${knowledgeSection}
 
-Guidelines:
-1. Always provide specific, actionable financial advice
-2. Use actual data from the user's transactions when answering
-3. Format currency amounts clearly (e.g., "1,234.56 UAH")
-4. Be conversational but professional
-5. If asked about specific transactions, refer to the recent data
-6. Suggest budgeting strategies based on spending patterns
-7. Warn about unusual spending if detected
-8. Always respond in Ukrainian if the user writes in Ukrainian, otherwise use English
+      Guidelines:
+      1. Always provide specific, actionable financial advice
+      2. Use actual data from the user's transactions when answering
+      3. Format currency amounts clearly (e.g., "1,234.56 UAH")
+      4. Be conversational but professional
+      5. If asked about specific transactions, refer to the recent data
+      6. Suggest budgeting strategies based on spending patterns
+      7. Warn about unusual spending if detected
+      8. Always respond in Ukrainian if the user writes in Ukrainian, otherwise use English
+      9. **IMPORTANT: You are a FINANCIAL assistant. If user asks non-financial questions (weather, recipes, general knowledge, etc.), politely redirect them: ${defaultReject}**
 
-Remember: You have access to the last 30 days of transaction history. Be helpful, accurate, and supportive!`;
+      Remember: You have access to the last 30 days of transaction history. Be helpful, accurate, and supportive!`;
   }
 
   private formatTopSpending(

@@ -5,15 +5,16 @@ import {
   Get,
   Param,
   Post,
-  Sse,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { map, Observable } from 'rxjs';
+import type { Response } from 'express';
 import {
   ChatResponseDto,
   ConversationDto,
   ConversationListItemDto,
+  HealthStatusDto,
   SendMessageDto,
 } from 'src/@generated/zod/pfd-dtos';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -34,19 +35,13 @@ export class AiController {
     return this.aiService.sendMessage(userId, dto);
   }
 
-  @Sse('chat/stream')
+  @Post('chat/stream')
   streamChat(
-    @Body() dto: SendMessageDto,
     @CurrentUser('id') userId: string,
-  ): Observable<MessageEvent> {
-    return this.aiService.streamMessage(userId, dto).pipe(
-      map(
-        (data) =>
-          new MessageEvent('message', {
-            data: JSON.stringify(data),
-          }),
-      ),
-    );
+    @Body() dto: SendMessageDto,
+    @Res() res: Response,
+  ): void {
+    return this.aiService.handleStreamResponse(userId, dto, res);
   }
 
   @Get('conversations/:id')
@@ -77,12 +72,18 @@ export class AiController {
   }
 
   @Get('health')
-  async healthCheck(): Promise<{ status: string; ollama: boolean }> {
-    const ollamaHealthy = await this.aiService.healthCheck();
+  async healthCheck(): Promise<HealthStatusDto> {
+    const { gemini, ollama } = await this.aiService.healthCheck();
 
     return {
-      status: ollamaHealthy ? 'healthy' : 'unhealthy',
-      ollama: ollamaHealthy,
+      status: gemini && ollama ? 'healthy' : 'unhealthy',
+      ollama,
+      gemini,
     };
+  }
+
+  @Get('gemini/models')
+  async listGeminiModels() {
+    return await this.aiService.listGeminiModels();
   }
 }

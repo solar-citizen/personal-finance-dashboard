@@ -5,6 +5,8 @@ import { AiController } from './ai.controller';
 import { AiService } from './ai.service';
 import { ContextBuilderService } from './services/context-builder.service';
 import { ConversationManagerService } from './services/conversation-manager.service';
+import { GeminiClientService } from './services/gemini-client.service';
+import { ModelRouterService } from './services/model-router.service';
 import { OllamaClientService } from './services/ollama-client.service';
 
 @Module({
@@ -15,6 +17,8 @@ import { OllamaClientService } from './services/ollama-client.service';
     OllamaClientService,
     ConversationManagerService,
     ContextBuilderService,
+    GeminiClientService,
+    ModelRouterService,
   ],
   exports: [AiService],
 })

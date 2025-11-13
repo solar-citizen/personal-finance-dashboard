@@ -231,8 +231,8 @@ async function main() {
 }
 
 main()
-  .catch((e) => {
-    console.error('❌ Error:', e);
+  .catch((err: unknown) => {
+    console.error('❌ Error:', err);
     process.exit(1);
   })
   .finally(async () => {
