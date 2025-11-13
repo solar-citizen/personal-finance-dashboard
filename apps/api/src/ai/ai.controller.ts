@@ -14,17 +14,12 @@ import {
   ChatResponseDto,
   ConversationDto,
   ConversationListItemDto,
+  HealthStatusDto,
   SendMessageDto,
 } from 'src/@generated/zod/pfd-dtos';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AiService } from './ai.service';
-
-type HealthStatus = {
-  status: string;
-  ollama: boolean;
-  gemini: boolean;
-};
 
 @ApiTags('AI')
 @Controller('api/ai')
@@ -77,7 +72,7 @@ export class AiController {
   }
 
   @Get('health')
-  async healthCheck(): Promise<HealthStatus> {
+  async healthCheck(): Promise<HealthStatusDto> {
     const { gemini, ollama } = await this.aiService.healthCheck();
 
     return {

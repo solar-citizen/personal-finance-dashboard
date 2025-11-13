@@ -3,7 +3,11 @@ import { MessageRole } from '@prisma/client';
 import dayjs from 'dayjs';
 import { Response } from 'express';
 import { Observable } from 'rxjs';
-import { ChatResponseDto, SendMessageDto } from 'src/@generated/zod/pfd-dtos';
+import {
+  ChatResponseDto,
+  HealthStatusDto,
+  SendMessageDto,
+} from 'src/@generated/zod/pfd-dtos';
 import { ContextBuilderService } from './services/context-builder.service';
 import { ConversationManagerService } from './services/conversation-manager.service';
 import {
@@ -215,7 +219,7 @@ export class AiService {
     return this.conversationManager.deleteConversation(conversationId, userId);
   }
 
-  async healthCheck() {
+  async healthCheck(): Promise<Omit<HealthStatusDto, 'status'>> {
     const [ollamaHealthy, geminiHealthy] = await Promise.all([
       this.ollamaClient.healthCheck(),
       this.geminiClient.healthCheck(),
