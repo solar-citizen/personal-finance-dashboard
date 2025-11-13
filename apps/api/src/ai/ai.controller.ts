@@ -20,6 +20,12 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AiService } from './ai.service';
 
+type HealthStatus = {
+  status: string;
+  ollama: boolean;
+  gemini: boolean;
+};
+
 @ApiTags('AI')
 @Controller('api/ai')
 @UseGuards(JwtAuthGuard)
@@ -71,12 +77,18 @@ export class AiController {
   }
 
   @Get('health')
-  async healthCheck(): Promise<{ status: string; ollama: boolean }> {
-    const ollamaHealthy = await this.aiService.healthCheck();
+  async healthCheck(): Promise<HealthStatus> {
+    const { gemini, ollama } = await this.aiService.healthCheck();
 
     return {
-      status: ollamaHealthy ? 'healthy' : 'unhealthy',
-      ollama: ollamaHealthy,
+      status: gemini && ollama ? 'healthy' : 'unhealthy',
+      ollama,
+      gemini,
     };
+  }
+
+  @Get('gemini/models')
+  async listGeminiModels() {
+    return await this.aiService.listGeminiModels();
   }
 }

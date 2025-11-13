@@ -7,6 +7,11 @@ import { ChatResponseDto, SendMessageDto } from 'src/@generated/zod/pfd-dtos';
 import { ContextBuilderService } from './services/context-builder.service';
 import { ConversationManagerService } from './services/conversation-manager.service';
 import {
+  type GeminiChatMessage,
+  GeminiClientService,
+} from './services/gemini-client.service';
+import { ModelRouterService } from './services/model-router.service';
+import {
   OllamaChatMessage,
   OllamaClientService,
 } from './services/ollama-client.service';
@@ -17,33 +22,66 @@ export class AiService {
 
   constructor(
     private readonly ollamaClient: OllamaClientService,
+    private readonly geminiClient: GeminiClientService,
     private readonly conversationManager: ConversationManagerService,
     private readonly contextBuilder: ContextBuilderService,
+    private readonly modelRouter: ModelRouterService,
   ) {}
 
   async sendMessage(
     userId: string,
     dto: SendMessageDto,
   ): Promise<ChatResponseDto> {
-    const { conversationId, messages, context } =
+    const { conversationId, messages, context, selectedModel } =
       await this.prepareConversation(userId, dto);
 
-    const { response, tokensUsed } = await this.ollamaClient.chat(messages);
+    const { provider, reason } = selectedModel;
 
     const startTime = dayjs();
+    let response: string;
+    let tokensUsed: number | undefined;
+
+    try {
+      if (provider === 'gemini') {
+        const geminiMessages = this.convertToGeminiFormat(messages);
+        const result = await this.geminiClient.chat(
+          context.systemPrompt,
+          geminiMessages,
+        );
+
+        response = result.response;
+        tokensUsed = result.tokensUsed;
+      } else {
+        const result = await this.ollamaClient.chat(messages);
+
+        response = result.response;
+        tokensUsed = result.tokensUsed;
+      }
+    } catch (error) {
+      this.logger.error('Primary model failed, falling back to Ollama:', error);
+      const result = await this.ollamaClient.chat(messages);
+
+      response = result.response;
+      tokensUsed = result.tokensUsed;
+    }
+
     const responseTimeMs = dayjs().diff(startTime, 'millisecond');
 
     const messageId = await this.conversationManager.addMessage(
       conversationId,
       MessageRole.assistant,
       response,
-      context.metadata,
+      {
+        ...context.metadata,
+        modelUsed: provider,
+        modelReason: reason,
+      },
       tokensUsed,
       responseTimeMs,
     );
 
     this.logger.log(
-      `Message processed in ${responseTimeMs}ms (${tokensUsed} tokens)`,
+      `Message processed in ${responseTimeMs}ms (${tokensUsed} tokens) using ${provider.toUpperCase()}`,
     );
 
     return {
@@ -99,19 +137,42 @@ export class AiService {
     content?: string;
     tokensUsed?: number;
     responseTimeMs?: number;
+    modelUsed?: string;
   }> {
     return new Observable((subscriber) => {
       let fullResponse = '';
       const startTime = dayjs();
 
       this.prepareConversation(userId, dto)
-        .then(({ conversationId, messages, context }) => {
+        .then(({ conversationId, messages, context, selectedModel }) => {
+          const { provider, reason } = selectedModel;
           subscriber.next({
             type: 'start',
             conversationId,
+            modelUsed: provider,
           });
 
-          const stream = this.ollamaClient.chatStream(messages);
+          let stream: Observable<string>;
+
+          try {
+            if (provider === 'gemini') {
+              const geminiMessages = this.convertToGeminiFormat(messages);
+
+              stream = this.geminiClient.chatStream(
+                context.systemPrompt,
+                geminiMessages,
+              );
+            } else {
+              stream = this.ollamaClient.chatStream(messages);
+            }
+          } catch (error) {
+            this.logger.error(
+              'Primary model failed, falling back to Ollama:',
+              error,
+            );
+
+            stream = this.ollamaClient.chatStream(messages);
+          }
 
           stream.subscribe({
             next: (chunk) => {
@@ -133,7 +194,11 @@ export class AiService {
                   conversationId,
                   MessageRole.assistant,
                   fullResponse,
-                  context.metadata,
+                  {
+                    ...context.metadata,
+                    modelUsed: provider,
+                    modelReason: reason,
+                  },
                   undefined,
                   responseTimeMs,
                 )
@@ -141,6 +206,7 @@ export class AiService {
                   subscriber.next({
                     type: 'end',
                     responseTimeMs,
+                    modelUsed: provider,
                   });
 
                   subscriber.complete();
@@ -172,7 +238,15 @@ export class AiService {
   }
 
   async healthCheck() {
-    return this.ollamaClient.healthCheck();
+    const [ollamaHealthy, geminiHealthy] = await Promise.all([
+      this.ollamaClient.healthCheck(),
+      this.geminiClient.healthCheck(),
+    ]);
+
+    return {
+      ollama: ollamaHealthy,
+      gemini: geminiHealthy,
+    };
   }
 
   private async prepareConversation(userId: string, dto: SendMessageDto) {
@@ -194,6 +268,18 @@ export class AiService {
       this.conversationManager.getConversationHistory(conversationId, userId),
     ]);
 
+    const hasFinancialContext =
+      context.metadata.transactionCount > 0 ||
+      (context.metadata.knowledgeBaseHits ?? 0) > 0;
+
+    const selectedModel = this.modelRouter.selectModel(
+      dto.message,
+      hasFinancialContext,
+      this.geminiClient.isAvailable(),
+    );
+
+    this.modelRouter.logSelection(selectedModel, dto.message);
+
     const messages: OllamaChatMessage[] = [
       { role: 'system', content: context.systemPrompt },
       ...history.map(
@@ -204,6 +290,21 @@ export class AiService {
       ),
     ];
 
-    return { conversationId, messages, context };
+    return { conversationId, messages, context, selectedModel };
+  }
+
+  private convertToGeminiFormat(
+    messages: OllamaChatMessage[],
+  ): GeminiChatMessage[] {
+    return messages
+      .filter(({ role }) => role !== 'system')
+      .map(({ role, content }) => ({
+        role: role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: content }],
+      }));
+  }
+
+  async listGeminiModels() {
+    return await this.geminiClient.listAvailableModels();
   }
 }
