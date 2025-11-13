@@ -77,7 +77,6 @@ model Message {
   createdAt      DateTime @default(now())
   
   @@index([conversationId, createdAt])
-  @@index([embedding], name: "message_embedding_idx")
 }
 
 model User {

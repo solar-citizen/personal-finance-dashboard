@@ -12,6 +12,7 @@
     "extname",
     "extversion",
     "healthcheck",
+    "hnsw",
     "iban",
     "initdb",
     "isready",

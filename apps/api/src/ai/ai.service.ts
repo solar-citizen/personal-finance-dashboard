@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { MessageRole } from '@prisma/client';
 import dayjs from 'dayjs';
+import { Response } from 'express';
 import { Observable } from 'rxjs';
 import { ChatResponseDto, SendMessageDto } from 'src/@generated/zod/pfd-dtos';
 import { ContextBuilderService } from './services/context-builder.service';
@@ -28,7 +29,9 @@ export class AiService {
       await this.prepareConversation(userId, dto);
 
     const { response, tokensUsed } = await this.ollamaClient.chat(messages);
-    const responseTimeMs = dayjs().diff(dayjs(), 'millisecond');
+
+    const startTime = dayjs();
+    const responseTimeMs = dayjs().diff(startTime, 'millisecond');
 
     const messageId = await this.conversationManager.addMessage(
       conversationId,
@@ -52,6 +55,41 @@ export class AiService {
     };
   }
 
+  handleStreamResponse(
+    userId: string,
+    dto: SendMessageDto,
+    res: Response,
+  ): void {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+
+    const subscription = this.streamMessage(userId, dto).subscribe({
+      next: (data) => {
+        res.write(`data: ${JSON.stringify(data)}\n\n`);
+      },
+      error: (err: Error) => {
+        this.logger.error('Stream error:', err);
+        res.write(
+          `data: ${JSON.stringify({
+            type: 'error',
+            message: err.message || 'Stream failed',
+          })}\n\n`,
+        );
+        res.end();
+      },
+      complete: () => {
+        res.end();
+      },
+    });
+
+    res.on('close', () => {
+      subscription.unsubscribe();
+      this.logger.log('Client disconnected, subscription cleaned up');
+    });
+  }
+
   streamMessage(
     userId: string,
     dto: SendMessageDto,
@@ -64,6 +102,7 @@ export class AiService {
   }> {
     return new Observable((subscriber) => {
       let fullResponse = '';
+      const startTime = dayjs();
 
       this.prepareConversation(userId, dto)
         .then(({ conversationId, messages, context }) => {
@@ -87,7 +126,7 @@ export class AiService {
               subscriber.error(error);
             },
             complete: () => {
-              const responseTimeMs = dayjs().diff(dayjs(), 'millisecond');
+              const responseTimeMs = dayjs().diff(startTime, 'millisecond');
 
               this.conversationManager
                 .addMessage(
