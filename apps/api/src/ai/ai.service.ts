@@ -36,34 +36,24 @@ export class AiService {
       await this.prepareConversation(userId, dto);
 
     const { provider, reason } = selectedModel;
-
     const startTime = dayjs();
-    let response: string;
-    let tokensUsed: number | undefined;
 
-    try {
-      if (provider === 'gemini') {
-        const geminiMessages = this.convertToGeminiFormat(messages);
-        const result = await this.geminiClient.chat(
-          context.systemPrompt,
-          geminiMessages,
+    const { response, tokensUsed } = await (async () => {
+      try {
+        return provider === 'gemini'
+          ? await this.geminiClient.chat(
+              context.systemPrompt,
+              this.convertToGeminiFormat(messages),
+            )
+          : await this.ollamaClient.chat(messages);
+      } catch (error) {
+        this.logger.error(
+          'Primary model failed, falling back to Ollama:',
+          error,
         );
-
-        response = result.response;
-        tokensUsed = result.tokensUsed;
-      } else {
-        const result = await this.ollamaClient.chat(messages);
-
-        response = result.response;
-        tokensUsed = result.tokensUsed;
+        return await this.ollamaClient.chat(messages);
       }
-    } catch (error) {
-      this.logger.error('Primary model failed, falling back to Ollama:', error);
-      const result = await this.ollamaClient.chat(messages);
-
-      response = result.response;
-      tokensUsed = result.tokensUsed;
-    }
+    })();
 
     const responseTimeMs = dayjs().diff(startTime, 'millisecond');
 
@@ -104,9 +94,7 @@ export class AiService {
     res.setHeader('X-Accel-Buffering', 'no');
 
     const subscription = this.streamMessage(userId, dto).subscribe({
-      next: (data) => {
-        res.write(`data: ${JSON.stringify(data)}\n\n`);
-      },
+      next: (data) => res.write(`data: ${JSON.stringify(data)}\n\n`),
       error: (err: Error) => {
         this.logger.error('Stream error:', err);
         res.write(
@@ -117,9 +105,7 @@ export class AiService {
         );
         res.end();
       },
-      complete: () => {
-        res.end();
-      },
+      complete: () => res.end(),
     });
 
     res.on('close', () => {
@@ -140,47 +126,40 @@ export class AiService {
     modelUsed?: string;
   }> {
     return new Observable((subscriber) => {
-      let fullResponse = '';
       const startTime = dayjs();
+      const responseBuilder = { current: '' };
 
       this.prepareConversation(userId, dto)
         .then(({ conversationId, messages, context, selectedModel }) => {
           const { provider, reason } = selectedModel;
+
           subscriber.next({
             type: 'start',
             conversationId,
             modelUsed: provider,
           });
 
-          let stream: Observable<string>;
-
-          try {
-            if (provider === 'gemini') {
-              const geminiMessages = this.convertToGeminiFormat(messages);
-
-              stream = this.geminiClient.chatStream(
-                context.systemPrompt,
-                geminiMessages,
+          const stream = (() => {
+            try {
+              return provider === 'gemini'
+                ? this.geminiClient.chatStream(
+                    context.systemPrompt,
+                    this.convertToGeminiFormat(messages),
+                  )
+                : this.ollamaClient.chatStream(messages);
+            } catch (error) {
+              this.logger.error(
+                'Primary model failed, falling back to Ollama:',
+                error,
               );
-            } else {
-              stream = this.ollamaClient.chatStream(messages);
+              return this.ollamaClient.chatStream(messages);
             }
-          } catch (error) {
-            this.logger.error(
-              'Primary model failed, falling back to Ollama:',
-              error,
-            );
-
-            stream = this.ollamaClient.chatStream(messages);
-          }
+          })();
 
           stream.subscribe({
             next: (chunk) => {
-              fullResponse += chunk;
-              subscriber.next({
-                type: 'chunk',
-                content: chunk,
-              });
+              responseBuilder.current += chunk;
+              subscriber.next({ type: 'chunk', content: chunk });
             },
             error: (error) => {
               this.logger.error('Stream error:', error);
@@ -193,7 +172,7 @@ export class AiService {
                 .addMessage(
                   conversationId,
                   MessageRole.assistant,
-                  fullResponse,
+                  responseBuilder.current,
                   {
                     ...context.metadata,
                     modelUsed: provider,
@@ -208,7 +187,6 @@ export class AiService {
                     responseTimeMs,
                     modelUsed: provider,
                   });
-
                   subscriber.complete();
                 })
                 .catch((error) => {
@@ -268,13 +246,8 @@ export class AiService {
       this.conversationManager.getConversationHistory(conversationId, userId),
     ]);
 
-    const hasFinancialContext =
-      context.metadata.transactionCount > 0 ||
-      (context.metadata.knowledgeBaseHits ?? 0) > 0;
-
     const selectedModel = this.modelRouter.selectModel(
       dto.message,
-      hasFinancialContext,
       this.geminiClient.isAvailable(),
     );
 

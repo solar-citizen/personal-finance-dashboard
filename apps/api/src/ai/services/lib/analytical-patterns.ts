@@ -1,7 +1,7 @@
 // cSpell:disable
 
 // Analytical queries - prefer Gemini
-export const analyticalPatterns = [
+export const analyticalFinancePatterns = [
   // Ukrainian patterns - Analysis & Comparison
   /аналіз|порівня|тренд|статистик|динамік|прогноз|звіт/i,
   /де я можу заощадити|скільки витратив|найбільше витрат/i,
@@ -41,7 +41,7 @@ export const analyticalPatterns = [
   // Financial metrics
   /expense|витрат|income|дохід|revenue|прибуток/i,
   /saving|заощадження|investment|інвестиц/i,
-  /debt|борг|loan|кредит|позик/i,
+  /debt|борг|loan|кредит|позик|гроші|money/i,
   /cash flow|грошовий потік|liquidity|ліквідність/i,
 
   // Comparative language

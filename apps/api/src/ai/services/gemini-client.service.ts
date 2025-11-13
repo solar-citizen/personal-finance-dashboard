@@ -183,13 +183,15 @@ export class GeminiClientService {
 
       return {
         total: data.models?.length || 0,
-        contentGenerationModels: contentGenerationModels.map((model) => ({
-          name: model.name,
-          displayName: model.displayName,
-          description: model.description,
-          supportedMethods: model.supportedGenerationMethods,
-        })),
-        allModels: data.models?.map((model) => model.name) || [],
+        contentGenerationModels: contentGenerationModels.map(
+          ({ name, displayName, description, supportedGenerationMethods }) => ({
+            name,
+            displayName,
+            description,
+            supportedMethods: supportedGenerationMethods,
+          }),
+        ),
+        allModels: data.models?.map(({ name }) => name) || [],
       };
     } catch (error) {
       this.logger.error('Error listing models:', error);

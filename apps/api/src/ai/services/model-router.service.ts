@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { analyticalPatterns } from './lib/analytical-patterns';
+import { analyticalFinancePatterns } from './lib/analytical-patterns';
 
 type ModelProvider = 'gemini' | 'ollama';
 
@@ -12,11 +12,7 @@ export type ModelSelection = {
 export class ModelRouterService {
   private readonly logger = new Logger(ModelRouterService.name);
 
-  selectModel(
-    message: string,
-    hasFinancialContext: boolean,
-    geminiAvailable: boolean,
-  ): ModelSelection {
+  selectModel(message: string, geminiAvailable: boolean): ModelSelection {
     if (!geminiAvailable) {
       return {
         provider: 'ollama',
@@ -24,11 +20,11 @@ export class ModelRouterService {
       };
     }
 
-    const isAnalytical = analyticalPatterns.some((pattern) =>
-      pattern.test(message),
+    const isAnalyticalFinancePatterns = analyticalFinancePatterns.some(
+      (pattern) => pattern.test(message),
     );
 
-    if (isAnalytical || hasFinancialContext) {
+    if (isAnalyticalFinancePatterns) {
       return {
         provider: 'gemini',
         reason: 'Analytical query with financial context',
