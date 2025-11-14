@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { CurrencyModule } from 'src/currency/currency.module';
 import { PrismaModule } from '../db/prisma.module';
 import { AiController } from './ai.controller';
 import { AiService } from './ai.service';
@@ -10,7 +11,7 @@ import { ModelRouterService } from './services/model-router.service';
 import { OllamaClientService } from './services/ollama-client.service';
 
 @Module({
-  imports: [ConfigModule, PrismaModule],
+  imports: [ConfigModule, PrismaModule, CurrencyModule],
   controllers: [AiController],
   providers: [
     AiService,

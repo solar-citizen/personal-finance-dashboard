@@ -16,3 +16,13 @@ export function getCurrencyFromCode(code: number): Currency {
 
   return currency;
 }
+
+export function getAccountTypeName(type: string): string {
+  const typeMap: Record<string, string> = {
+    black: 'Чорна',
+    white: 'Біла',
+    eAid: 'єПідтримка',
+  };
+
+  return typeMap[type] || type;
+}
