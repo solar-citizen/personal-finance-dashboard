@@ -10,6 +10,7 @@ export const analyticalFinancePatterns = [
   /середн|загальн|сум|підсумок/i,
   /зріст|зростання|падіння|зменшення|збільшення/i,
   /частка|відсоток|процент|частина/i,
+  /рахун|рахунки|витрати|доходи|збитки|валюта/i,
 
   // English patterns - Analysis & Comparison
   /analy[sz]e|compar|trend|statistic|forecast|report/i,
@@ -19,6 +20,7 @@ export const analyticalFinancePatterns = [
   /average|total|sum|summary|overall/i,
   /increas|decreas|growth|decline|drop|rise/i,
   /share|percent|proportion|portion/i,
+  /accoun|accounts|expenses|profit|loss|currency/i,
 
   // Pattern indicators - Time-based
   /last (month|week|year|quarter)|минулого (місяця|тижня|року|кварталу)/i,

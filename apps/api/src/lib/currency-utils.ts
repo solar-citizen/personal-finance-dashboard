@@ -21,7 +21,3 @@ export function formatCurrency(
 ): string {
   return `${formatAmount(amount, options)} ${currency.toUpperCase()}`;
 }
-
-export function calculateTotal(amounts: number[]): number {
-  return amounts.reduce((sum, amount) => sum + amount, 0);
-}
