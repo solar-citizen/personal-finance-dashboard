@@ -3,12 +3,15 @@ import dayjs from 'dayjs';
 import {
   AccountSummaryDto,
   CategorySummaryDto,
+  ExchangeRatesDto,
   FinancialContextDto,
   TransactionWithRelationsDto,
 } from 'src/@generated/zod/pfd-dtos';
-import { calculateTotal, formatCurrency } from 'src/lib/currency-utils';
+import { CurrencyService } from 'src/currency/currency.service';
+import { formatAmount, formatCurrency } from 'src/lib/currency-utils';
 import { getDateRange } from 'src/lib/date-utils';
 import { formatEmbeddingVector } from 'src/lib/vector.utils';
+import { getAccountTypeName } from 'src/monobank/lib/currency-utils';
 import { PrismaService } from '../../db/prisma.service';
 import { rejectPatterns } from './lib/reject-patterns';
 import { OllamaClientService } from './ollama-client.service';
@@ -23,6 +26,19 @@ type KnowledgeBaseEntry = {
   similarity: number;
 };
 
+type SystemPromptData = {
+  accounts: AccountSummaryDto[];
+  transactions: TransactionWithRelationsDto[];
+  categories: CategorySummaryDto[];
+  knowledgeBase: KnowledgeBaseEntry[];
+  exchangeRates: ExchangeRatesDto;
+};
+
+type ContextData = {
+  userId: string;
+  userMessage?: string;
+};
+
 @Injectable()
 export class ContextBuilderService {
   private readonly logger = new Logger(ContextBuilderService.name);
@@ -30,28 +46,36 @@ export class ContextBuilderService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly ollamaClient: OllamaClientService,
+    private readonly currencyService: CurrencyService,
   ) {}
 
-  async buildContext(
-    userId: string,
-    userMessage?: string,
-  ): Promise<FinancialContextDto> {
-    const [accounts, recentTransactions, categories, relevantKnowledge] =
-      await Promise.all([
-        this.getUserAccounts(userId),
-        this.getRecentTransactions(userId),
-        this.getCategories(),
-        userMessage
-          ? this.findRelevantKnowledge(userMessage)
-          : Promise.resolve([]),
-      ]);
-
-    const systemPrompt = this.createSystemPrompt(
+  async buildContext({
+    userId,
+    userMessage,
+  }: ContextData): Promise<FinancialContextDto> {
+    const [
       accounts,
       recentTransactions,
       categories,
       relevantKnowledge,
-    );
+      exchangeRates,
+    ] = await Promise.all([
+      this.getUserAccounts(userId),
+      this.getRecentTransactions(userId),
+      this.getCategories(),
+      userMessage
+        ? this.findRelevantKnowledge(userMessage)
+        : Promise.resolve([]),
+      this.currencyService.getExchangeRates(),
+    ]);
+
+    const systemPrompt = this.createSystemPrompt({
+      accounts,
+      transactions: recentTransactions,
+      categories,
+      knowledgeBase: relevantKnowledge,
+      exchangeRates,
+    });
 
     const metadata = {
       accountCount: accounts.length,
@@ -141,21 +165,73 @@ export class ContextBuilderService {
     });
   }
 
-  private createSystemPrompt(
-    accounts: AccountSummaryDto[],
-    transactions: TransactionWithRelationsDto[],
-    categories: CategorySummaryDto[],
-    knowledgeBase: KnowledgeBaseEntry[],
-  ): string {
-    const totalBalance = calculateTotal(
-      accounts.map(({ balance }) => Number(balance)),
-    );
-    const totalBalanceFormatted = formatCurrency(totalBalance, 'UAH');
+  private createSystemPrompt({
+    accounts,
+    transactions,
+    categories,
+    knowledgeBase,
+    exchangeRates,
+  }: SystemPromptData): string {
+    const { USD, EUR } = exchangeRates;
+    const usdToUah = 1 / USD;
+    const eurToUah = 1 / EUR;
 
-    const accountsSummary = accounts
-      .map(({ balance, currency, type }) => {
-        const formattedBalance = formatCurrency(Number(balance), currency);
-        return `- ${type} (${currency.toUpperCase()}): ${formattedBalance}`;
+    const formatted = accounts.map(({ balance, currency, type }) => {
+      const amount = Number(balance);
+      const formattedBalance = formatCurrency(balance, currency);
+      const typeName = getAccountTypeName(type);
+
+      const conversionRates: Record<string, number> = {
+        usd: usdToUah,
+        eur: eurToUah,
+        uah: 1,
+      };
+      const uahAmount = amount * (conversionRates[currency] ?? 1);
+
+      const uahSuffix =
+        currency !== 'uah' && amount !== 0
+          ? ` = ${formatAmount(uahAmount, { decimals: 2, divisor: 1 })} UAH`
+          : '';
+
+      const line = `- ${typeName} (${currency.toUpperCase()}): ${formattedBalance}${uahSuffix}`;
+
+      return { line, amount };
+    });
+
+    const allAccountsList = formatted.map((f) => f.line).join('\n');
+    const accountsSummary = formatted
+      .filter(({ amount }) => amount !== 0)
+      .map(({ line }) => line)
+      .join('\n');
+
+    const totalInUah = accounts.reduce((sum, { balance, currency }) => {
+      const amount = Number(balance);
+
+      if (currency === 'usd') {
+        return sum + amount * usdToUah;
+      }
+
+      if (currency === 'eur') {
+        return sum + amount * eurToUah;
+      }
+
+      return sum + amount;
+    }, 0);
+
+    const txByCurrency = transactions.reduce(
+      (acc, tx): Record<string, TransactionWithRelationsDto[]> => {
+        const currency = tx.account?.currency || 'uah';
+        if (!acc[currency]) acc[currency] = [];
+        acc[currency].push(tx);
+        return acc;
+      },
+      {},
+    );
+
+    const txSummary = Object.entries(txByCurrency)
+      .map(([currency, txs]) => {
+        const total = txs.reduce((sum, { amount }) => sum + Number(amount), 0);
+        return `- ${currency.toUpperCase()}: ${txs.length} transactions, ${formatCurrency(total.toString(), currency)}`;
       })
       .join('\n');
 
@@ -164,33 +240,64 @@ export class ContextBuilderService {
     const knowledgeSection = this.formatKnowledgeSection(knowledgeBase);
     const { defaultReject } = rejectPatterns;
 
-    return `You are a helpful financial assistant for a personal finance dashboard. You have access to the user's financial data and can help them understand their spending, budgeting, and financial health.
+    return `You are a financial assistant for a personal finance app. You have FULL ACCESS to user's transaction data including currency information.
 
-      Current Financial Overview:
-      - Total Balance: ${totalBalanceFormatted}
-      - Number of Accounts: ${accounts.length}
-      - Recent Transactions: ${transactions.length} in the last 30 days
+      === EXCHANGE RATES (CURRENT) ===
+      1 USD = ${formatAmount(usdToUah, { decimals: 2, divisor: 1 })} UAH
+      1 EUR = ${formatAmount(eurToUah, { decimals: 2, divisor: 1 })} UAH
+      1 UAH = 1 UAH
 
-      Accounts:
-      ${accountsSummary || 'No accounts connected yet'}
+      === FINANCIAL SUMMARY ===
+      Total Balance: ${formatAmount(totalInUah, { decimals: 2, divisor: 1 })} UAH
+      Accounts: ${accounts.length}
+      Recent Transactions (30 days): ${transactions.length}
 
-      Available Categories: ${categoryList}
+      Transactions by Currency:
+      ${txSummary || 'No transactions'}
 
-      Top Spending Categories (Last 30 Days):
-      ${topSpending || 'No spending data available'}${knowledgeSection}
+      Active Accounts:
+      ${accountsSummary || 'No accounts with balance'}
 
-      Guidelines:
-      1. Always provide specific, actionable financial advice
-      2. Use actual data from the user's transactions when answering
-      3. Format currency amounts clearly (e.g., "1,234.56 UAH")
-      4. Be conversational but professional
-      5. If asked about specific transactions, refer to the recent data
-      6. Suggest budgeting strategies based on spending patterns
-      7. Warn about unusual spending if detected
-      8. Always respond in Ukrainian if the user writes in Ukrainian, otherwise use English
-      9. **IMPORTANT: You are a FINANCIAL assistant. If user asks non-financial questions (weather, recipes, general knowledge, etc.), politely redirect them: ${defaultReject}**
+      All Accounts:
+      ${allAccountsList}
 
-      Remember: You have access to the last 30 days of transaction history. Be helpful, accurate, and supportive!`;
+      Top Spending (30 days):
+      ${topSpending || 'No data'}
+
+      Categories: ${categoryList}
+      ${knowledgeSection}
+
+      === CRITICAL RULES ===
+      1. **CURRENCY CONVERSIONS**: You HAVE exchange rates above. When user asks about amounts in UAH/EUR/USD:
+        - Use the rates provided
+        - Don't ask for rates - YOU HAVE THEM.
+        - Show calculations clearly
+        - Example: "1,000 UAH ÷ ${formatAmount(eurToUah, { decimals: 2, divisor: 1 })} = X EUR"
+
+      2. **TRANSACTION DATA**: You have FULL transaction data with currency info. When asked about spending by currency:
+        - Analyze transactions from "Transactions by Currency" section
+        - Show amounts per currency
+        - Don't say "I don't have this data" - YOU HAVE IT.
+
+      3. **LANGUAGE**: Respond in Ukrainian if user writes in Ukrainian, English otherwise
+
+      4. **ACCOUNTS DISPLAY**:
+        - By default show only non-zero accounts
+        - Show all accounts only if explicitly asked
+        - Use translated names (Чорна, Біла, єПідтримка), not technical names
+
+      5. **NON-FINANCIAL QUESTIONS**: Redirect with: ${defaultReject}
+
+      6. **FORMATTING**: Be concise, no unnecessary explanations, direct answers with data
+
+      === EXAMPLES ===
+      ❌ BAD: "I don't have currency data for transactions"
+      ✅ GOOD: "EUR spending: 150.50 EUR (see Transactions by Currency section)"
+
+      ❌ BAD: "Please provide exchange rate"
+      ✅ GOOD: "Using rate 1 EUR = ${formatAmount(eurToUah, { decimals: 2, divisor: 1 })} UAH: 5,000 UAH = 102.50 EUR"
+
+      Remember: You have ALL data needed. Be confident, precise, and helpful!`;
   }
 
   private formatTopSpending(

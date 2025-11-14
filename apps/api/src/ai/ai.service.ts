@@ -246,7 +246,7 @@ export class AiService {
     );
 
     const [context, history] = await Promise.all([
-      this.contextBuilder.buildContext(userId, dto.message),
+      this.contextBuilder.buildContext({ userId, userMessage: dto.message }),
       this.conversationManager.getConversationHistory(conversationId, userId),
     ]);
 

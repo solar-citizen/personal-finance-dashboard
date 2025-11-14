@@ -7,11 +7,19 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { ConfigModule } from './config/config.module';
+import { CurrencyModule } from './currency/currency.module';
 import { PrismaModule } from './db/prisma.module';
 import { MonoBankModule } from './monobank/monobank.module';
 
 @Module({
-  imports: [ConfigModule, PrismaModule, AuthModule, MonoBankModule, AiModule],
+  imports: [
+    ConfigModule,
+    PrismaModule,
+    AuthModule,
+    MonoBankModule,
+    AiModule,
+    CurrencyModule,
+  ],
   controllers: [AppController],
   providers: [
     AppService,
