@@ -4,10 +4,7 @@ import dayjs from 'dayjs';
 import { firstValueFrom } from 'rxjs';
 import { ExchangeRatesDto } from 'src/@generated/zod/pfd-dtos';
 import { ConfigService } from 'src/config/config.service';
-import {
-  ExchangeRateApiResponseSchema,
-  ExchangeRatesSchema,
-} from './currency.schema';
+import { ExchangeRateApiResponseSchema } from './currency.schema';
 
 @Injectable()
 export class CurrencyService {
@@ -36,24 +33,17 @@ export class CurrencyService {
         this.httpService.get<unknown>(this.apiUrl),
       );
 
-      const validatedData = ExchangeRateApiResponseSchema.parse(data);
+      const { rates } = ExchangeRateApiResponseSchema.parse(data);
+      const { EUR, USD } = rates;
 
-      const rates: ExchangeRatesDto = {
-        UAH: 1,
-        USD: validatedData.rates.USD,
-        EUR: validatedData.rates.EUR,
-      };
-
-      const validatedRates = ExchangeRatesSchema.parse(rates);
-
-      this.cachedRates = validatedRates;
+      this.cachedRates = rates;
       this.cacheTimestamp = dayjs();
 
       this.logger.log(
-        `Fresh exchange rates fetched: 1 UAH = ${rates.USD} USD, ${rates.EUR} EUR`,
+        `Fresh exchange rates fetched: 1 UAH = ${USD} USD, ${EUR} EUR`,
       );
 
-      return validatedRates;
+      return this.cachedRates;
     } catch (error) {
       this.logger.error('Failed to fetch exchange rates', error);
 
