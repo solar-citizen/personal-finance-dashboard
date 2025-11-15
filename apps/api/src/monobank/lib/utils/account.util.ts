@@ -1,7 +1,7 @@
 import { Account } from '@prisma/client';
 import { MonoBankAccountResponseDto } from 'src/@generated/zod/pfd-dtos';
-import { formatAmount } from 'src/lib/currency-utils';
-import { formatDateToIso } from 'src/lib/date-utils';
+import { formatAmount } from 'src/lib/utils/currency.util';
+import { formatDateToIso } from 'src/lib/utils/date.util';
 
 export function formatAccountResponse({
   id,

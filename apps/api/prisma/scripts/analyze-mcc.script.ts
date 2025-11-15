@@ -1,4 +1,4 @@
-import { formatAmount } from 'src/lib/currency-utils';
+import { formatAmount } from 'src/lib/utils/currency.util';
 import { prisma } from '../client';
 
 type MccStats = {
