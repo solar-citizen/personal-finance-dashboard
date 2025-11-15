@@ -2,13 +2,13 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Account, SyncJobStatus } from '@prisma/client';
 import { SyncProgressResponseDto } from 'src/@generated/zod/pfd-dtos';
 import { PrismaService } from 'src/db/prisma.service';
-import { formatDateToIso } from 'src/lib/date-utils';
-import { getErrorMessage } from 'src/lib/error-utils';
+import { formatDateToIso } from 'src/lib/utils/date.util';
+import { getErrorMessage } from 'src/lib/utils/error.util';
 import {
   calculateChunkCount,
   splitDateRangeIntoChunks,
-} from '../lib/date-utils';
-import { MonoBankTransaction } from '../lib/monobank-types';
+} from '../lib/utils/date.util';
+import { MonoBankTransaction } from '../lib/monobank.types';
 import { MonoBankApiClient } from './monobank-api-client.service';
 import { TransactionProcessor } from './transaction-processor.service';
 

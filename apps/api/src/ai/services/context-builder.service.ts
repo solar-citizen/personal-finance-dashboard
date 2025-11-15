@@ -8,10 +8,10 @@ import {
   TransactionWithRelationsDto,
 } from 'src/@generated/zod/pfd-dtos';
 import { CurrencyService } from 'src/currency/currency.service';
-import { formatAmount, formatCurrency } from 'src/lib/currency-utils';
-import { getDateRange } from 'src/lib/date-utils';
-import { formatEmbeddingVector } from 'src/lib/vector.utils';
-import { getAccountTypeName } from 'src/monobank/lib/currency-utils';
+import { formatAmount, formatCurrency } from 'src/lib/utils/currency.util';
+import { getDateRange } from 'src/lib/utils/date.util';
+import { formatEmbeddingVector } from 'src/lib/utils/vector.util';
+import { getAccountTypeName } from 'src/monobank/lib/utils/currency.util';
 import { PrismaService } from '../../db/prisma.service';
 import { rejectPatterns } from './lib/reject-patterns';
 import { OllamaClientService } from './ollama-client.service';
