@@ -58,7 +58,9 @@ export type MonoBankTransaction = {
   counterName?: string; // Counterparty name
 };
 
-// Error response from MonoBank API
+/**
+ * Error response from MonoBank API
+ */
 export type MonoBankErrorResponse = {
   errorDescription: string;
 };

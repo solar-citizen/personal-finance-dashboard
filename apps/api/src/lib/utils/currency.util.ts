@@ -21,3 +21,10 @@ export function formatCurrency(
 ): string {
   return `${formatAmount(amount, options)} ${currency.toUpperCase()}`;
 }
+
+export function amountToNumber(
+  amount: bigint | number | string,
+  divisor = 100,
+): number {
+  return new Decimal(amount.toString()).dividedBy(divisor).toNumber();
+}

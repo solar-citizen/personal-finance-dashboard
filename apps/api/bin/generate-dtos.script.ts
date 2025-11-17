@@ -9,7 +9,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
-import prettier from 'prettier';
+import { formatWithPrettier } from 'src/lib/utils/prettier.util';
 
 dayjs.extend(timezone);
 
@@ -88,10 +88,10 @@ async function generateSchemas(schemas: SchemaInfo[]) {
   }
 
   let output = `// Auto-generated Zod schemas - do not edit manually
-// Generated on ${timestamp}
-// Run 'bun run dtos:generate' or 'bun run codegen' to regenerate
+    // Generated on ${timestamp}
+    // Run 'bun run dtos:generate' or 'bun run codegen' to regenerate
 
-`;
+  `;
 
   // Group imports by file
   const importsByPath = new Map<string, string[]>();
@@ -108,11 +108,7 @@ async function generateSchemas(schemas: SchemaInfo[]) {
     output += `export { ${schemaNames.join(', ')} } from '${importPath}';\n`;
   });
 
-  const prettierConfig = (await prettier.resolveConfig(schemasOutput)) || {};
-  const formattedOutput = await prettier.format(output, {
-    ...prettierConfig,
-    parser: 'typescript',
-  });
+  const formattedOutput = await formatWithPrettier(output, schemasOutput);
 
   writeFileSync(schemasOutput, formattedOutput);
 
@@ -142,12 +138,12 @@ async function generateDtos(schemas: SchemaInfo[]) {
   }
 
   let output = `// Auto-generated DTOs - do not edit manually
-// Generated on ${timestamp}
-// Run 'bun run dtos:generate' or 'bun run codegen' to regenerate
+    // Generated on ${timestamp}
+    // Run 'bun run dtos:generate' or 'bun run codegen' to regenerate
 
-import { createZodDto } from 'nestjs-zod';
+    import { createZodDto } from 'nestjs-zod';
 
-`;
+  `;
 
   // Import all schemas from the root schemas file
   const allSchemaNames = schemas.map(({ name }) => `${name}Schema`);
@@ -160,11 +156,7 @@ import { createZodDto } from 'nestjs-zod';
     output += `export class ${name}Dto extends createZodDto(${name}Schema) {}\n`;
   });
 
-  const prettierConfig = await prettier.resolveConfig(dtosOutput);
-  const formattedOutput = await prettier.format(output, {
-    ...prettierConfig,
-    filepath: dtosOutput,
-  });
+  const formattedOutput = await formatWithPrettier(output, dtosOutput);
 
   writeFileSync(dtosOutput, formattedOutput);
 

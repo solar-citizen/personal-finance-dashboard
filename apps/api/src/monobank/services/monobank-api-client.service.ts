@@ -2,18 +2,18 @@ import { HttpService } from '@nestjs/axios';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import { ConfigService } from 'src/config/config.service';
-import { toUnixTimestamp } from 'src/lib/date-utils';
+import { toUnixTimestamp } from 'src/lib/utils/date.util';
 import type {
   MonoBankClientInfo,
   MonoBankTransaction,
-} from '../lib/monobank-types';
-import { isAxiosErrorWithResponse } from '../lib/utils';
+} from '../lib/monobank.types';
+import { isAxiosErrorWithResponse } from '../lib/utils/common.util';
 
 @Injectable()
 export class MonoBankApiClient {
   private readonly logger = new Logger(MonoBankApiClient.name);
   private readonly apiUrl: string;
-  private readonly rateLimitDelay = 60000; // 60 seconds in ms
+  private readonly rateLimitDelay = 60000;
   private lastRequestTime = 0;
 
   constructor(

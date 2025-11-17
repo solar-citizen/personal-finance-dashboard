@@ -8,13 +8,19 @@ import {
   TransactionWithRelationsDto,
 } from 'src/@generated/zod/pfd-dtos';
 import { CurrencyService } from 'src/currency/currency.service';
-import { formatAmount, formatCurrency } from 'src/lib/currency-utils';
-import { getDateRange } from 'src/lib/date-utils';
-import { formatEmbeddingVector } from 'src/lib/vector.utils';
-import { getAccountTypeName } from 'src/monobank/lib/currency-utils';
+import {
+  amountToNumber,
+  formatAmount,
+  formatCurrency,
+} from 'src/lib/utils/currency.util';
+import { formatDateToIso, getDateRange } from 'src/lib/utils/date.util';
+import { formatValue } from 'src/lib/utils/number.util';
+import { formatEmbeddingVector } from 'src/lib/utils/vector.util';
+import { getAccountTypeName } from 'src/monobank/lib/utils/currency.util';
 import { PrismaService } from '../../db/prisma.service';
 import { rejectPatterns } from './lib/reject-patterns';
 import { OllamaClientService } from './ollama-client.service';
+import type { ContextLevel } from './query-strategy.service';
 
 type CategoryRecord = Record<
   NonNullable<TransactionWithRelationsDto['category']>['name'],
@@ -36,12 +42,26 @@ type SystemPromptData = {
 
 type ContextData = {
   userId: string;
-  userMessage?: string;
+  userMessage: string;
+  contextLevel: ContextLevel;
+};
+
+type CachedPrompt = {
+  prompt: string;
+  timestamp: number;
+  metadata: {
+    accountCount: number;
+    transactionCount: number;
+    categories: string[];
+    dateRange: { from: string; to: string };
+  };
 };
 
 @Injectable()
 export class ContextBuilderService {
   private readonly logger = new Logger(ContextBuilderService.name);
+  private promptCache = new Map<string, CachedPrompt>();
+  private readonly cacheTtl = 10 * 60 * 1000;
 
   constructor(
     private readonly prismaService: PrismaService,
@@ -52,7 +72,45 @@ export class ContextBuilderService {
   async buildContext({
     userId,
     userMessage,
+    contextLevel,
   }: ContextData): Promise<FinancialContextDto> {
+    if (contextLevel === 'minimal') {
+      const now = dayjs();
+
+      return {
+        systemPrompt: this.createMinimalSystemPrompt(),
+        metadata: {
+          accountCount: 0,
+          transactionCount: 0,
+          categories: [],
+          dateRange: {
+            from: formatDateToIso(now.toDate()),
+            to: formatDateToIso(now.toDate()),
+          },
+          knowledgeBaseHits: 0,
+          cached: false,
+          minimal: true,
+        },
+      };
+    }
+
+    const cached = this.promptCache.get(userId);
+    const now = dayjs();
+
+    if (cached && now.valueOf() - cached.timestamp < this.cacheTtl) {
+      this.logger.log(`Using cached context for user ${userId}`);
+
+      return {
+        systemPrompt: cached.prompt,
+        metadata: {
+          ...cached.metadata,
+          knowledgeBaseHits: 0,
+          cached: true,
+          minimal: true,
+        },
+      };
+    }
+
     const [
       accounts,
       recentTransactions,
@@ -83,9 +141,23 @@ export class ContextBuilderService {
       categories: categories.map(({ name }) => name),
       dateRange: getDateRange(recentTransactions),
       knowledgeBaseHits: relevantKnowledge.length,
+      minimal: false,
     };
 
-    return { systemPrompt, metadata };
+    this.promptCache.set(userId, {
+      prompt: systemPrompt,
+      timestamp: now.valueOf(),
+      metadata,
+    });
+
+    return {
+      systemPrompt,
+      metadata: {
+        ...metadata,
+        knowledgeBaseHits: relevantKnowledge.length,
+        cached: false,
+      },
+    };
   }
 
   private async findRelevantKnowledge(
@@ -176,47 +248,33 @@ export class ContextBuilderService {
     const usdToUah = 1 / USD;
     const eurToUah = 1 / EUR;
 
+    const conversionRates: Record<string, number> = {
+      usd: usdToUah,
+      eur: eurToUah,
+      uah: 1,
+    };
+
     const formatted = accounts.map(({ balance, currency, type }) => {
-      const amount = Number(balance);
-      const formattedBalance = formatCurrency(balance, currency);
-      const typeName = getAccountTypeName(type);
-
-      const conversionRates: Record<string, number> = {
-        usd: usdToUah,
-        eur: eurToUah,
-        uah: 1,
-      };
+      const amount = amountToNumber(balance);
       const uahAmount = amount * (conversionRates[currency] ?? 1);
-
-      const uahSuffix =
+      const suffix =
         currency !== 'uah' && amount !== 0
-          ? ` = ${formatAmount(uahAmount, { decimals: 2, divisor: 1 })} UAH`
+          ? ` = ${uahAmount.toFixed(2)} UAH`
           : '';
 
-      const line = `- ${typeName} (${currency.toUpperCase()}): ${formattedBalance}${uahSuffix}`;
-
-      return { line, amount };
+      return {
+        line: `- ${getAccountTypeName(type)} (${currency.toUpperCase()}): ${formatCurrency(balance, currency)}${suffix}`,
+        amount: uahAmount,
+      };
     });
 
-    const allAccountsList = formatted.map((f) => f.line).join('\n');
+    const allAccountsList = formatted.map(({ line }) => line).join('\n');
     const accountsSummary = formatted
       .filter(({ amount }) => amount !== 0)
       .map(({ line }) => line)
       .join('\n');
 
-    const totalInUah = accounts.reduce((sum, { balance, currency }) => {
-      const amount = Number(balance);
-
-      if (currency === 'usd') {
-        return sum + amount * usdToUah;
-      }
-
-      if (currency === 'eur') {
-        return sum + amount * eurToUah;
-      }
-
-      return sum + amount;
-    }, 0);
+    const totalInUah = formatted.reduce((sum, { amount }) => sum + amount, 0);
 
     const txByCurrency = transactions.reduce(
       (acc, tx): Record<string, TransactionWithRelationsDto[]> => {
@@ -235,7 +293,7 @@ export class ContextBuilderService {
       })
       .join('\n');
 
-    const categoryList = categories.map((c) => c.name).join(', ');
+    const categoryList = categories.map(({ name }) => name).join(', ');
     const topSpending = this.formatTopSpending(transactions);
     const knowledgeSection = this.formatKnowledgeSection(knowledgeBase);
     const { defaultReject } = rejectPatterns;
@@ -243,9 +301,20 @@ export class ContextBuilderService {
     return `You are a financial assistant for a personal finance app. You have FULL ACCESS to user's transaction data including currency information.
 
       === EXCHANGE RATES (CURRENT) ===
-      1 USD = ${formatAmount(usdToUah, { decimals: 2, divisor: 1 })} UAH
-      1 EUR = ${formatAmount(eurToUah, { decimals: 2, divisor: 1 })} UAH
+      1 USD = ${formatValue(conversionRates.usd)} UAH
+      1 EUR = ${formatValue(conversionRates.eur)} UAH
       1 UAH = 1 UAH
+
+      === CALCULATION RULES ===
+      When calculating totals:
+        1. Convert each account to UAH using rates above
+        2. Sum all converted amounts
+        3. Show your calculation steps
+
+      Example:
+        - 929.22 EUR × 48.78 UAH/EUR = 45,327.80 UAH
+        - 329.88 UAH = 329.88 UAH
+        Total: 45,327.80 + 329.88 = 45,657.68 UAH
 
       === FINANCIAL SUMMARY ===
       Total Balance: ${formatAmount(totalInUah, { decimals: 2, divisor: 1 })} UAH
@@ -268,27 +337,33 @@ export class ContextBuilderService {
       ${knowledgeSection}
 
       === CRITICAL RULES ===
-      1. **CURRENCY CONVERSIONS**: You HAVE exchange rates above. When user asks about amounts in UAH/EUR/USD:
+      1. **TONE & STYLE**: 
+        - Be warm, polite, and conversational.
+        - Write like a helpful human, not a robot.
+        - Use natural language, avoid overly technical or formal tone.
+        - Show empathy when discussing spending or finances.
+
+      2. **CURRENCY CONVERSIONS**: You HAVE exchange rates above. When user asks about amounts in UAH/EUR/USD:
         - Use the rates provided
         - Don't ask for rates - YOU HAVE THEM.
         - Show calculations clearly
         - Example: "1,000 UAH ÷ ${formatAmount(eurToUah, { decimals: 2, divisor: 1 })} = X EUR"
 
-      2. **TRANSACTION DATA**: You have FULL transaction data with currency info. When asked about spending by currency:
+      3. **TRANSACTION DATA**: You have FULL transaction data with currency info. When asked about spending by currency:
         - Analyze transactions from "Transactions by Currency" section
         - Show amounts per currency
         - Don't say "I don't have this data" - YOU HAVE IT.
 
-      3. **LANGUAGE**: Respond in Ukrainian if user writes in Ukrainian, English otherwise
+      4. **LANGUAGE**: Respond in Ukrainian if user writes in Ukrainian, English otherwise
 
-      4. **ACCOUNTS DISPLAY**:
+      5. **ACCOUNTS DISPLAY**:
         - By default show only non-zero accounts
         - Show all accounts only if explicitly asked
         - Use translated names (Чорна, Біла, єПідтримка), not technical names
 
-      5. **NON-FINANCIAL QUESTIONS**: Redirect with: ${defaultReject}
+      6. **NON-FINANCIAL QUESTIONS**: Redirect with: ${defaultReject}
 
-      6. **FORMATTING**: Be concise, no unnecessary explanations, direct answers with data
+      7. **FORMATTING**: Be concise, no unnecessary explanations, direct answers with data
 
       === EXAMPLES ===
       ❌ BAD: "I don't have currency data for transactions"
@@ -297,7 +372,10 @@ export class ContextBuilderService {
       ❌ BAD: "Please provide exchange rate"
       ✅ GOOD: "Using rate 1 EUR = ${formatAmount(eurToUah, { decimals: 2, divisor: 1 })} UAH: 5,000 UAH = 102.50 EUR"
 
-      Remember: You have ALL data needed. Be confident, precise, and helpful!`;
+      ❌ BAD: "Data shows: EUR=500, USD=200"
+      ✅ GOOD: "You spent 500 EUR and 200 USD this month. Would you like to see this converted to UAH?"
+
+      Remember: You have ALL data needed. Be confident, precise, helpful, and most importantly - human!`;
   }
 
   private formatTopSpending(
@@ -344,5 +422,24 @@ export class ContextBuilderService {
       },
       {},
     );
+  }
+
+  private createMinimalSystemPrompt(): string {
+    const { defaultReject } = rejectPatterns;
+    return `You are a financial assistant for a personal finance app.
+
+      For non-financial questions, politely redirect: ${defaultReject}
+
+      Respond in Ukrainian if user writes in Ukrainian, English otherwise.`;
+  }
+
+  clearCache(userId?: string): void {
+    if (userId) {
+      this.promptCache.delete(userId);
+      this.logger.log(`Cleared cache for user ${userId}`);
+    } else {
+      this.promptCache.clear();
+      this.logger.log('Cleared all cached prompts');
+    }
   }
 }

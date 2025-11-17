@@ -45,6 +45,8 @@ export const FinancialContextMetadataSchema = z.object({
   knowledgeBaseHits: z.number().optional(),
   modelUsed: z.string().optional(),
   modelReason: z.string().optional(),
+  cached: z.boolean(),
+  minimal: z.boolean(),
 });
 
 export const FinancialContextSchema = z.object({

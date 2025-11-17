@@ -27,13 +27,13 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@nestjs/axios": "^4.0.1",
-    "@nestjs/common": "^11.1.8",
+    "@nestjs/common": "^11.1.9",
     "@nestjs/config": "^4.0.2",
-    "@nestjs/core": "^11.1.8",
+    "@nestjs/core": "^11.1.9",
     "@nestjs/jwt": "^11.0.1",
     "@nestjs/passport": "^11.0.5",
-    "@nestjs/platform-express": "^11.1.8",
-    "@nestjs/swagger": "^11.2.1",
+    "@nestjs/platform-express": "^11.1.9",
+    "@nestjs/swagger": "^11.2.2",
     "@paralleldrive/cuid2": "^3.0.4",
     "@prisma/adapter-pg": "^6.19.0",
     "@prisma/client": "^6.19.0",
@@ -43,7 +43,7 @@
     "class-validator": "^0.14.2",
     "decimal.js": "^10.6.0",
     "nestjs-zod": "^5.0.1",
-    "ollama": "^0.6.2",
+    "ollama": "^0.6.3",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.2",
@@ -58,7 +58,7 @@
     "@openapi-codegen/typescript": "^11.1.0",
     "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.5",
-    "@types/node": "^24.10.0",
+    "@types/node": "^24.10.1",
     "@types/passport-jwt": "^4.0.1",
     "eslint": "^9.39.1",
     "eslint-config-prettier": "^10.1.8",
@@ -71,6 +71,6 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.46.4"
+    "typescript-eslint": "^8.47.0"
   }
 }

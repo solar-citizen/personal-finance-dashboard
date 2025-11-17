@@ -10,7 +10,7 @@ import { ExchangeRateApiResponseSchema } from './currency.schema';
 export class CurrencyService {
   private readonly logger = new Logger(CurrencyService.name);
   private readonly apiUrl: string;
-  private readonly cacheTtlMs = 60 * 60 * 1000; // 1h
+  private readonly cacheTtlMs = 60 * 60 * 1000;
 
   private cachedRates: ExchangeRatesDto | null = null;
   private cacheTimestamp: dayjs.Dayjs | null = null;
@@ -72,11 +72,5 @@ export class CurrencyService {
       USD: 0.024,
       EUR: 0.022,
     };
-  }
-
-  clearCache(): void {
-    this.cachedRates = null;
-    this.cacheTimestamp = null;
-    this.logger.log('Exchange rates cache cleared');
   }
 }
