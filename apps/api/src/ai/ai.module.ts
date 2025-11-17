@@ -21,6 +21,6 @@ import { QueryStrategyService } from './services/query-strategy.service';
     GeminiClientService,
     QueryStrategyService,
   ],
-  exports: [AiService],
+  exports: [AiService, ContextBuilderService],
 })
 export class AiModule {}

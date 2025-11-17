@@ -432,4 +432,14 @@ export class ContextBuilderService {
 
       Respond in Ukrainian if user writes in Ukrainian, English otherwise.`;
   }
+
+  clearCache(userId?: string): void {
+    if (userId) {
+      this.promptCache.delete(userId);
+      this.logger.log(`Cleared cache for user ${userId}`);
+    } else {
+      this.promptCache.clear();
+      this.logger.log('Cleared all cached prompts');
+    }
+  }
 }

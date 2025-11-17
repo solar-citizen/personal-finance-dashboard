@@ -13,7 +13,7 @@ import { isAxiosErrorWithResponse } from '../lib/utils/common.util';
 export class MonoBankApiClient {
   private readonly logger = new Logger(MonoBankApiClient.name);
   private readonly apiUrl: string;
-  private readonly rateLimitDelay = 60000; // 60 seconds in ms
+  private readonly rateLimitDelay = 60000;
   private lastRequestTime = 0;
 
   constructor(

@@ -1,6 +1,8 @@
 import { Currency } from '@prisma/client';
 
-// MonoBank uses ISO 4217 numeric currency codes
+/**
+ * MonoBank uses ISO 4217 numeric currency codes
+ */
 const currencyMap: Record<number, Currency> = {
   980: Currency.uah,
   840: Currency.usd,

@@ -123,7 +123,7 @@ model Account {
   creditLimit BigInt @default(0)
   
   // Sync metadata
-  monoToken    String?  // encrypted token
+  monoToken    String
   lastSyncedAt DateTime?
   webHookUrl   String?
 
