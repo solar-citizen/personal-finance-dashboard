@@ -171,7 +171,6 @@ export class GeminiClientService {
 
       const data = (await response.json()) as GeminiModelsListResponse;
 
-      // Filter to only show models that support generateContent
       const contentGenerationModels: GeminiModel[] =
         data.models?.filter((model: GeminiModel) =>
           model.supportedGenerationMethods?.includes('generateContent'),

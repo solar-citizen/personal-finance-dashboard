@@ -42,6 +42,15 @@ type ConversationWithMessagesAndCount = {
   updatedAt: Date;
 };
 
+type AddMessageArgs = {
+  conversationId: string;
+  role: MessageRole;
+  content: string;
+  contextUsed?: FinancialContextMetadataDto;
+  tokensUsed?: number;
+  responseTimeMs?: number;
+};
+
 @Injectable()
 export class ConversationManagerService {
   private readonly logger = new Logger(ConversationManagerService.name);
@@ -86,44 +95,44 @@ export class ConversationManagerService {
     return this.createConversation(userId, firstMessage || 'New conversation');
   }
 
-  async addMessage(
-    conversationId: string,
-    role: MessageRole,
-    content: string,
-    contextUsed?: FinancialContextMetadataDto,
-    tokensUsed?: number,
-    responseTimeMs?: number,
-  ): Promise<string> {
-    const embedding = await this.ollamaClient.generateEmbedding(content);
-    const embeddingVector = formatEmbeddingVector(embedding);
+  async addMessage({
+    conversationId,
+    role,
+    content,
+    contextUsed,
+    tokensUsed,
+    responseTimeMs,
+  }: AddMessageArgs): Promise<string> {
     const messageId = createId();
 
     await this.prismaService.$executeRaw`
-    INSERT INTO "Message" (
-      id, "conversationId", role, content, embedding, 
-      "contextUsed", "tokensUsed", "responseTimeMs", "createdAt"
-    )
-    VALUES (
-      ${messageId},
-      ${conversationId},
-      ${role}::"MessageRole",
-      ${content},
-      ${embeddingVector}::vector,
-      ${contextUsed ? JSON.stringify(contextUsed) : null}::jsonb,
-      ${tokensUsed},
-      ${responseTimeMs},
-      NOW()
-    )
-  `;
+      INSERT INTO "Message" (
+        id, "conversationId", role, content, 
+        "contextUsed", "tokensUsed", "responseTimeMs", "createdAt"
+      )
+      VALUES (
+        ${messageId},
+        ${conversationId},
+        ${role}::"MessageRole",
+        ${content},
+        ${contextUsed ? JSON.stringify(contextUsed) : null}::jsonb,
+        ${tokensUsed},
+        ${responseTimeMs},
+        NOW()
+      )
+    `;
 
     await this.prismaService.conversation.update({
       where: { id: conversationId },
       data: { updatedAt: dayjs().toDate() },
     });
 
-    this.logger.log(
-      `Saved message ${messageId} with embedding (${embedding.length} dimensions)`,
-    );
+    this.generateAndUpdateEmbedding(messageId, content).catch((error) => {
+      this.logger.error(
+        `Failed to generate embedding for ${messageId}:`,
+        error,
+      );
+    });
 
     return messageId;
   }
@@ -252,6 +261,31 @@ export class ConversationManagerService {
     });
 
     this.logger.log(`Deleted conversation ${conversationId}`);
+  }
+
+  private async generateAndUpdateEmbedding(
+    messageId: string,
+    content: string,
+  ): Promise<void> {
+    try {
+      const embedding = await this.ollamaClient.generateEmbedding(content);
+      const embeddingVector = formatEmbeddingVector(embedding);
+
+      await this.prismaService.$executeRaw`
+        UPDATE "Message"
+        SET embedding = ${embeddingVector}::vector
+        WHERE id = ${messageId}
+      `;
+
+      this.logger.log(
+        `Updated embedding for message ${messageId} (${embedding.length} dimensions)`,
+      );
+    } catch (err) {
+      this.logger.error(
+        `Embedding generation failed for message ${messageId}:`,
+        err,
+      );
+    }
   }
 
   private generateTitle(message: string): string {

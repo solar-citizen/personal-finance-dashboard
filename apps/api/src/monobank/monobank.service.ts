@@ -2,11 +2,13 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import {
   ConnectMonoBankDto,
   MonoBankAccountResponseDto,
+  SyncJobResponseDto,
   SyncProgressResponseDto,
   SyncResultResponseDto,
   SyncTransactionsDto,
 } from 'src/@generated/zod/pfd-dtos';
 import { formatDateToIso } from 'src/lib/utils/date.util';
+import { ContextBuilderService } from '../ai/services/context-builder.service';
 import { PrismaService } from '../db/prisma.service';
 import { formatAccountResponse } from './lib/utils/account.util';
 import { getCurrencyFromCode } from './lib/utils/currency.util';
@@ -24,6 +26,7 @@ export class MonoBankService {
     private readonly apiClient: MonoBankApiClient,
     private readonly syncJobManager: SyncJobManager,
     private readonly transactionProcessor: TransactionProcessor,
+    private readonly contextBuilder: ContextBuilderService,
   ) {}
 
   async connectAccount(
@@ -79,6 +82,8 @@ export class MonoBankService {
       `Connected ${savedAccounts.length} accounts for user: ${userId}`,
     );
 
+    this.contextBuilder.clearCache(userId);
+
     return savedAccounts;
   }
 
@@ -95,7 +100,7 @@ export class MonoBankService {
     userId: string,
     accountId: string,
     dto?: SyncTransactionsDto,
-  ): Promise<SyncResultResponseDto | { jobId: string; message: string }> {
+  ): Promise<SyncResultResponseDto | SyncJobResponseDto> {
     this.logger.log(`Syncing transactions for account: ${accountId}`);
 
     const account = await this.prismaService.account.findFirst({
@@ -120,7 +125,6 @@ export class MonoBankService {
 
     this.logger.log(`Account ${accountId}: daysDiff = ${daysDiff} days`);
 
-    // Check if there's a gap in sync history
     if (
       account.lastSyncedAt &&
       !dto?.from &&
@@ -139,12 +143,10 @@ export class MonoBankService {
       }
     }
 
-    // For large date ranges, use background job
     if (daysDiff > 31) {
       return this.syncJobManager.createBackgroundSyncJob(account, from, to);
     }
 
-    // For small date ranges, do immediate sync
     const transactions = await this.apiClient.getStatement(
       account.monoToken,
       account.accountId,
@@ -165,6 +167,9 @@ export class MonoBankService {
       where: { id: account.id },
       data: { lastSyncedAt: new Date() },
     });
+
+    this.contextBuilder.clearCache(userId);
+    this.logger.log(`Cleared context cache for user ${userId} after sync`);
 
     this.logger.log(
       `Sync complete: ${result.newTransactions} new, ${result.updatedTransactions} updated, ${result.errors.length} errors`,

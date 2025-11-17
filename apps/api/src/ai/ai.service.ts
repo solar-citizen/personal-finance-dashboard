@@ -14,11 +14,20 @@ import {
   type GeminiChatMessage,
   GeminiClientService,
 } from './services/gemini-client.service';
-import { ModelRouterService } from './services/model-router.service';
 import {
   OllamaChatMessage,
   OllamaClientService,
 } from './services/ollama-client.service';
+import { QueryStrategyService } from './services/query-strategy.service';
+
+type StreamResponse = {
+  type: 'start' | 'chunk' | 'end';
+  conversationId?: string;
+  content?: string;
+  tokensUsed?: number;
+  responseTimeMs?: number;
+  modelUsed?: string;
+};
 
 @Injectable()
 export class AiService {
@@ -29,7 +38,7 @@ export class AiService {
     private readonly geminiClient: GeminiClientService,
     private readonly conversationManager: ConversationManagerService,
     private readonly contextBuilder: ContextBuilderService,
-    private readonly modelRouter: ModelRouterService,
+    private readonly queryStrategy: QueryStrategyService,
   ) {}
 
   async sendMessage(
@@ -61,18 +70,18 @@ export class AiService {
 
     const responseTimeMs = dayjs().diff(startTime, 'millisecond');
 
-    const messageId = await this.conversationManager.addMessage(
+    const messageId = await this.conversationManager.addMessage({
       conversationId,
-      MessageRole.assistant,
-      response,
-      {
+      role: MessageRole.assistant,
+      content: response,
+      contextUsed: {
         ...context.metadata,
         modelUsed: provider,
         modelReason: reason,
       },
       tokensUsed,
       responseTimeMs,
-    );
+    });
 
     this.logger.log(
       `Message processed in ${responseTimeMs}ms (${tokensUsed} tokens) using ${provider.toUpperCase()}`,
@@ -121,14 +130,7 @@ export class AiService {
   streamMessage(
     userId: string,
     dto: SendMessageDto,
-  ): Observable<{
-    type: 'start' | 'chunk' | 'end';
-    conversationId?: string;
-    content?: string;
-    tokensUsed?: number;
-    responseTimeMs?: number;
-    modelUsed?: string;
-  }> {
+  ): Observable<StreamResponse> {
     return new Observable((subscriber) => {
       const startTime = dayjs();
       const responseBuilder = { current: '' };
@@ -173,18 +175,18 @@ export class AiService {
               const responseTimeMs = dayjs().diff(startTime, 'millisecond');
 
               this.conversationManager
-                .addMessage(
+                .addMessage({
                   conversationId,
-                  MessageRole.assistant,
-                  responseBuilder.current,
-                  {
+                  role: MessageRole.assistant,
+                  content: responseBuilder.current,
+                  contextUsed: {
                     ...context.metadata,
                     modelUsed: provider,
                     modelReason: reason,
                   },
-                  undefined,
+                  tokensUsed: undefined,
                   responseTimeMs,
-                )
+                })
                 .then(() => {
                   subscriber.next({
                     type: 'end',
@@ -232,6 +234,17 @@ export class AiService {
   }
 
   private async prepareConversation(userId: string, dto: SendMessageDto) {
+    const { contextLevel, provider, reason, type } =
+      this.queryStrategy.analyzeQuery(
+        dto.message,
+        this.geminiClient.isAvailable(),
+      );
+
+    this.queryStrategy.logStrategy(
+      { provider, contextLevel, reason, type },
+      dto.message,
+    );
+
     const conversationId =
       await this.conversationManager.getOrCreateConversation(
         userId,
@@ -239,23 +252,20 @@ export class AiService {
         dto.message,
       );
 
-    await this.conversationManager.addMessage(
-      conversationId,
-      MessageRole.user,
-      dto.message,
-    );
+    await this.conversationManager.addMessage({
+      conversationId: conversationId,
+      role: MessageRole.user,
+      content: dto.message,
+    });
 
     const [context, history] = await Promise.all([
-      this.contextBuilder.buildContext({ userId, userMessage: dto.message }),
+      this.contextBuilder.buildContext({
+        userId,
+        userMessage: dto.message,
+        contextLevel,
+      }),
       this.conversationManager.getConversationHistory(conversationId, userId),
     ]);
-
-    const selectedModel = this.modelRouter.selectModel(
-      dto.message,
-      this.geminiClient.isAvailable(),
-    );
-
-    this.modelRouter.logSelection(selectedModel, dto.message);
 
     const messages: OllamaChatMessage[] = [
       { role: 'system', content: context.systemPrompt },
@@ -267,7 +277,15 @@ export class AiService {
       ),
     ];
 
-    return { conversationId, messages, context, selectedModel };
+    return {
+      conversationId,
+      messages,
+      context,
+      selectedModel: {
+        provider,
+        reason,
+      },
+    };
   }
 
   private convertToGeminiFormat(

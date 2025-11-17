@@ -1,16 +1,29 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Account, SyncJobStatus } from '@prisma/client';
-import { SyncProgressResponseDto } from 'src/@generated/zod/pfd-dtos';
+import dayjs from 'dayjs';
+import {
+  SyncJobResponseDto,
+  SyncProgressResponseDto,
+} from 'src/@generated/zod/pfd-dtos';
+import { ContextBuilderService } from 'src/ai/services/context-builder.service';
 import { PrismaService } from 'src/db/prisma.service';
 import { formatDateToIso } from 'src/lib/utils/date.util';
 import { getErrorMessage } from 'src/lib/utils/error.util';
+import { MonoBankTransaction } from '../lib/monobank.types';
 import {
   calculateChunkCount,
   splitDateRangeIntoChunks,
 } from '../lib/utils/date.util';
-import { MonoBankTransaction } from '../lib/monobank.types';
 import { MonoBankApiClient } from './monobank-api-client.service';
 import { TransactionProcessor } from './transaction-processor.service';
+
+type FetchTransactionsParams = {
+  jobId: string;
+  token: string;
+  accountId: string;
+  from: Date;
+  to: Date;
+};
 
 @Injectable()
 export class SyncJobManager {
@@ -21,13 +34,14 @@ export class SyncJobManager {
     private readonly prismaService: PrismaService,
     private readonly apiClient: MonoBankApiClient,
     private readonly transactionProcessor: TransactionProcessor,
+    private readonly contextBuilder: ContextBuilderService,
   ) {}
 
   async createBackgroundSyncJob(
     account: Account,
     from: Date,
     to: Date,
-  ): Promise<{ jobId: string; message: string }> {
+  ): Promise<SyncJobResponseDto> {
     const chunks = calculateChunkCount(from, to, this.maxDaysPerRequest);
 
     const syncJob = await this.prismaService.syncJob.create({
@@ -75,7 +89,7 @@ export class SyncJobManager {
 
   private async processSyncJob(
     jobId: string,
-    account: Account,
+    { monoToken, accountId, id, userId }: Account,
     from: Date,
     to: Date,
   ): Promise<void> {
@@ -85,27 +99,32 @@ export class SyncJobManager {
         data: { status: SyncJobStatus.running },
       });
 
-      const allTransactions = await this.fetchAllTransactionsWithProgress(
+      const allTransactions = await this.fetchAllTransactionsWithProgress({
         jobId,
-        account.monoToken!,
-        account.accountId,
+        token: monoToken,
+        accountId,
         from,
         to,
-      );
+      });
 
       this.logger.log(
         `Job ${jobId}: Fetched ${allTransactions.length} total transactions`,
       );
 
       const result = await this.transactionProcessor.saveTransactions(
-        account.id,
+        id,
         allTransactions,
       );
 
       await this.prismaService.account.update({
-        where: { id: account.id },
-        data: { lastSyncedAt: new Date() },
+        where: { id },
+        data: { lastSyncedAt: dayjs().toDate() },
       });
+
+      this.contextBuilder.clearCache(userId);
+      this.logger.log(
+        `Cleared context cache for user ${userId} after background sync`,
+      );
 
       await this.prismaService.syncJob.update({
         where: { id: jobId },
@@ -132,13 +151,13 @@ export class SyncJobManager {
     }
   }
 
-  private async fetchAllTransactionsWithProgress(
-    jobId: string,
-    token: string,
-    accountId: string,
-    from: Date,
-    to: Date,
-  ) {
+  private async fetchAllTransactionsWithProgress({
+    jobId,
+    token,
+    accountId,
+    from,
+    to,
+  }: FetchTransactionsParams) {
     const allTransactions: MonoBankTransaction[] = [];
 
     for (const chunk of splitDateRangeIntoChunks(
