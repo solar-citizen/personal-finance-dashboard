@@ -73,11 +73,4 @@ export class CurrencyService {
       EUR: 0.022,
     };
   }
-
-  // TODO: Use this method
-  clearCache(): void {
-    this.cachedRates = null;
-    this.cacheTimestamp = null;
-    this.logger.log('Exchange rates cache cleared');
-  }
 }

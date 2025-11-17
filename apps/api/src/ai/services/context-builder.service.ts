@@ -97,7 +97,7 @@ export class ContextBuilderService {
     const cached = this.promptCache.get(userId);
     const now = dayjs();
 
-    if (cached && now.millisecond() - cached.timestamp < this.cacheTtl) {
+    if (cached && now.valueOf() - cached.timestamp < this.cacheTtl) {
       this.logger.log(`Using cached context for user ${userId}`);
 
       return {
@@ -146,7 +146,7 @@ export class ContextBuilderService {
 
     this.promptCache.set(userId, {
       prompt: systemPrompt,
-      timestamp: now.millisecond(),
+      timestamp: now.valueOf(),
       metadata,
     });
 
