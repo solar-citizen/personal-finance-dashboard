@@ -8,6 +8,7 @@ import {
   SyncTransactionsDto,
 } from 'src/@generated/zod/pfd-dtos';
 import { formatDateToIso } from 'src/lib/utils/date.util';
+import { decrypt, encrypt } from 'src/lib/utils/encryption.util'; // Add this import
 import { ContextBuilderService } from '../ai/services/context-builder.service';
 import { PrismaService } from '../db/prisma.service';
 import { formatAccountResponse } from './lib/utils/account.util';
@@ -42,6 +43,7 @@ export class MonoBankService {
     }
 
     const savedAccounts: MonoBankAccountResponseDto[] = [];
+    const encryptedToken = encrypt(token);
 
     for (const account of clientInfo.accounts) {
       const currency = getCurrencyFromCode(account.currencyCode);
@@ -61,7 +63,7 @@ export class MonoBankService {
           currency,
           balance: BigInt(account.balance),
           creditLimit: BigInt(account.creditLimit),
-          monoToken: token, // TODO: Encrypt in production
+          monoToken: encryptedToken,
           webHookUrl: clientInfo.webHookUrl || null,
         },
         update: {
@@ -70,7 +72,7 @@ export class MonoBankService {
           currency,
           balance: BigInt(account.balance),
           creditLimit: BigInt(account.creditLimit),
-          monoToken: token,
+          monoToken: encryptedToken,
           webHookUrl: clientInfo.webHookUrl || null,
         },
       });
@@ -114,7 +116,6 @@ export class MonoBankService {
     if (!account.monoToken) {
       throw new BadRequestException('Account not connected to MonoBank');
     }
-
     const toDate = dto?.to ? new Date(dto.to) : new Date();
     const { from, to, daysDiff } = calculateSyncDateRange(
       account.lastSyncedAt,
@@ -147,12 +148,12 @@ export class MonoBankService {
       return this.syncJobManager.createBackgroundSyncJob(account, from, to);
     }
 
-    const transactions = await this.apiClient.getStatement(
-      account.monoToken,
-      account.accountId,
+    const transactions = await this.apiClient.getStatement({
+      accountId: account.accountId,
+      token: decrypt(account.monoToken),
       from,
       to,
-    );
+    });
 
     this.logger.log(
       `Fetched ${transactions.length} transactions from MonoBank`,

@@ -9,6 +9,13 @@ import type {
 } from '../lib/monobank.types';
 import { isAxiosErrorWithResponse } from '../lib/utils/common.util';
 
+type GetStatementData = {
+  token: string;
+  accountId: string;
+  from: Date;
+  to: Date;
+};
+
 @Injectable()
 export class MonoBankApiClient {
   private readonly logger = new Logger(MonoBankApiClient.name);
@@ -42,12 +49,12 @@ export class MonoBankApiClient {
     }
   }
 
-  async getStatement(
-    token: string,
-    accountId: string,
-    from: Date,
-    to: Date,
-  ): Promise<MonoBankTransaction[]> {
+  async getStatement({
+    accountId,
+    token,
+    from,
+    to,
+  }: GetStatementData): Promise<MonoBankTransaction[]> {
     await this.waitForRateLimit();
 
     const fromTimestamp = toUnixTimestamp(from);
