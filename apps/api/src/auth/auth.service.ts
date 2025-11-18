@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -15,6 +16,8 @@ import { PrismaService } from '../db/prisma.service';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly prismaService: PrismaService,
     private readonly jwtService: JwtService,
@@ -81,6 +84,8 @@ export class AuthService {
     };
 
     const accessToken = this.jwtService.sign(payload);
+
+    this.logger.log(`Logged as: ${user.email} | ${user.id}`);
 
     return {
       accessToken,

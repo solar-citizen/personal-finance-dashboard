@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import dayjs from 'dayjs';
 import {
   ConnectMonoBankDto,
   MonoBankAccountResponseDto,
@@ -8,6 +9,7 @@ import {
   SyncTransactionsDto,
 } from 'src/@generated/zod/pfd-dtos';
 import { formatDateToIso } from 'src/lib/utils/date.util';
+import { decrypt, encrypt } from 'src/lib/utils/encryption.util'; // Add this import
 import { ContextBuilderService } from '../ai/services/context-builder.service';
 import { PrismaService } from '../db/prisma.service';
 import { formatAccountResponse } from './lib/utils/account.util';
@@ -42,6 +44,7 @@ export class MonoBankService {
     }
 
     const savedAccounts: MonoBankAccountResponseDto[] = [];
+    const encryptedToken = encrypt(token);
 
     for (const account of clientInfo.accounts) {
       const currency = getCurrencyFromCode(account.currencyCode);
@@ -61,7 +64,7 @@ export class MonoBankService {
           currency,
           balance: BigInt(account.balance),
           creditLimit: BigInt(account.creditLimit),
-          monoToken: token, // TODO: Encrypt in production
+          monoToken: encryptedToken,
           webHookUrl: clientInfo.webHookUrl || null,
         },
         update: {
@@ -70,7 +73,7 @@ export class MonoBankService {
           currency,
           balance: BigInt(account.balance),
           creditLimit: BigInt(account.creditLimit),
-          monoToken: token,
+          monoToken: encryptedToken,
           webHookUrl: clientInfo.webHookUrl || null,
         },
       });
@@ -115,11 +118,11 @@ export class MonoBankService {
       throw new BadRequestException('Account not connected to MonoBank');
     }
 
-    const toDate = dto?.to ? new Date(dto.to) : new Date();
+    const toDate = dto?.to ? dayjs(dto.to).toDate() : dayjs().toDate();
     const { from, to, daysDiff } = calculateSyncDateRange(
       account.lastSyncedAt,
       toDate,
-      dto?.from ? new Date(dto.from) : undefined,
+      dto?.from ? dayjs(dto.from).toDate() : undefined,
       dto?.fullHistory,
     );
 
@@ -131,9 +134,9 @@ export class MonoBankService {
       !dto?.fullHistory &&
       daysDiff === 31
     ) {
-      const lastSyncDaysDiff = Math.ceil(
-        (toDate.getTime() - account.lastSyncedAt.getTime()) /
-          (1000 * 60 * 60 * 24),
+      const lastSyncDaysDiff = dayjs(toDate).diff(
+        dayjs(account.lastSyncedAt),
+        'day',
       );
 
       if (lastSyncDaysDiff > 31) {
@@ -147,12 +150,12 @@ export class MonoBankService {
       return this.syncJobManager.createBackgroundSyncJob(account, from, to);
     }
 
-    const transactions = await this.apiClient.getStatement(
-      account.monoToken,
-      account.accountId,
+    const transactions = await this.apiClient.getStatement({
+      accountId: account.accountId,
+      token: decrypt(account.monoToken),
       from,
       to,
-    );
+    });
 
     this.logger.log(
       `Fetched ${transactions.length} transactions from MonoBank`,
@@ -165,7 +168,7 @@ export class MonoBankService {
 
     await this.prismaService.account.update({
       where: { id: account.id },
-      data: { lastSyncedAt: new Date() },
+      data: { lastSyncedAt: dayjs().toDate() },
     });
 
     this.contextBuilder.clearCache(userId);

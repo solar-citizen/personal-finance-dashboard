@@ -18,7 +18,11 @@ import { formatValue } from 'src/lib/utils/number.util';
 import { formatEmbeddingVector } from 'src/lib/utils/vector.util';
 import { getAccountTypeName } from 'src/monobank/lib/utils/currency.util';
 import { PrismaService } from '../../db/prisma.service';
-import { rejectPatterns } from './lib/reject-patterns';
+import {
+  identityInstructions,
+  languageInstructions,
+  nonFinancialInstructions,
+} from './lib/system-prompt-commons';
 import { OllamaClientService } from './ollama-client.service';
 import type { ContextLevel } from './query-strategy.service';
 
@@ -296,9 +300,10 @@ export class ContextBuilderService {
     const categoryList = categories.map(({ name }) => name).join(', ');
     const topSpending = this.formatTopSpending(transactions);
     const knowledgeSection = this.formatKnowledgeSection(knowledgeBase);
-    const { defaultReject } = rejectPatterns;
 
-    return `You are a financial assistant for a personal finance app. You have FULL ACCESS to user's transaction data including currency information.
+    return `
+      === IDENTITY ===
+      ${identityInstructions}
 
       === EXCHANGE RATES (CURRENT) ===
       1 USD = ${formatValue(conversionRates.usd)} UAH
@@ -354,14 +359,14 @@ export class ContextBuilderService {
         - Show amounts per currency
         - Don't say "I don't have this data" - YOU HAVE IT.
 
-      4. **LANGUAGE**: Respond in Ukrainian if user writes in Ukrainian, English otherwise
+      4. **LANGUAGE**: ${languageInstructions}
 
       5. **ACCOUNTS DISPLAY**:
         - By default show only non-zero accounts
         - Show all accounts only if explicitly asked
         - Use translated names (Чорна, Біла, єПідтримка), not technical names
 
-      6. **NON-FINANCIAL QUESTIONS**: Redirect with: ${defaultReject}
+      6. **NON-FINANCIAL QUESTIONS**: ${nonFinancialInstructions}
 
       7. **FORMATTING**: Be concise, no unnecessary explanations, direct answers with data
 
@@ -425,12 +430,11 @@ export class ContextBuilderService {
   }
 
   private createMinimalSystemPrompt(): string {
-    const { defaultReject } = rejectPatterns;
-    return `You are a financial assistant for a personal finance app.
-
-      For non-financial questions, politely redirect: ${defaultReject}
-
-      Respond in Ukrainian if user writes in Ukrainian, English otherwise.`;
+    return `
+      **IDENTITY**: ${identityInstructions}
+      **NON-FINANCIAL QUESTIONS**: ${nonFinancialInstructions}
+      **LANGUAGE**: ${languageInstructions}
+    `;
   }
 
   clearCache(userId?: string): void {

@@ -8,6 +8,7 @@ import {
 import { ContextBuilderService } from 'src/ai/services/context-builder.service';
 import { PrismaService } from 'src/db/prisma.service';
 import { formatDateToIso } from 'src/lib/utils/date.util';
+import { decrypt } from 'src/lib/utils/encryption.util';
 import { getErrorMessage } from 'src/lib/utils/error.util';
 import { MonoBankTransaction } from '../lib/monobank.types';
 import {
@@ -93,6 +94,10 @@ export class SyncJobManager {
     from: Date,
     to: Date,
   ): Promise<void> {
+    if (!monoToken) {
+      throw new Error('MonoBank token is missing for the account');
+    }
+
     try {
       await this.prismaService.syncJob.update({
         where: { id: jobId },
@@ -101,7 +106,7 @@ export class SyncJobManager {
 
       const allTransactions = await this.fetchAllTransactionsWithProgress({
         jobId,
-        token: monoToken,
+        token: decrypt(monoToken),
         accountId,
         from,
         to,
@@ -169,12 +174,12 @@ export class SyncJobManager {
         `Job ${jobId}: Fetching chunk ${chunk.chunkIndex + 1} from ${formatDateToIso(chunk.from)} to ${formatDateToIso(chunk.to)}`,
       );
 
-      const transactions = await this.apiClient.getStatement(
-        token,
+      const transactions = await this.apiClient.getStatement({
         accountId,
-        chunk.from,
-        chunk.to,
-      );
+        token,
+        from: chunk.from,
+        to: chunk.to,
+      });
 
       allTransactions.push(...transactions);
 
