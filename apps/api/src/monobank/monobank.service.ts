@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import dayjs from 'dayjs';
 import {
   ConnectMonoBankDto,
   MonoBankAccountResponseDto,
@@ -115,11 +116,11 @@ export class MonoBankService {
       throw new BadRequestException('Account not connected to MonoBank');
     }
 
-    const toDate = dto?.to ? new Date(dto.to) : new Date();
+    const toDate = dto?.to ? dayjs(dto.to).toDate() : dayjs().toDate();
     const { from, to, daysDiff } = calculateSyncDateRange(
       account.lastSyncedAt,
       toDate,
-      dto?.from ? new Date(dto.from) : undefined,
+      dto?.from ? dayjs(dto.from).toDate() : undefined,
       dto?.fullHistory,
     );
 
@@ -131,9 +132,9 @@ export class MonoBankService {
       !dto?.fullHistory &&
       daysDiff === 31
     ) {
-      const lastSyncDaysDiff = Math.ceil(
-        (toDate.getTime() - account.lastSyncedAt.getTime()) /
-          (1000 * 60 * 60 * 24),
+      const lastSyncDaysDiff = dayjs(toDate).diff(
+        dayjs(account.lastSyncedAt),
+        'day',
       );
 
       if (lastSyncDaysDiff > 31) {
@@ -165,7 +166,7 @@ export class MonoBankService {
 
     await this.prismaService.account.update({
       where: { id: account.id },
-      data: { lastSyncedAt: new Date() },
+      data: { lastSyncedAt: dayjs().toDate() },
     });
 
     this.contextBuilder.clearCache(userId);
