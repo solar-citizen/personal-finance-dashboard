@@ -1,9 +1,9 @@
-import { Card, Currency } from '@prisma/client';
+import { AccountType, Currency } from '@prisma/client';
 import { z } from 'zod';
 
 export const AccountSummarySchema = z.object({
   id: z.string(),
-  type: z.enum(Card),
+  type: z.enum(AccountType),
   currency: z.enum(Currency),
   balance: z.bigint(),
   iban: z.string().nullable(),
@@ -29,7 +29,7 @@ export const TransactionWithRelationsSchema = z.object({
   balance: z.bigint(),
   category: CategorySummarySchema.nullable(),
   account: z.object({
-    type: z.enum(Card),
+    type: z.enum(AccountType),
     currency: z.enum(Currency),
   }),
 });

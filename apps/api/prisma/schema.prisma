@@ -17,8 +17,7 @@ enum Currency {
   eur
 }
 
-// ToDo: Rename to AccountType
-enum Card {
+enum AccountType {
   black
   white
   platinum
@@ -117,7 +116,7 @@ model Account {
   // MonoBank specific
   accountId String
   iban      String?
-  type      Card
+  type      AccountType
   currency  Currency
   balance   BigInt   // in minimal units (kopiykas)
   creditLimit BigInt @default(0)
