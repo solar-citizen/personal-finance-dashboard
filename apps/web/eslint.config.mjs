@@ -1,3 +1,4 @@
+// @ts-check
 import pluginJsxA11y from 'eslint-plugin-jsx-a11y';
 import pluginReact from 'eslint-plugin-react';
 import pluginReactHooks from 'eslint-plugin-react-hooks';
@@ -14,7 +15,9 @@ const eslintConfig = defineConfig(
   {
     plugins: {
       react: pluginReact,
+      // @ts-expect-error - plugin has ESM/CJS compatibility issue with flat config types
       'react-hooks': pluginReactHooks,
+      // @ts-expect-error - plugin has ESM/CJS compatibility issue with flat config types
       'jsx-a11y': pluginJsxA11y,
     },
   },
