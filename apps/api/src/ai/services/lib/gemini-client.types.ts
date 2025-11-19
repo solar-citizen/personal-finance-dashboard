@@ -13,15 +13,12 @@ export type GeminiModel = {
   outputTokenLimit: number;
   supportedGenerationMethods: GeminiGenerationMethod[];
   temperature?: number;
+  maxTemperature?: number;
   topP?: number;
   topK?: number;
 };
 
-export type GeminiModelsListResponse = {
-  models: GeminiModel[];
-};
-
-export type GeminiModelSummary = {
+type GeminiModelSummary = {
   name: string;
   displayName: string;
   description: string;

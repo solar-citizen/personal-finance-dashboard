@@ -41,13 +41,13 @@ export class MonoBankController {
     @Param('accountId') accountId: string,
     @Body() dto?: SyncTransactionsDto,
   ): Promise<SyncResultResponseDto | SyncJobResponseDto> {
-    return this.monoBankService.syncTransactions(userId, accountId, dto);
+    return await this.monoBankService.syncTransactions(userId, accountId, dto);
   }
 
   @Get('sync-status/:jobId')
   async getSyncStatus(
     @Param('jobId') jobId: string,
   ): Promise<SyncProgressResponseDto> {
-    return this.monoBankService.getSyncJobStatus(jobId);
+    return await this.monoBankService.getSyncJobStatus(jobId);
   }
 }

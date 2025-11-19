@@ -19,11 +19,17 @@
     "bump:interactive": "bunx npm-check-updates -i --workspaces --root && bun install && bun run update:bun",
     "bump:minor": "bunx npm-check-updates -u --workspaces --root --target minor && bun install && bun run update:bun",
     "bump:patch": "bunx npm-check-updates -u --workspaces --root --target patch && bun install && bun run update:bun",
-    "update:bun": "bun run bin/update-bun.js"
+    "update:bun": "bun run bin/update-bun.js",
+    "lint": "bun lint:api & bun lint:web",
+    "lint:api": "cd apps/api && bun run lint",
+    "lint:web": "cd apps/web && bun run lint"
   },
   "devDependencies": {
     "@types/lodash-es": "^4.17.12",
     "dotenv": "^17.2.3",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-promise": "^7.2.1",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
     "turbo": "^2.6.1"
   },
   "dependencies": {

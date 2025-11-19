@@ -3,6 +3,12 @@
   "editor.formatOnSave": true,
   "files.trimFinalNewlines": false,
   "files.insertFinalNewline": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "always",
+    "source.organizeImports": "never"
+  },
+  "eslint.codeActionsOnSave.mode": "all",
+  "eslint.codeActionsOnSave.rules": ["simple-import-sort/imports", "simple-import-sort/exports"],
   "cSpell.words": [
     "bunx",
     "codegen",
