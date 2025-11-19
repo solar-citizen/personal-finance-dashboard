@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "strictNullChecks": true,
+    "noImplicitAny": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "incremental": true,
+    "sourceMap": true,
+    "declaration": true,
+    "removeComments": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "target": "es2024"
+  },
+  "include": ["globals.d.ts", "eslint.config.ts", ".prettierrc.mjs"]
+}

@@ -1,5 +1,8 @@
 import eslint from '@eslint/js';
 import { defineConfig } from 'eslint/config';
+import pluginImport from 'eslint-plugin-import';
+import pluginPromise from 'eslint-plugin-promise';
+import pluginSimpleImportSort from 'eslint-plugin-simple-import-sort';
 import tsEslint from 'typescript-eslint';
 
 export default defineConfig(
@@ -24,6 +27,9 @@ export default defineConfig(
     },
     plugins: {
       '@typescript-eslint/eslint-plugin': tsEslint,
+      'simple-import-sort': pluginSimpleImportSort,
+      promise: pluginPromise,
+      import: pluginImport,
     },
     rules: {
       'max-len': ['warn', { code: 100 }],
@@ -58,6 +64,20 @@ export default defineConfig(
         { blankLine: 'always', prev: '*', next: 'if' },
         { blankLine: 'always', prev: '*', next: 'export' },
       ],
+
+      'simple-import-sort/imports': 'error',
+      'simple-import-sort/exports': 'error',
+
+      'import/first': 'error',
+      'import/newline-after-import': 'error',
+      'import/no-duplicates': 'error',
+      'import/max-dependencies': ['warn', { max: 10, ignoreTypeImports: true }],
+    },
+  },
+  {
+    files: ['**/*.d.ts'],
+    rules: {
+      'import/newline-after-import': 'off',
     },
   },
 );

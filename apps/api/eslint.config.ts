@@ -1,18 +1,17 @@
-// @ts-check
-import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import { defineConfig } from 'eslint/config';
+import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import globals from 'globals';
-import baseConfig from '../../eslint.config.base.mjs';
+
+import baseConfig from '../../eslint.config.js';
 
 export default defineConfig(
-  ...baseConfig,
+  baseConfig,
   eslintPluginPrettierRecommended,
   {
     languageOptions: {
       globals: {
         ...globals.node,
       },
-      sourceType: 'commonjs',
       parserOptions: {
         projectService: true,
         tsconfigRootDir: import.meta.dirname,
