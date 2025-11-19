@@ -1,9 +1,6 @@
-import pluginImport from 'eslint-plugin-import';
 import pluginJsxA11y from 'eslint-plugin-jsx-a11y';
-import pluginPromise from 'eslint-plugin-promise';
 import pluginReact from 'eslint-plugin-react';
 import pluginReactHooks from 'eslint-plugin-react-hooks';
-import pluginSimpleImportSort from 'eslint-plugin-simple-import-sort';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import baseConfig from '../../eslint.config.base.mjs';
 
@@ -17,11 +14,8 @@ const eslintConfig = defineConfig(
   {
     plugins: {
       react: pluginReact,
-      import: pluginImport,
-      promise: pluginPromise,
       'react-hooks': pluginReactHooks,
       'jsx-a11y': pluginJsxA11y,
-      'simple-import-sort': pluginSimpleImportSort,
     },
   },
   {
@@ -37,13 +31,6 @@ const eslintConfig = defineConfig(
           children: 'always',
         },
       ],
-
-      'simple-import-sort/imports': 'error',
-      'simple-import-sort/exports': 'error',
-      'import/first': 'error',
-      'import/newline-after-import': 'error',
-      'import/no-duplicates': 'error',
-      'import/max-dependencies': ['warn', { max: 10, ignoreTypeImports: true }],
 
       '@typescript-eslint/no-unused-vars': 'error',
       'no-unused-vars': 'off',
