@@ -1,12 +1,11 @@
 generator client {
-  provider        = "prisma-client-js"
-  engineType      = "client"
+  provider        = "prisma-client"
+  output          = "../src/@generated/prisma-client"
   previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
   provider   = "postgresql"
-  url        = env("DATABASE_URL")
   extensions = [vector]
 }
 
@@ -17,8 +16,7 @@ enum Currency {
   eur
 }
 
-// ToDo: Rename to AccountType
-enum Card {
+enum AccountType {
   black
   white
   platinum
@@ -117,7 +115,7 @@ model Account {
   // MonoBank specific
   accountId String
   iban      String?
-  type      Card
+  type      AccountType
   currency  Currency
   balance   BigInt   // in minimal units (kopiykas)
   creditLimit BigInt @default(0)

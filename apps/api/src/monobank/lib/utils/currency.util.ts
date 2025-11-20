@@ -1,4 +1,4 @@
-import { Currency } from '@prisma/client';
+import { Currency } from 'src/@generated/prisma-client/client';
 
 /**
  * MonoBank uses ISO 4217 numeric currency codes

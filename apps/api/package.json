@@ -3,6 +3,7 @@
   "private": true,
   "license": "GPL-3.0-only",
   "postinstall": "prisma generate",
+  "type": "module",
   "scripts": {
     "dev": "bun start:dev",
     "build": "nest build",
@@ -16,12 +17,12 @@
     "db:push": "prisma db push && bun run prisma/scripts/create-vector-index.script.ts",
     "db:generate": "prisma generate",
     "db:seed": "bun run prisma/seed.ts",
-    "db:reset": "prisma db push && prisma generate && prisma db seed",
-    "db:force-reset": "prisma db push --force-reset && prisma generate && prisma db seed",
+    "db:reset": "prisma db push && prisma generate && bun db:seed",
+    "db:force-reset": "prisma db push --force-reset && prisma generate && bun db:seed",
     "db:studio": "prisma studio",
     "openapi:generate": "bun run bin/generate-openapi.script.ts",
     "dtos:generate": "bun run bin/generate-dtos.script.ts",
-    "codegen": "bun run dtos:generate && bun run openapi:generate",
+    "codegen": "bun run db:generate && bun run dtos:generate && bun run openapi:generate",
     "mcc": "bun run prisma/scripts/analyze-mcc.script.ts"
   },
   "dependencies": {
@@ -33,10 +34,10 @@
     "@nestjs/jwt": "^11.0.1",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.1.9",
-    "@nestjs/swagger": "^11.2.2",
+    "@nestjs/swagger": "^11.2.3",
     "@paralleldrive/cuid2": "^3.0.4",
-    "@prisma/adapter-pg": "^6.19.0",
-    "@prisma/client": "^6.19.0",
+    "@prisma/adapter-pg": "^7.0.0",
+    "@prisma/client": "^7.0.0",
     "axios": "^1.13.2",
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
@@ -50,9 +51,7 @@
     "rxjs": "^7.8.2"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.1",
-    "@eslint/js": "^9.39.1",
-    "@nestjs/cli": "^11.0.10",
+    "@nestjs/cli": "^11.0.12",
     "@nestjs/schematics": "^11.0.9",
     "@openapi-codegen/cli": "^3.1.0",
     "@openapi-codegen/typescript": "^11.1.0",
@@ -60,17 +59,11 @@
     "@types/express": "^5.0.5",
     "@types/node": "^24.10.1",
     "@types/passport-jwt": "^4.0.1",
-    "eslint": "^9.39.1",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-prettier": "^5.5.4",
     "globals": "^16.5.0",
-    "prettier": "^3.6.2",
-    "prisma": "6.19.0",
+    "prisma": "7.0.0",
     "source-map-support": "^0.5.21",
     "ts-loader": "^9.5.4",
     "ts-node": "^10.9.2",
-    "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.47.0"
+    "tsconfig-paths": "^4.2.0"
   }
 }

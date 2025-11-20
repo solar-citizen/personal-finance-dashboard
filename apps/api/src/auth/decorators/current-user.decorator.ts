@@ -1,6 +1,6 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { User } from '@prisma/client';
 import { Request } from 'express';
+import { User } from 'src/@generated/prisma-client/client';
 
 export const CurrentUser = createParamDecorator(
   (

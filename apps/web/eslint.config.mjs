@@ -1,18 +1,50 @@
-import { defineConfig, globalIgnores } from "eslint/config";
-import nextVitals from "eslint-config-next/core-web-vitals";
-import nextTs from "eslint-config-next/typescript";
+// @ts-check
+import pluginJsxA11y from 'eslint-plugin-jsx-a11y';
+import pluginReact from 'eslint-plugin-react';
+import pluginReactHooks from 'eslint-plugin-react-hooks';
+import { defineConfig, globalIgnores } from 'eslint/config';
+import baseConfig from '../../eslint.config.base.mjs';
 
-const eslintConfig = defineConfig([
-  ...nextVitals,
-  ...nextTs,
-  // Override default ignores of eslint-config-next.
-  globalIgnores([
-    // Default ignores of eslint-config-next:
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
-  ]),
-]);
+const eslintConfig = defineConfig(
+  [...baseConfig, globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts'])],
+  {
+    settings: {
+      react: { version: 'detect' },
+    },
+  },
+  {
+    plugins: {
+      react: pluginReact,
+      // @ts-expect-error - plugin has ESM/CJS compatibility issue with flat config types
+      'react-hooks': pluginReactHooks,
+      // @ts-expect-error - plugin has ESM/CJS compatibility issue with flat config types
+      'jsx-a11y': pluginJsxA11y,
+    },
+  },
+  {
+    rules: {
+      'react/prop-types': 'off',
+      'react/react-in-jsx-scope': 'off',
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
+      'react/jsx-curly-brace-presence': [
+        'error',
+        {
+          props: 'always',
+          children: 'always',
+        },
+      ],
+
+      '@typescript-eslint/no-unused-vars': 'error',
+      'no-unused-vars': 'off',
+    },
+  },
+  {
+    files: ['src/app/**/*', 'app/**/*'],
+    rules: {
+      'import/no-default-export': 'off',
+    },
+  },
+);
 
 export default eslintConfig;

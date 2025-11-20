@@ -3,12 +3,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import dayjs from 'dayjs';
 import { Observable } from 'rxjs';
 import { ConfigService } from 'src/config/config.service';
+
 import {
   AvailableModelsErrorResponse,
   AvailableModelsResponse,
   GeminiModel,
-  GeminiModelsListResponse,
 } from './lib/gemini-client.types';
+import { isGeminiModelsListResponse } from './lib/utils';
 
 export type GeminiChatMessage = {
   role: 'user' | 'model';
@@ -18,8 +19,8 @@ export type GeminiChatMessage = {
 @Injectable()
 export class GeminiClientService {
   private readonly logger = new Logger(GeminiClientService.name);
-  private readonly genAI: GoogleGenerativeAI;
-  private readonly model: GenerativeModel;
+  private readonly genAI?: GoogleGenerativeAI;
+  private readonly model?: GenerativeModel;
 
   constructor(private readonly configService: ConfigService) {
     const apiKey = this.configService.geminiApiKey;
@@ -57,10 +58,8 @@ export class GeminiClientService {
     response: string;
     tokensUsed?: number;
   }> {
-    if (!this.isAvailable()) {
-      throw new Error(
-        'Gemini client not initialized - check GEMINI_MODEL env variable',
-      );
+    if (!this.model || !this.genAI) {
+      throw new Error('Gemini client not initialized');
     }
 
     const startTime = dayjs();
@@ -97,16 +96,14 @@ export class GeminiClientService {
     systemPrompt: string,
     messages: GeminiChatMessage[],
   ): Observable<string> {
-    if (!this.isAvailable()) {
-      throw new Error(
-        'Gemini client not initialized - check GEMINI_MODEL env variable',
-      );
-    }
-
     return new Observable((subscriber) => {
       const startTime = dayjs();
 
       (async () => {
+        if (!this.model || !this.genAI) {
+          throw new Error('Gemini client not initialized');
+        }
+
         const chat = this.model.startChat({
           history: messages.slice(0, -1),
           systemInstruction: {
@@ -128,7 +125,7 @@ export class GeminiClientService {
 
         this.logDuration('Stream completed', startTime);
         subscriber.complete();
-      })().catch((error) => {
+      })().catch((error: unknown) => {
         this.logger.error('Uncaught Gemini stream error:', error);
         subscriber.error(error);
       });
@@ -136,7 +133,7 @@ export class GeminiClientService {
   }
 
   async healthCheck(): Promise<boolean> {
-    if (!this.isAvailable()) {
+    if (!this.model || !this.genAI) {
       return false;
     }
 
@@ -158,7 +155,7 @@ export class GeminiClientService {
     }
 
     try {
-      const response: Response = await fetch(
+      const response = await fetch(
         `https://generativelanguage.googleapis.com/v1/models?key=${apiKey}`,
       );
 
@@ -169,19 +166,25 @@ export class GeminiClientService {
         return { error: `HTTP ${response.status}: ${error}` };
       }
 
-      const data = (await response.json()) as GeminiModelsListResponse;
+      const data: unknown = await response.json();
 
-      const contentGenerationModels: GeminiModel[] =
-        data.models?.filter((model: GeminiModel) =>
-          model.supportedGenerationMethods?.includes('generateContent'),
-        ) || [];
+      if (!isGeminiModelsListResponse(data)) {
+        throw new Error('Invalid response format from Gemini API');
+      }
+
+      const { models } = data;
+
+      const contentGenerationModels: GeminiModel[] = models.filter(
+        ({ supportedGenerationMethods }: GeminiModel) =>
+          supportedGenerationMethods.includes('generateContent'),
+      );
 
       this.logger.log(
         `Found ${contentGenerationModels.length} models supporting generateContent`,
       );
 
       return {
-        total: data.models?.length || 0,
+        total: models.length || 0,
         contentGenerationModels: contentGenerationModels.map(
           ({ name, displayName, description, supportedGenerationMethods }) => ({
             name,
@@ -190,7 +193,7 @@ export class GeminiClientService {
             supportedMethods: supportedGenerationMethods,
           }),
         ),
-        allModels: data.models?.map(({ name }) => name) || [],
+        allModels: models.map(({ name }) => name),
       };
     } catch (error) {
       this.logger.error('Error listing models:', error);
@@ -202,7 +205,16 @@ export class GeminiClientService {
   }
 
   isAvailable(): boolean {
-    return !!this.model;
+    return this.model !== undefined && this.genAI !== undefined;
+  }
+
+  private assertAvailable(): asserts this is this & {
+    model: GenerativeModel;
+    genAI: GoogleGenerativeAI;
+  } {
+    if (!this.model || !this.genAI) {
+      throw new Error('Gemini client not initialized');
+    }
   }
 
   private logDuration(message: string, startTime: dayjs.Dayjs): void {

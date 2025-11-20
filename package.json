@@ -19,17 +19,34 @@
     "bump:interactive": "bunx npm-check-updates -i --workspaces --root && bun install && bun run update:bun",
     "bump:minor": "bunx npm-check-updates -u --workspaces --root --target minor && bun install && bun run update:bun",
     "bump:patch": "bunx npm-check-updates -u --workspaces --root --target patch && bun install && bun run update:bun",
-    "update:bun": "bun run bin/update-bun.js"
-  },
-  "devDependencies": {
-    "@types/lodash-es": "^4.17.12",
-    "dotenv": "^17.2.3",
-    "turbo": "^2.6.1"
+    "update:bun": "bun run bin/update-bun.js",
+    "lint": "bun lint:api & bun lint:web",
+    "lint:api": "cd apps/api && bun run lint",
+    "lint:web": "cd apps/web && bun run lint",
+    "lint:fix": "bun lint:api-fix & bun lint:web-fix",
+    "lint:api-fix": "cd apps/api && bun run lint:fix",
+    "lint:web-fix": "cd apps/web && bun run lint:fix"
   },
   "dependencies": {
     "axios": "^1.13.2",
     "dayjs": "^1.11.19",
     "lodash-es": "^4.17.21",
     "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.39.1",
+    "@types/lodash-es": "^4.17.12",
+    "dotenv": "^17.2.3",
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-promise": "^7.2.1",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "prettier": "^3.6.2",
+    "turbo": "^2.6.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.47.0"
   }
 }

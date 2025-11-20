@@ -39,7 +39,7 @@ export class MonoBankService {
 
     const clientInfo = await this.apiClient.getClientInfo(token);
 
-    if (!clientInfo.accounts || clientInfo.accounts.length === 0) {
+    if (clientInfo.accounts.length === 0) {
       throw new BadRequestException('No accounts found for this token');
     }
 
@@ -188,6 +188,6 @@ export class MonoBankService {
   }
 
   async getSyncJobStatus(jobId: string): Promise<SyncProgressResponseDto> {
-    return this.syncJobManager.getJobStatus(jobId);
+    return await this.syncJobManager.getJobStatus(jobId);
   }
 }
