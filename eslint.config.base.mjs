@@ -79,5 +79,11 @@ export default defineConfig(
       'import/max-dependencies': ['warn', { max: 10, ignoreTypeImports: true }],
     },
   },
+  {
+    files: ['**/*.script.ts'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
   configPrettier,
 );

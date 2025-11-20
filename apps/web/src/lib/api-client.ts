@@ -21,9 +21,9 @@ export type ApiFetcherOptions<TBody, THeaders, TQueryParams, TPathParams> = {
 function resolveUrl(
   url: string,
   queryParams: Record<string, unknown> = {},
-  pathParams: Record<string, string> = {},
+  pathParams: Record<string, string | undefined> = {},
 ): string {
-  const resolvedUrl = url.replace(/\{(\w+)\}/g, (match, key) => {
+  const resolvedUrl = url.replace(/\{(\w+)\}/g, (match, key: string) => {
     const value = pathParams[key];
     return value !== undefined ? encodeURIComponent(value) : match;
   });
@@ -50,6 +50,7 @@ function resolveUrl(
   );
 
   const query = new URLSearchParams(serializedParams).toString();
+
   return query ? `${resolvedUrl}?${query}` : resolvedUrl;
 }
 
@@ -63,6 +64,7 @@ function getAuthToken(): string | null {
 
 export async function apiFetch<
   TData,
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
   TError,
   TBody extends Record<string, unknown> | FormData | undefined | null,
   THeaders extends RawAxiosRequestHeaders,
@@ -110,14 +112,12 @@ export async function apiFetch<
         }
       }
 
-      const errorWrapper: ErrorWrapper<TError> = errorData
-        ? errorData
-        : {
-            status: 'unknown' as const,
-            payload: e.message || 'Request failed',
-          };
+      const errorWrapper: ErrorWrapper<TError> = errorData ?? {
+        status: 'unknown' as const,
+        payload: e.message || 'Request failed',
+      };
 
-      throw errorWrapper;
+      throw new Error(JSON.stringify(errorWrapper));
     }
 
     const errorWrapper: ErrorWrapper<TError> = {
@@ -125,6 +125,6 @@ export async function apiFetch<
       payload: e.message || 'Network error occurred',
     };
 
-    throw errorWrapper;
+    throw new Error(JSON.stringify(errorWrapper));
   }
 }
