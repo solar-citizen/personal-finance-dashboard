@@ -17,6 +17,7 @@ import {
   HealthStatusDto,
   SendMessageDto,
 } from 'src/@generated/zod/pfd-dtos';
+
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AiService } from './ai.service';

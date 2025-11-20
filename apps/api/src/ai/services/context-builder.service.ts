@@ -17,6 +17,7 @@ import { formatDateToIso, getDateRange } from 'src/lib/utils/date.util';
 import { formatValue } from 'src/lib/utils/number.util';
 import { formatEmbeddingVector } from 'src/lib/utils/vector.util';
 import { getAccountTypeName } from 'src/monobank/lib/utils/currency.util';
+
 import { PrismaService } from '../../db/prisma.service';
 import {
   identityInstructions,
@@ -283,6 +284,7 @@ export class ContextBuilderService {
     const txByCurrency = transactions.reduce(
       (acc, tx): Record<string, TransactionWithRelationsDto[]> => {
         const currency = tx.account?.currency || 'uah';
+
         if (!acc[currency]) acc[currency] = [];
         acc[currency].push(tx);
         return acc;

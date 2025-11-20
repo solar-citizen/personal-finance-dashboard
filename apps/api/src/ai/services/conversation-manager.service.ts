@@ -11,6 +11,7 @@ import {
 import { ConfigService } from 'src/config/config.service';
 import { formatDateToIso } from 'src/lib/utils/date.util';
 import { formatEmbeddingVector } from 'src/lib/utils/vector.util';
+
 import { PrismaService } from '../../db/prisma.service';
 import { OllamaClientService } from './ollama-client.service';
 

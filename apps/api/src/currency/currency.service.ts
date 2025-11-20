@@ -4,6 +4,7 @@ import dayjs from 'dayjs';
 import { firstValueFrom } from 'rxjs';
 import { ExchangeRatesDto } from 'src/@generated/zod/pfd-dtos';
 import { ConfigService } from 'src/config/config.service';
+
 import { ExchangeRateApiResponseSchema } from './currency.schema';
 
 @Injectable()

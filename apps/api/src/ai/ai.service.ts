@@ -8,6 +8,7 @@ import {
   HealthStatusDto,
   SendMessageDto,
 } from 'src/@generated/zod/pfd-dtos';
+
 import { ContextBuilderService } from './services/context-builder.service';
 import { ConversationManagerService } from './services/conversation-manager.service';
 import {
@@ -253,7 +254,7 @@ export class AiService {
       );
 
     await this.conversationManager.addMessage({
-      conversationId: conversationId,
+      conversationId,
       role: MessageRole.user,
       content: dto.message,
     });

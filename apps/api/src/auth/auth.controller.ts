@@ -5,6 +5,7 @@ import {
   LoginDto,
   RegisterDto,
 } from 'src/@generated/zod/pfd-dtos';
+
 import { AuthService } from './auth.service';
 import { Public } from './decorators/public.decorator';
 

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { CurrencyModule } from 'src/currency/currency.module';
+
 import { PrismaModule } from '../db/prisma.module';
 import { AiController } from './ai.controller';
 import { AiService } from './ai.service';

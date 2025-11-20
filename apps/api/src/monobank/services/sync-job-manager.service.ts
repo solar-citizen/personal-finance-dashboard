@@ -10,6 +10,7 @@ import { PrismaService } from 'src/db/prisma.service';
 import { formatDateToIso } from 'src/lib/utils/date.util';
 import { decrypt } from 'src/lib/utils/encryption.util';
 import { getErrorMessage } from 'src/lib/utils/error.util';
+
 import { MonoBankTransaction } from '../lib/monobank.types';
 import {
   calculateChunkCount,
