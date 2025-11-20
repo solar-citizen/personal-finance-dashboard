@@ -1,12 +1,10 @@
 // @ts-check
-import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import { defineConfig } from 'eslint/config';
 import globals from 'globals';
 import baseConfig from '../../eslint.config.base.mjs';
 
 export default defineConfig(
   ...baseConfig,
-  eslintPluginPrettierRecommended,
   {
     languageOptions: {
       globals: {

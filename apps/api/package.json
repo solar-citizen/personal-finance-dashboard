@@ -51,8 +51,6 @@
     "rxjs": "^7.8.2"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.1",
-    "@eslint/js": "^9.39.1",
     "@nestjs/cli": "^11.0.12",
     "@nestjs/schematics": "^11.0.9",
     "@openapi-codegen/cli": "^3.1.0",
@@ -61,17 +59,11 @@
     "@types/express": "^5.0.5",
     "@types/node": "^24.10.1",
     "@types/passport-jwt": "^4.0.1",
-    "eslint": "^9.39.1",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-prettier": "^5.5.4",
     "globals": "^16.5.0",
-    "prettier": "^3.6.2",
     "prisma": "7.0.0",
     "source-map-support": "^0.5.21",
     "ts-loader": "^9.5.4",
     "ts-node": "^10.9.2",
-    "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.47.0"
+    "tsconfig-paths": "^4.2.0"
   }
 }

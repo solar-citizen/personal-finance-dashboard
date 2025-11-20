@@ -1,5 +1,8 @@
+// @ts-check
 import eslint from '@eslint/js';
+import configPrettier from 'eslint-config-prettier';
 import pluginImport from 'eslint-plugin-import';
+import pluginPrettier from 'eslint-plugin-prettier';
 import pluginPromise from 'eslint-plugin-promise';
 import pluginSimpleImportSort from 'eslint-plugin-simple-import-sort';
 import { defineConfig } from 'eslint/config';
@@ -28,12 +31,14 @@ export default defineConfig(
     plugins: {
       '@typescript-eslint/eslint-plugin': tsEslint,
       'simple-import-sort': pluginSimpleImportSort,
+      // @ts-expect-error - plugin has ESM/CJS compatibility issue with flat config types
       promise: pluginPromise,
       import: pluginImport,
+      prettier: pluginPrettier,
     },
     rules: {
-      'max-len': ['warn', { code: 100 }],
-      semi: [2, 'always'],
+      'prettier/prettier': 'error',
+
       '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
       '@typescript-eslint/consistent-type-assertions': ['error', { assertionStyle: 'never' }],
       '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
@@ -74,4 +79,5 @@ export default defineConfig(
       'import/max-dependencies': ['warn', { max: 10, ignoreTypeImports: true }],
     },
   },
+  configPrettier,
 );
