@@ -3,6 +3,7 @@
   "private": true,
   "license": "GPL-3.0-only",
   "postinstall": "prisma generate",
+  "type": "module",
   "scripts": {
     "dev": "bun start:dev",
     "build": "nest build",

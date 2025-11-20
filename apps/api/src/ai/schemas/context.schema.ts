@@ -1,4 +1,4 @@
-import { AccountType, Currency } from '@prisma/client';
+import { AccountType, Currency } from 'src/@generated/prisma-client/client';
 import { z } from 'zod';
 
 export const AccountSummarySchema = z.object({

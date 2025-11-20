@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { MessageRole } from '@prisma/client';
 import dayjs from 'dayjs';
 import { Response } from 'express';
 import { Observable } from 'rxjs';
+import { MessageRole } from 'src/@generated/prisma-client/client';
 import {
   ChatResponseDto,
   HealthStatusDto,
