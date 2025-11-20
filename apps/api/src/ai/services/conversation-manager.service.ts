@@ -1,7 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { createId } from '@paralleldrive/cuid2';
-import { MessageRole } from '@prisma/client';
 import dayjs from 'dayjs';
+import { MessageRole } from 'src/@generated/prisma-client/client';
 import {
   ConversationDto,
   ConversationListItemDto,

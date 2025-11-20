@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import { Account, SyncJobStatus } from '@prisma/client';
 import dayjs from 'dayjs';
+import { Account, SyncJobStatus } from 'src/@generated/prisma-client/client';
 import {
   SyncJobResponseDto,
   SyncProgressResponseDto,

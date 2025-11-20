@@ -5,7 +5,7 @@ import {
   type OnModuleInit,
 } from '@nestjs/common';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { Prisma, PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from 'src/@generated/prisma-client/client';
 
 type PrismaClientWithEvents = PrismaClient & {
   $on(eventType: 'query', callback: (e: Prisma.QueryEvent) => void): void;
@@ -19,6 +19,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     const adapter = new PrismaPg({
       connectionString: process.env.DATABASE_URL,
     });
+
     super({ adapter });
   }
 
