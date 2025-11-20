@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { type PropsWithChildren, useState } from "react";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { type PropsWithChildren, useState } from 'react';
 
 export function QueryProvider({ children }: PropsWithChildren) {
   const [queryClient] = useState(
@@ -12,10 +12,8 @@ export function QueryProvider({ children }: PropsWithChildren) {
             retry: 2,
           },
         },
-      })
+      }),
   );
 
-  return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }
