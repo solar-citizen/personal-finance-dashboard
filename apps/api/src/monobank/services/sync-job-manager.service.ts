@@ -7,9 +7,7 @@ import {
 } from 'src/@generated/zod/pfd-dtos';
 import { ContextBuilderService } from 'src/ai/services/context-builder.service';
 import { PrismaService } from 'src/db/prisma.service';
-import { formatDateToIso } from 'src/lib/utils/date.util';
-import { decrypt } from 'src/lib/utils/encryption.util';
-import { getErrorMessage } from 'src/lib/utils/error.util';
+import { decrypt, formatDateToIso, getErrorMessage } from 'src/lib/utils';
 
 import { MonoBankTransaction } from '../lib/monobank.types';
 import {
@@ -57,9 +55,11 @@ export class SyncJobManager {
       },
     });
 
-    this.processSyncJob(syncJob.id, account, from, to).catch((error) => {
-      this.logger.error(`Background sync job ${syncJob.id} failed:`, error);
-    });
+    this.processSyncJob(syncJob.id, account, from, to).catch(
+      (error: unknown) => {
+        this.logger.error(`Background sync job ${syncJob.id} failed:`, error);
+      },
+    );
 
     const estimatedTime = chunks * 60; // seconds
 
@@ -85,7 +85,7 @@ export class SyncJobManager {
       total: job.total,
       newTransactions: job.newCount,
       updatedTransactions: job.updatedCount,
-      errorMessage: job.errorMessage || undefined,
+      errorMessage: job.errorMessage ?? undefined,
     };
   }
 

@@ -70,7 +70,7 @@ export class OllamaClientService {
         });
 
         for await (const chunk of stream) {
-          if (chunk.message?.content) {
+          if (chunk.message.content) {
             subscriber.next(chunk.message.content);
           }
 
@@ -79,9 +79,9 @@ export class OllamaClientService {
             subscriber.complete();
           }
         }
-      })().catch((error) => {
-        this.logger.error('Uncaught Ollama stream error:', error);
-        subscriber.error(error);
+      })().catch((err: unknown) => {
+        this.logger.error('Uncaught Ollama stream error:', err);
+        subscriber.error(err);
       });
     });
   }

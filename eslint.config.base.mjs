@@ -37,6 +37,8 @@ export default defineConfig(
       prettier: pluginPrettier,
     },
     rules: {
+      'max-len': ['warn', { code: 100 }],
+
       'prettier/prettier': 'error',
 
       '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
@@ -76,7 +78,7 @@ export default defineConfig(
       'import/first': 'error',
       'import/newline-after-import': 'error',
       'import/no-duplicates': 'error',
-      'import/max-dependencies': ['warn', { max: 10, ignoreTypeImports: true }],
+      'import/max-dependencies': ['warn', { max: 15, ignoreTypeImports: true }],
     },
   },
   {

@@ -13,9 +13,8 @@ export function isAxiosErrorWithResponse(error: unknown): error is {
   }
 
   return (
-    error.response !== undefined &&
+    error.response != undefined &&
     typeof error.response === 'object' &&
-    error.response !== null &&
     'status' in error.response &&
     typeof error.response.status === 'number' &&
     'data' in error.response

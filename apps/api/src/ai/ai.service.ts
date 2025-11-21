@@ -196,30 +196,36 @@ export class AiService {
                   });
                   subscriber.complete();
                 })
-                .catch((error) => {
-                  this.logger.error('Complete handler error:', error);
-                  subscriber.error(error);
+                .catch((err: unknown) => {
+                  this.logger.error('Complete handler error:', err);
+                  subscriber.error(err);
                 });
             },
           });
         })
-        .catch((error) => {
-          this.logger.error('Stream setup error:', error);
-          subscriber.error(error);
+        .catch((err: unknown) => {
+          this.logger.error('Stream setup error:', err);
+          subscriber.error(err);
         });
     });
   }
 
   async getConversation(conversationId: string, userId: string) {
-    return this.conversationManager.getConversation(conversationId, userId);
+    return await this.conversationManager.getConversation(
+      conversationId,
+      userId,
+    );
   }
 
   async listConversations(userId: string) {
-    return this.conversationManager.listConversations(userId);
+    return await this.conversationManager.listConversations(userId);
   }
 
   async deleteConversation(conversationId: string, userId: string) {
-    return this.conversationManager.deleteConversation(conversationId, userId);
+    return await this.conversationManager.deleteConversation(
+      conversationId,
+      userId,
+    );
   }
 
   async healthCheck(): Promise<Omit<HealthStatusDto, 'status'>> {

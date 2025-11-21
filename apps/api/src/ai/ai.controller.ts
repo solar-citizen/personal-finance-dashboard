@@ -33,7 +33,7 @@ export class AiController {
     @CurrentUser('id') userId: string,
     @Body() dto: SendMessageDto,
   ): Promise<ChatResponseDto> {
-    return this.aiService.sendMessage(userId, dto);
+    return await this.aiService.sendMessage(userId, dto);
   }
 
   @Post('chat/stream')
@@ -50,7 +50,7 @@ export class AiController {
     @CurrentUser('id') userId: string,
     @Param('id') conversationId: string,
   ): Promise<ConversationDto> {
-    return this.aiService.getConversation(conversationId, userId);
+    return await this.aiService.getConversation(conversationId, userId);
   }
 
   @Get('conversations')

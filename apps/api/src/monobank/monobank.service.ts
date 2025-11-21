@@ -13,12 +13,16 @@ import { decrypt, encrypt } from 'src/lib/utils/encryption.util'; // Add this im
 
 import { ContextBuilderService } from '../ai/services/context-builder.service';
 import { PrismaService } from '../db/prisma.service';
-import { formatAccountResponse } from './lib/utils/account.util';
-import { getCurrencyFromCode } from './lib/utils/currency.util';
-import { calculateSyncDateRange } from './lib/utils/date.util';
-import { MonoBankApiClient } from './services/monobank-api-client.service';
-import { SyncJobManager } from './services/sync-job-manager.service';
-import { TransactionProcessor } from './services/transaction-processor.service';
+import {
+  calculateSyncDateRange,
+  formatAccountResponse,
+  getCurrencyFromCode,
+} from './lib/utils';
+import {
+  MonoBankApiClient,
+  SyncJobManager,
+  TransactionProcessor,
+} from './services/';
 
 @Injectable()
 export class MonoBankService {

@@ -24,9 +24,11 @@ export class CurrencyService {
   }
 
   async getExchangeRates(): Promise<ExchangeRatesDto> {
-    if (this.isCacheValid()) {
-      this.logger.debug('Returning cached exchange rates');
-      return this.cachedRates!;
+    const cached = this.getValidCache();
+
+    if (cached) {
+      this.logger.log('Returning cached exchange rates');
+      return cached;
     }
 
     try {
@@ -57,12 +59,14 @@ export class CurrencyService {
     }
   }
 
-  private isCacheValid(): boolean {
+  private getValidCache(): ExchangeRatesDto | null {
     if (!this.cachedRates || !this.cacheTimestamp) {
-      return false;
+      return null;
     }
 
-    return dayjs().diff(this.cacheTimestamp, 'milliseconds') < this.cacheTtlMs;
+    return dayjs().diff(this.cacheTimestamp, 'milliseconds') < this.cacheTtlMs
+      ? this.cachedRates
+      : null;
   }
 
   private getFallbackRates(): ExchangeRatesDto {
