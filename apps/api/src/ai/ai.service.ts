@@ -8,6 +8,7 @@ import {
   HealthStatusDto,
   SendMessageDto,
 } from 'src/@generated/zod/pfd-dtos';
+
 import { ContextBuilderService } from './services/context-builder.service';
 import { ConversationManagerService } from './services/conversation-manager.service';
 import {
@@ -59,11 +60,8 @@ export class AiService {
               this.convertToGeminiFormat(messages),
             )
           : await this.ollamaClient.chat(messages);
-      } catch (error) {
-        this.logger.error(
-          'Primary model failed, falling back to Ollama:',
-          error,
-        );
+      } catch (err) {
+        this.logger.error('Primary model failed, falling back to Ollama:', err);
         return await this.ollamaClient.chat(messages);
       }
     })();
@@ -96,11 +94,7 @@ export class AiService {
     };
   }
 
-  handleStreamResponse(
-    userId: string,
-    dto: SendMessageDto,
-    res: Response,
-  ): void {
+  streamChat(userId: string, dto: SendMessageDto, res: Response): void {
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
@@ -153,10 +147,10 @@ export class AiService {
                     this.convertToGeminiFormat(messages),
                   )
                 : this.ollamaClient.chatStream(messages);
-            } catch (error) {
+            } catch (err) {
               this.logger.error(
                 'Primary model failed, falling back to Ollama:',
-                error,
+                err,
               );
               return this.ollamaClient.chatStream(messages);
             }
@@ -167,9 +161,9 @@ export class AiService {
               responseBuilder.current += chunk;
               subscriber.next({ type: 'chunk', content: chunk });
             },
-            error: (error) => {
-              this.logger.error('Stream error:', error);
-              subscriber.error(error);
+            error: (err) => {
+              this.logger.error('Stream error:', err);
+              subscriber.error(err);
             },
             complete: () => {
               const responseTimeMs = dayjs().diff(startTime, 'millisecond');
@@ -195,30 +189,36 @@ export class AiService {
                   });
                   subscriber.complete();
                 })
-                .catch((error) => {
-                  this.logger.error('Complete handler error:', error);
-                  subscriber.error(error);
+                .catch((err: unknown) => {
+                  this.logger.error('Complete handler error:', err);
+                  subscriber.error(err);
                 });
             },
           });
         })
-        .catch((error) => {
-          this.logger.error('Stream setup error:', error);
-          subscriber.error(error);
+        .catch((err: unknown) => {
+          this.logger.error('Stream setup error:', err);
+          subscriber.error(err);
         });
     });
   }
 
   async getConversation(conversationId: string, userId: string) {
-    return this.conversationManager.getConversation(conversationId, userId);
+    return await this.conversationManager.getConversation(
+      conversationId,
+      userId,
+    );
   }
 
   async listConversations(userId: string) {
-    return this.conversationManager.listConversations(userId);
+    return await this.conversationManager.listConversations(userId);
   }
 
   async deleteConversation(conversationId: string, userId: string) {
-    return this.conversationManager.deleteConversation(conversationId, userId);
+    return await this.conversationManager.deleteConversation(
+      conversationId,
+      userId,
+    );
   }
 
   async healthCheck(): Promise<Omit<HealthStatusDto, 'status'>> {
@@ -253,7 +253,7 @@ export class AiService {
       );
 
     await this.conversationManager.addMessage({
-      conversationId: conversationId,
+      conversationId,
       role: MessageRole.user,
       content: dto.message,
     });

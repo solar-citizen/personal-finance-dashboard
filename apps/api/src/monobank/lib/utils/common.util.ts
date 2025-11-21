@@ -1,22 +1,22 @@
 import { isAxiosError } from 'axios';
+
 import type { MonoBankErrorResponse } from '../monobank.types';
 
-export function isAxiosErrorWithResponse(error: unknown): error is {
+export function isAxiosErrorWithResponse(err: unknown): err is {
   response: {
     status: number;
     data: MonoBankErrorResponse;
   };
 } {
-  if (!isAxiosError(error)) {
+  if (!isAxiosError(err)) {
     return false;
   }
 
   return (
-    error.response !== undefined &&
-    typeof error.response === 'object' &&
-    error.response !== null &&
-    'status' in error.response &&
-    typeof error.response.status === 'number' &&
-    'data' in error.response
+    err.response != undefined &&
+    typeof err.response === 'object' &&
+    'status' in err.response &&
+    typeof err.response.status === 'number' &&
+    'data' in err.response
   );
 }

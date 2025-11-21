@@ -3,6 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { JwtPayloadDto } from 'src/@generated/zod/pfd-dtos';
 import { ConfigService } from 'src/config/config.service';
+
 import { PrismaService } from '../../db/prisma.service';
 
 @Injectable()

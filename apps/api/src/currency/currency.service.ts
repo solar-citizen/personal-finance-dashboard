@@ -4,6 +4,7 @@ import dayjs from 'dayjs';
 import { firstValueFrom } from 'rxjs';
 import { ExchangeRatesDto } from 'src/@generated/zod/pfd-dtos';
 import { ConfigService } from 'src/config/config.service';
+
 import { ExchangeRateApiResponseSchema } from './currency.schema';
 
 @Injectable()
@@ -23,9 +24,11 @@ export class CurrencyService {
   }
 
   async getExchangeRates(): Promise<ExchangeRatesDto> {
-    if (this.isCacheValid()) {
-      this.logger.debug('Returning cached exchange rates');
-      return this.cachedRates!;
+    const cached = this.getValidCache();
+
+    if (cached) {
+      this.logger.log('Returning cached exchange rates');
+      return cached;
     }
 
     try {
@@ -44,8 +47,8 @@ export class CurrencyService {
       );
 
       return this.cachedRates;
-    } catch (error) {
-      this.logger.error('Failed to fetch exchange rates', error);
+    } catch (err) {
+      this.logger.error('Failed to fetch exchange rates', err);
 
       if (this.cachedRates) {
         this.logger.warn('Returning stale cached rates due to API error');
@@ -56,12 +59,14 @@ export class CurrencyService {
     }
   }
 
-  private isCacheValid(): boolean {
+  private getValidCache(): ExchangeRatesDto | null {
     if (!this.cachedRates || !this.cacheTimestamp) {
-      return false;
+      return null;
     }
 
-    return dayjs().diff(this.cacheTimestamp, 'milliseconds') < this.cacheTtlMs;
+    return dayjs().diff(this.cacheTimestamp, 'milliseconds') < this.cacheTtlMs
+      ? this.cachedRates
+      : null;
   }
 
   private getFallbackRates(): ExchangeRatesDto {

@@ -9,15 +9,7 @@ const currencyMap: Record<number, Currency> = {
   978: Currency.eur,
 };
 
-export function getCurrencyFromCode(code: number): Currency {
-  const currency = currencyMap[code];
-
-  if (!currency) {
-    throw new Error(`Unknown currency code: ${code}`);
-  }
-
-  return currency;
-}
+export const getCurrencyFromCode = (code: number) => currencyMap[code];
 
 export function getAccountTypeName(type: string): string {
   const typeMap: Record<string, string> = {

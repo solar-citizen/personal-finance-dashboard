@@ -1,4 +1,5 @@
 import { hash } from 'bcrypt';
+
 import { prisma } from './client';
 import { mccCategories } from './lib/mcc-categories';
 
@@ -11,8 +12,8 @@ async function main() {
 
   const nameCount = new Map<string, number>();
 
-  mccCategories.forEach((cat) => {
-    nameCount.set(cat.name, (nameCount.get(cat.name) || 0) + 1);
+  mccCategories.forEach(({ name }) => {
+    nameCount.set(name, (nameCount.get(name) ?? 0) + 1);
   });
 
   const duplicates = [...nameCount].filter(([, count]) => count > 1);
@@ -59,6 +60,10 @@ async function main() {
     throw new Error('SEED_ADMIN_EMAIL env variable is missing.');
   }
 
+  if (!adminName) {
+    throw new Error('SEED_ADMIN_NAME env variable is missing.');
+  }
+
   const { email } = await prisma.user.upsert({
     where: { email: adminEmail },
     update: {},
@@ -74,8 +79,8 @@ async function main() {
 }
 
 main()
-  .catch((e) => {
-    console.error('❌ Seeding error:', e);
+  .catch((err: unknown) => {
+    console.error('❌ Seeding error:', err);
     process.exit(1);
   })
   .finally(async () => {

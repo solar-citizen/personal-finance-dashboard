@@ -16,7 +16,7 @@ export function formatAccountResponse({
   return {
     id,
     accountId,
-    iban: iban || '',
+    iban: iban ?? '',
     type,
     currency,
     balance: formatAmount(balance),

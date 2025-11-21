@@ -11,6 +11,7 @@ import {
 import { ConfigService } from 'src/config/config.service';
 import { formatDateToIso } from 'src/lib/utils/date.util';
 import { formatEmbeddingVector } from 'src/lib/utils/vector.util';
+
 import { PrismaService } from '../../db/prisma.service';
 import { OllamaClientService } from './ollama-client.service';
 
@@ -92,7 +93,7 @@ export class ConversationManagerService {
       return conversationId;
     }
 
-    return this.createConversation(userId, firstMessage || 'New conversation');
+    return this.createConversation(userId, firstMessage ?? 'New conversation');
   }
 
   async addMessage({
@@ -127,12 +128,14 @@ export class ConversationManagerService {
       data: { updatedAt: dayjs().toDate() },
     });
 
-    this.generateAndUpdateEmbedding(messageId, content).catch((error) => {
-      this.logger.error(
-        `Failed to generate embedding for ${messageId}:`,
-        error,
-      );
-    });
+    this.generateAndUpdateEmbedding(messageId, content).catch(
+      (err: unknown) => {
+        this.logger.error(
+          `Failed to generate embedding for ${messageId}:`,
+          err,
+        );
+      },
+    );
 
     return messageId;
   }
