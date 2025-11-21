@@ -51,8 +51,8 @@ export class OllamaClientService {
         response: message.content,
         tokensUsed: eval_count,
       };
-    } catch (error) {
-      this.logger.error('Ollama chat error:', error);
+    } catch (err) {
+      this.logger.error('Ollama chat error:', err);
 
       return { response: '', tokensUsed: undefined };
     }
@@ -94,8 +94,8 @@ export class OllamaClientService {
       });
 
       return response.embedding;
-    } catch (error) {
-      this.logger.error('Embedding generation error:', error);
+    } catch (err) {
+      this.logger.error('Embedding generation error:', err);
 
       return [];
     }
@@ -105,8 +105,8 @@ export class OllamaClientService {
     try {
       await this.ollama.list();
       return true;
-    } catch (error) {
-      this.logger.error('Ollama health check failed:', error);
+    } catch (err) {
+      this.logger.error('Ollama health check failed:', err);
       return false;
     }
   }

@@ -6,9 +6,13 @@ export const axiosAgent = axios.create({
   withCredentials: true,
 });
 
-export type ErrorWrapper<TError> = TError | { status: 'unknown'; payload: string };
+type ErrorWrapper<TError> = TError | { status: 'unknown'; payload: string };
 
-export type ApiFetcherOptions<TBody, THeaders, TQueryParams, TPathParams> = {
+type ApiResult<TData, TError> =
+  | { success: true; data: TData }
+  | { success: false; error: ErrorWrapper<TError> };
+
+type ApiFetcherOptions<TBody, THeaders, TQueryParams, TPathParams> = {
   url: string;
   method: string;
   body?: TBody;
@@ -64,7 +68,6 @@ function getAuthToken(): string | null {
 
 export async function apiFetch<
   TData,
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
   TError,
   TBody extends Record<string, unknown> | FormData | undefined | null,
   THeaders extends RawAxiosRequestHeaders,
@@ -78,7 +81,9 @@ export async function apiFetch<
   pathParams,
   queryParams,
   signal,
-}: ApiFetcherOptions<TBody, THeaders, TQueryParams, TPathParams>): Promise<TData> {
+}: ApiFetcherOptions<TBody, THeaders, TQueryParams, TPathParams>): Promise<
+  ApiResult<TData, TError>
+> {
   try {
     const accessToken = getAuthToken();
 
@@ -95,15 +100,18 @@ export async function apiFetch<
 
     const response = await axiosAgent<TData>(axiosConfig);
 
-    return response.data;
-  } catch (e: unknown) {
-    if (!isError(e)) {
-      throw new Error('Unknown error occurred');
+    return { success: true, data: response.data };
+  } catch (err: unknown) {
+    if (!isError(err)) {
+      return {
+        success: false,
+        error: { status: 'unknown' as const, payload: 'Unknown error occurred' },
+      };
     }
 
-    if (isAxiosError<TError>(e)) {
-      const status = e.response?.status;
-      const errorData = e.response?.data;
+    if (isAxiosError<TError>(err)) {
+      const status = err.response?.status;
+      const errorData = err.response?.data;
 
       if (status === 401 && typeof window !== 'undefined') {
         if (window.location.pathname !== '/login') {
@@ -114,17 +122,17 @@ export async function apiFetch<
 
       const errorWrapper: ErrorWrapper<TError> = errorData ?? {
         status: 'unknown' as const,
-        payload: e.message || 'Request failed',
+        payload: err.message || 'Request failed',
       };
 
-      throw new Error(JSON.stringify(errorWrapper));
+      return { success: false, error: errorWrapper };
     }
 
     const errorWrapper: ErrorWrapper<TError> = {
       status: 'unknown' as const,
-      payload: e.message || 'Network error occurred',
+      payload: err.message || 'Network error occurred',
     };
 
-    throw new Error(JSON.stringify(errorWrapper));
+    return { success: false, error: errorWrapper };
   }
 }

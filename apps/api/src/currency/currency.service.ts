@@ -47,8 +47,8 @@ export class CurrencyService {
       );
 
       return this.cachedRates;
-    } catch (error) {
-      this.logger.error('Failed to fetch exchange rates', error);
+    } catch (err) {
+      this.logger.error('Failed to fetch exchange rates', err);
 
       if (this.cachedRates) {
         this.logger.warn('Returning stale cached rates due to API error');

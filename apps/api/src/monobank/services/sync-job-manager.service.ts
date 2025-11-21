@@ -55,11 +55,9 @@ export class SyncJobManager {
       },
     });
 
-    this.processSyncJob(syncJob.id, account, from, to).catch(
-      (error: unknown) => {
-        this.logger.error(`Background sync job ${syncJob.id} failed:`, error);
-      },
-    );
+    this.processSyncJob(syncJob.id, account, from, to).catch((err: unknown) => {
+      this.logger.error(`Background sync job ${syncJob.id} failed:`, err);
+    });
 
     const estimatedTime = chunks * 60; // seconds
 
@@ -144,14 +142,14 @@ export class SyncJobManager {
       });
 
       this.logger.log(`Job ${jobId}: Completed successfully`);
-    } catch (error) {
-      this.logger.error(`Job ${jobId}: Failed with error:`, error);
+    } catch (err) {
+      this.logger.error(`Job ${jobId}: Failed with error:`, err);
 
       await this.prismaService.syncJob.update({
         where: { id: jobId },
         data: {
           status: SyncJobStatus.failed,
-          errorMessage: getErrorMessage(error),
+          errorMessage: getErrorMessage(err),
         },
       });
     }

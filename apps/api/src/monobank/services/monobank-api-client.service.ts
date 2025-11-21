@@ -45,8 +45,8 @@ export class MonoBankApiClient {
       );
 
       return response.data;
-    } catch (error) {
-      this.handleMonoBankError(error);
+    } catch (err) {
+      this.handleMonoBankError(err);
     }
   }
 
@@ -72,8 +72,8 @@ export class MonoBankApiClient {
       );
 
       return response.data;
-    } catch (error) {
-      this.handleMonoBankError(error);
+    } catch (err) {
+      this.handleMonoBankError(err);
     }
   }
 
@@ -89,10 +89,10 @@ export class MonoBankApiClient {
     this.lastRequestTime = Date.now();
   }
 
-  private handleMonoBankError(error: unknown): never {
-    if (isAxiosErrorWithResponse(error)) {
-      const status = error.response.status;
-      const data = error.response.data;
+  private handleMonoBankError(err: unknown): never {
+    if (isAxiosErrorWithResponse(err)) {
+      const status = err.response.status;
+      const data = err.response.data;
 
       this.logger.error(`MonoBank API error (${status}):`, data);
 
@@ -116,7 +116,7 @@ export class MonoBankApiClient {
       );
     }
 
-    this.logger.error('Unexpected error:', error);
+    this.logger.error('Unexpected error:', err);
     throw new HttpException(
       'Failed to connect to MonoBank API',
       HttpStatus.INTERNAL_SERVER_ERROR,

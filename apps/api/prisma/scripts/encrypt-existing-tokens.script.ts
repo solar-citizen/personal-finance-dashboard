@@ -1,4 +1,5 @@
 import { prisma } from 'prisma/client';
+
 import { encrypt } from '../../src/lib/utils/encryption.util';
 
 async function main() {
@@ -19,14 +20,14 @@ async function main() {
 
   for (const account of accounts) {
     try {
-      if (account.monoToken && account.monoToken.includes(':')) {
-        console.log(`Account ${account.id} - already encrypted`);
-        skipped++;
-
+      if (!account.monoToken) {
         continue;
       }
 
-      if (!account.monoToken) {
+      if (account.monoToken.includes(':')) {
+        console.log(`Account ${account.id} - already encrypted`);
+        skipped++;
+
         continue;
       }
 
@@ -39,8 +40,8 @@ async function main() {
 
       console.log(`✅ Account ${account.id} - token encrypted`);
       encrypted++;
-    } catch (error) {
-      console.error(`❌ Account ${account.id} - error:`, error);
+    } catch (err) {
+      console.error(`❌ Account ${account.id} - error:`, err);
     }
   }
 
@@ -51,8 +52,8 @@ async function main() {
 }
 
 main()
-  .catch((e) => {
-    console.error('Migration failed:', e);
+  .catch((err: unknown) => {
+    console.error('Migration failed:', err);
     process.exit(1);
   })
   .finally(async () => {

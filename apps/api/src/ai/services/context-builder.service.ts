@@ -188,8 +188,8 @@ export class ContextBuilderService {
       );
 
       return results;
-    } catch (error) {
-      this.logger.warn('Knowledge base search failed:', error);
+    } catch (err) {
+      this.logger.warn('Knowledge base search failed:', err);
 
       return [];
     }

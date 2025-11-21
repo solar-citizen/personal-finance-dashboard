@@ -42,7 +42,7 @@ export class AiController {
     @Body() dto: SendMessageDto,
     @Res() res: Response,
   ): void {
-    return this.aiService.handleStreamResponse(userId, dto, res);
+    return this.aiService.streamChat(userId, dto, res);
   }
 
   @Get('conversations/:id')

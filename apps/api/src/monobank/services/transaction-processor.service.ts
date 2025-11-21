@@ -83,11 +83,11 @@ export class TransactionProcessor {
 
       const isNew = saved.createdAt.getTime() > Date.now() - 1000;
       return { success: true, isNew };
-    } catch (error) {
-      this.logger.error(`Error saving transaction ${tx.id}:`, error);
+    } catch (err) {
+      this.logger.error(`Error saving transaction ${tx.id}:`, err);
       return {
         success: false,
-        error: `Transaction ${tx.id}: ${getErrorMessage(error)}`,
+        error: `Transaction ${tx.id}: ${getErrorMessage(err)}`,
       };
     }
   }

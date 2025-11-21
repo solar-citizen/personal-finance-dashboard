@@ -86,9 +86,9 @@ export class GeminiClientService {
         response: response.text(),
         tokensUsed: response.usageMetadata?.totalTokenCount,
       };
-    } catch (error) {
-      this.logger.error('Gemini chat error:', error);
-      throw error;
+    } catch (err) {
+      this.logger.error('Gemini chat error:', err);
+      throw err;
     }
   }
 
@@ -125,9 +125,9 @@ export class GeminiClientService {
 
         this.logDuration('Stream completed', startTime);
         subscriber.complete();
-      })().catch((error: unknown) => {
-        this.logger.error('Uncaught Gemini stream error:', error);
-        subscriber.error(error);
+      })().catch((err: unknown) => {
+        this.logger.error('Uncaught Gemini stream error:', err);
+        subscriber.error(err);
       });
     });
   }
@@ -139,8 +139,8 @@ export class GeminiClientService {
 
     try {
       return !!(await this.model.generateContent('test')).response.text();
-    } catch (error) {
-      this.logger.error('Gemini health check failed:', error);
+    } catch (err) {
+      this.logger.error('Gemini health check failed:', err);
       return false;
     }
   }
@@ -195,10 +195,9 @@ export class GeminiClientService {
         ),
         allModels: models.map(({ name }) => name),
       };
-    } catch (error) {
-      this.logger.error('Error listing models:', error);
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error';
+    } catch (err) {
+      this.logger.error('Error listing models:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
 
       return { error: errorMessage };
     }

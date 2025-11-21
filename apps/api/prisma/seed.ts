@@ -1,4 +1,5 @@
 import { hash } from 'bcrypt';
+
 import { prisma } from './client';
 import { mccCategories } from './lib/mcc-categories';
 
@@ -74,8 +75,8 @@ async function main() {
 }
 
 main()
-  .catch((e) => {
-    console.error('❌ Seeding error:', e);
+  .catch((err: unknown) => {
+    console.error('❌ Seeding error:', err);
     process.exit(1);
   })
   .finally(async () => {
