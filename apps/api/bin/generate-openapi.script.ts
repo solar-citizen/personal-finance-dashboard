@@ -1,6 +1,8 @@
-import { NestFactory } from '@nestjs/core';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+
+import { NestFactory } from '@nestjs/core';
+
 import { AppModule } from '../src/app.module';
 import { initSwagger } from '../src/lib/swagger.config';
 
@@ -27,7 +29,7 @@ async function generateOpenAPISpec() {
   await app.close();
 }
 
-generateOpenAPISpec().catch((error: unknown) => {
-  console.error('Error generating OpenAPI spec:', error);
+generateOpenAPISpec().catch((err: unknown) => {
+  console.error('Error generating OpenAPI spec:', err);
   process.exit(1);
 });

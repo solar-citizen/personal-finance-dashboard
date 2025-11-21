@@ -1,17 +1,16 @@
-export function isErrorWithMessage(
-  error: unknown,
-): error is { message: string } {
+export function isErrorWithMessage(err: unknown): err is { message: string } {
   return (
-    typeof error === 'object' &&
-    error !== null &&
-    'message' in error &&
-    typeof (error as { message: unknown }).message === 'string'
+    typeof err === 'object' &&
+    err !== null &&
+    'message' in err &&
+    typeof err.message === 'string'
   );
 }
 
-export function getErrorMessage(error: unknown): string {
-  if (isErrorWithMessage(error)) {
-    return error.message;
+export function getErrorMessage(err: unknown): string {
+  if (isErrorWithMessage(err)) {
+    return err.message;
   }
-  return String(error);
+
+  return String(err);
 }

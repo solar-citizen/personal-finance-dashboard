@@ -17,6 +17,7 @@ import { formatDateToIso, getDateRange } from 'src/lib/utils/date.util';
 import { formatValue } from 'src/lib/utils/number.util';
 import { formatEmbeddingVector } from 'src/lib/utils/vector.util';
 import { getAccountTypeName } from 'src/monobank/lib/utils/currency.util';
+
 import { PrismaService } from '../../db/prisma.service';
 import {
   identityInstructions,
@@ -187,15 +188,15 @@ export class ContextBuilderService {
       );
 
       return results;
-    } catch (error) {
-      this.logger.warn('Knowledge base search failed:', error);
+    } catch (err) {
+      this.logger.warn('Knowledge base search failed:', err);
 
       return [];
     }
   }
 
   private async getUserAccounts(userId: string): Promise<AccountSummaryDto[]> {
-    return this.prismaService.account.findMany({
+    return await this.prismaService.account.findMany({
       where: { userId },
       select: {
         id: true,
@@ -212,7 +213,7 @@ export class ContextBuilderService {
   ): Promise<TransactionWithRelationsDto[]> {
     const thirtyDaysAgo = dayjs().subtract(30, 'day').toDate();
 
-    return this.prismaService.transaction.findMany({
+    return await this.prismaService.transaction.findMany({
       where: {
         account: { userId },
         time: { gte: thirtyDaysAgo },
@@ -232,7 +233,7 @@ export class ContextBuilderService {
   }
 
   private async getCategories(): Promise<CategorySummaryDto[]> {
-    return this.prismaService.category.findMany({
+    return await this.prismaService.category.findMany({
       select: {
         id: true,
         name: true,
@@ -280,20 +281,28 @@ export class ContextBuilderService {
 
     const totalInUah = formatted.reduce((sum, { amount }) => sum + amount, 0);
 
-    const txByCurrency = transactions.reduce(
-      (acc, tx): Record<string, TransactionWithRelationsDto[]> => {
-        const currency = tx.account?.currency || 'uah';
-        if (!acc[currency]) acc[currency] = [];
-        acc[currency].push(tx);
-        return acc;
-      },
-      {},
-    );
+    const txByCurrency = transactions.reduce<
+      Partial<Record<string, TransactionWithRelationsDto[]>>
+    >((acc, tx) => {
+      const currency = tx.account.currency;
+
+      acc[currency] = acc[currency] ?? [];
+      acc[currency].push(tx);
+
+      return acc;
+    }, {});
 
     const txSummary = Object.entries(txByCurrency)
-      .map(([currency, txs]) => {
+      .flatMap(([currency, txs]) => {
+        if (!txs) {
+          return [];
+        }
+
         const total = txs.reduce((sum, { amount }) => sum + Number(amount), 0);
-        return `- ${currency.toUpperCase()}: ${txs.length} transactions, ${formatCurrency(total.toString(), currency)}`;
+
+        return [
+          `- ${currency.toUpperCase()}: ${txs.length} transactions, ${formatCurrency(total.toString(), currency)}`,
+        ];
       })
       .join('\n');
 
@@ -418,7 +427,7 @@ export class ContextBuilderService {
   ): CategoryRecord {
     return transactions.reduce<CategoryRecord>(
       (spending, { amount, category }) => {
-        const categoryName = category?.name || 'Uncategorized';
+        const categoryName = category?.name ?? 'Uncategorized';
 
         return {
           ...spending,

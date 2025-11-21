@@ -17,6 +17,7 @@ import {
   HealthStatusDto,
   SendMessageDto,
 } from 'src/@generated/zod/pfd-dtos';
+
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AiService } from './ai.service';
@@ -32,7 +33,7 @@ export class AiController {
     @CurrentUser('id') userId: string,
     @Body() dto: SendMessageDto,
   ): Promise<ChatResponseDto> {
-    return this.aiService.sendMessage(userId, dto);
+    return await this.aiService.sendMessage(userId, dto);
   }
 
   @Post('chat/stream')
@@ -41,7 +42,7 @@ export class AiController {
     @Body() dto: SendMessageDto,
     @Res() res: Response,
   ): void {
-    return this.aiService.handleStreamResponse(userId, dto, res);
+    return this.aiService.streamChat(userId, dto, res);
   }
 
   @Get('conversations/:id')
@@ -49,7 +50,7 @@ export class AiController {
     @CurrentUser('id') userId: string,
     @Param('id') conversationId: string,
   ): Promise<ConversationDto> {
-    return this.aiService.getConversation(conversationId, userId);
+    return await this.aiService.getConversation(conversationId, userId);
   }
 
   @Get('conversations')

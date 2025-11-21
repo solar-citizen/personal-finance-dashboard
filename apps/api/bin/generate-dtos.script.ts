@@ -1,5 +1,3 @@
-import dayjs from 'dayjs';
-import timezone from 'dayjs/plugin/timezone';
 import {
   existsSync,
   mkdirSync,
@@ -9,6 +7,9 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
+
+import dayjs from 'dayjs';
+import timezone from 'dayjs/plugin/timezone';
 import { formatWithPrettier } from 'src/lib/utils/prettier.util';
 
 dayjs.extend(timezone);
@@ -66,6 +67,7 @@ function findSchemaFiles(
       let relativeFromDtos = relative(dtosDir, fullPath)
         .replace(/\.ts$/, '')
         .replace(/\\/g, '/');
+
       if (!relativeFromDtos.startsWith('.')) {
         relativeFromDtos = './' + relativeFromDtos;
       }
@@ -100,7 +102,8 @@ async function generateSchemas(schemas: SchemaInfo[]) {
     if (!importsByPath.has(importPath)) {
       importsByPath.set(importPath, []);
     }
-    importsByPath.get(importPath)!.push(`${name}Schema`);
+
+    (importsByPath.get(importPath) ?? []).push(`${name}Schema`);
   });
 
   // Generate re-exports
@@ -185,7 +188,7 @@ async function generateAll() {
   console.log('\n✅ Generation complete!');
 }
 
-generateAll().catch((error: unknown) => {
-  console.error('❌ Error during generation:', error);
+generateAll().catch((err: unknown) => {
+  console.error('❌ Error during generation:', err);
   process.exit(1);
 });

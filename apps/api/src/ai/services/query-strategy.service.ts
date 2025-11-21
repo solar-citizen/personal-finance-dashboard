@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+
 import { analyticalFinancePatterns } from './lib/analytical-patterns';
 
 export type ContextLevel = 'full' | 'minimal';

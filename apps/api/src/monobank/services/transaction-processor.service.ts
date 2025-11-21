@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/db/prisma.service';
 import { fromUnixTimestamp } from 'src/lib/utils/date.util';
 import { getErrorMessage } from 'src/lib/utils/error.util';
+
 import type { MonoBankTransaction } from '../lib/monobank.types';
 
 type SaveTransactionsResult = {
@@ -82,11 +83,11 @@ export class TransactionProcessor {
 
       const isNew = saved.createdAt.getTime() > Date.now() - 1000;
       return { success: true, isNew };
-    } catch (error) {
-      this.logger.error(`Error saving transaction ${tx.id}:`, error);
+    } catch (err) {
+      this.logger.error(`Error saving transaction ${tx.id}:`, err);
       return {
         success: false,
-        error: `Transaction ${tx.id}: ${getErrorMessage(error)}`,
+        error: `Transaction ${tx.id}: ${getErrorMessage(err)}`,
       };
     }
   }

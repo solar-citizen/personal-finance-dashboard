@@ -1,4 +1,5 @@
 import { formatAmount } from 'src/lib/utils/currency.util';
+
 import { prisma } from '../client';
 
 type MccStats = {
@@ -175,12 +176,12 @@ async function verifyResults() {
   const categoriesWithCounts = await Promise.all(
     distribution.map(async (item) => {
       const category = await prisma.category.findUnique({
-        where: { id: item.categoryId || undefined },
+        where: { id: item.categoryId ?? undefined },
         select: { name: true },
       });
 
       return {
-        category: category?.name || 'Unknown',
+        category: category?.name ?? 'Unknown',
         count: item._count,
       };
     }),
