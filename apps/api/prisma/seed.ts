@@ -12,8 +12,8 @@ async function main() {
 
   const nameCount = new Map<string, number>();
 
-  mccCategories.forEach((cat) => {
-    nameCount.set(cat.name, (nameCount.get(cat.name) || 0) + 1);
+  mccCategories.forEach(({ name }) => {
+    nameCount.set(name, (nameCount.get(name) ?? 0) + 1);
   });
 
   const duplicates = [...nameCount].filter(([, count]) => count > 1);
@@ -58,6 +58,10 @@ async function main() {
 
   if (!adminEmail) {
     throw new Error('SEED_ADMIN_EMAIL env variable is missing.');
+  }
+
+  if (!adminName) {
+    throw new Error('SEED_ADMIN_NAME env variable is missing.');
   }
 
   const { email } = await prisma.user.upsert({

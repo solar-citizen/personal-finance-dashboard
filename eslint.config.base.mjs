@@ -82,7 +82,7 @@ export default defineConfig(
     },
   },
   {
-    files: ['**/*.script.ts'],
+    files: ['**/*.script.ts', '**/prisma/seed.ts'],
     rules: {
       'no-console': 'off',
     },

@@ -67,6 +67,7 @@ function findSchemaFiles(
       let relativeFromDtos = relative(dtosDir, fullPath)
         .replace(/\.ts$/, '')
         .replace(/\\/g, '/');
+
       if (!relativeFromDtos.startsWith('.')) {
         relativeFromDtos = './' + relativeFromDtos;
       }
@@ -101,7 +102,8 @@ async function generateSchemas(schemas: SchemaInfo[]) {
     if (!importsByPath.has(importPath)) {
       importsByPath.set(importPath, []);
     }
-    importsByPath.get(importPath)!.push(`${name}Schema`);
+
+    (importsByPath.get(importPath) ?? []).push(`${name}Schema`);
   });
 
   // Generate re-exports
