@@ -11,5 +11,5 @@ console.log(`✅ Bun upgraded to version ${newVersion}`);
 const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
 packageJson.packageManager = `bun@${newVersion}`;
 
-writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n');
 console.log(`📦 package.json updated with bun@${newVersion}`);
