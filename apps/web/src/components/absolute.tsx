@@ -6,6 +6,12 @@ type UserData = {
   age: any;
 };
 
+type UserDataTwo = {
+  name?: string;
+  password: string;
+  age: any;
+};
+
 const API_URL = 'https://api.example.com';
 
 const u = 'john';
