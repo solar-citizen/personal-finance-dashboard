@@ -3,8 +3,8 @@ import { dirname, join } from 'node:path';
 
 import { NestFactory } from '@nestjs/core';
 
+import { initSwagger } from '../src/_lib/swagger.config';
 import { AppModule } from '../src/app.module';
-import { initSwagger } from '../src/lib/swagger.config';
 
 async function generateOpenAPISpec() {
   console.log('Generating OpenAPI specification...');

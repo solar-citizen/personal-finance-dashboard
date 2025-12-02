@@ -1,4 +1,4 @@
-import { formatAmount } from 'src/lib/utils/currency.util';
+import { formatAmount } from 'src/_lib/utils/currency.util';
 
 import { prisma } from '../client';
 
