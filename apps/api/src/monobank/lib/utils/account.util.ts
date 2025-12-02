@@ -1,7 +1,7 @@
-import { Account } from 'src/@generated/prisma-client/client';
-import { MonoBankAccountResponseDto } from 'src/@generated/zod/pfd-dtos';
 import { formatAmount } from 'src/_lib/utils/currency.util';
 import { formatDateToIso } from 'src/_lib/utils/date.util';
+import { Account } from 'src/@generated/prisma-client/client';
+import { MonoBankAccountResponseDto } from 'src/@generated/zod/pfd-dtos';
 
 export function formatAccountResponse({
   id,
@@ -16,7 +16,7 @@ export function formatAccountResponse({
   return {
     id,
     accountId,
-    iban: iban ?? '',
+    iban,
     type,
     currency,
     balance: formatAmount(balance),

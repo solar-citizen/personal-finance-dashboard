@@ -25,7 +25,8 @@
     "lint:web": "cd apps/web && bun run lint",
     "lint:fix": "bun lint:api-fix & bun lint:web-fix",
     "lint:api-fix": "cd apps/api && bun run lint:fix",
-    "lint:web-fix": "cd apps/web && bun run lint:fix"
+    "lint:web-fix": "cd apps/web && bun run lint:fix",
+    "codegen": "cd apps/api && bun run codegen && cd ../web && bun run codegen"
   },
   "dependencies": {
     "axios": "^1.13.2",
