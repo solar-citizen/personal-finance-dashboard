@@ -10,7 +10,7 @@ import { dirname, join, relative } from 'node:path';
 
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
-import { formatWithPrettier } from 'src/lib/utils/prettier.util';
+import { formatWithPrettier } from 'src/_lib/utils/prettier.util';
 
 dayjs.extend(timezone);
 

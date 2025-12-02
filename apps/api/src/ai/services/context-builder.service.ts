@@ -12,10 +12,10 @@ import {
   amountToNumber,
   formatAmount,
   formatCurrency,
-} from 'src/lib/utils/currency.util';
-import { formatDateToIso, getDateRange } from 'src/lib/utils/date.util';
-import { formatValue } from 'src/lib/utils/number.util';
-import { formatEmbeddingVector } from 'src/lib/utils/vector.util';
+} from 'src/_lib/utils/currency.util';
+import { formatDateToIso, getDateRange } from 'src/_lib/utils/date.util';
+import { formatValue } from 'src/_lib/utils/number.util';
+import { formatEmbeddingVector } from 'src/_lib/utils/vector.util';
 import { getAccountTypeName } from 'src/monobank/lib/utils/currency.util';
 
 import { PrismaService } from '../../db/prisma.service';
