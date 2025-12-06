@@ -40,7 +40,7 @@ async function main() {
 
       console.log(`✅ Account ${account.id} - token encrypted`);
       encrypted++;
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(`❌ Account ${account.id} - error:`, err);
     }
   }

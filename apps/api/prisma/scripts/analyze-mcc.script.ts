@@ -122,7 +122,7 @@ async function updateTransactionCategories() {
 
   for (const category of categories) {
     // Update all transactions with this MCC that don't have a category yet
-    const result = await prisma.transaction.updateMany({
+    const { count } = await prisma.transaction.updateMany({
       where: {
         mcc: category.mcc,
         OR: [
@@ -139,11 +139,11 @@ async function updateTransactionCategories() {
       },
     });
 
-    if (result.count > 0) {
+    if (count > 0) {
       console.log(
-        `✅ ${category.name} (MCC ${category.mcc}): Updated ${result.count} transactions`,
+        `✅ ${category.name} (MCC ${category.mcc}): Updated ${count} transactions`,
       );
-      totalUpdated += result.count;
+      totalUpdated += count;
     }
   }
 
