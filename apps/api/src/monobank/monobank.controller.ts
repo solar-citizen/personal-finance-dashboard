@@ -7,7 +7,7 @@ import {
   SyncProgressResponseDto,
   SyncResultResponseDto,
   SyncTransactionsDto,
-} from 'src/@generated/zod/pfd-dtos';
+} from 'src/_generated/zod/pfd-dtos';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';

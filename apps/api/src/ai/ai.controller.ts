@@ -16,7 +16,7 @@ import {
   ConversationListItemDto,
   HealthStatusDto,
   SendMessageDto,
-} from 'src/@generated/zod/pfd-dtos';
+} from 'src/_generated/zod/pfd-dtos';
 
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';

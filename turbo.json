@@ -18,7 +18,7 @@
       "cache": false
     },
     "openapi:generate": {
-      "outputs": ["@generated/openapi.json"],
+      "outputs": ["_generated/openapi.json"],
       "cache": false
     },
     "gen:api": {

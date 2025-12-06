@@ -15,7 +15,7 @@ async function generateOpenAPISpec() {
 
   const document = initSwagger(app);
 
-  const outputPath = join(__dirname, '../../../@generated/openapi.json');
+  const outputPath = join(__dirname, '../../../_generated/openapi.json');
   const outputDir = dirname(outputPath);
 
   if (!existsSync(outputDir)) {

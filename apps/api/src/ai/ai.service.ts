@@ -2,12 +2,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import dayjs from 'dayjs';
 import { Response } from 'express';
 import { Observable } from 'rxjs';
-import { MessageRole } from 'src/@generated/prisma-client/client';
+import { MessageRole } from 'src/_generated/prisma-client/client';
 import {
   ChatResponseDto,
   HealthStatusDto,
   SendMessageDto,
-} from 'src/@generated/zod/pfd-dtos';
+} from 'src/_generated/zod/pfd-dtos';
 
 import { ContextBuilderService } from './services/context-builder.service';
 import { ConversationManagerService } from './services/conversation-manager.service';

@@ -2,7 +2,7 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger } from '@nestjs/common';
 import dayjs from 'dayjs';
 import { firstValueFrom } from 'rxjs';
-import { ExchangeRatesDto } from 'src/@generated/zod/pfd-dtos';
+import { ExchangeRatesDto } from 'src/_generated/zod/pfd-dtos';
 import { ConfigService } from 'src/config/config.service';
 
 import { ExchangeRateApiResponseSchema } from './currency.schema';

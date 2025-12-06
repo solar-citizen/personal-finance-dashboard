@@ -1,11 +1,11 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import dayjs from 'dayjs';
-import { decrypt, formatDateToIso, getErrorMessage } from 'src/_lib/utils';
-import { Account, SyncJobStatus } from 'src/@generated/prisma-client/client';
+import { Account, SyncJobStatus } from 'src/_generated/prisma-client/client';
 import {
   SyncJobResponseDto,
   SyncProgressResponseDto,
-} from 'src/@generated/zod/pfd-dtos';
+} from 'src/_generated/zod/pfd-dtos';
+import { decrypt, formatDateToIso, getErrorMessage } from 'src/_lib/utils';
 import { ContextBuilderService } from 'src/ai/services/context-builder.service';
 import { PrismaService } from 'src/db/prisma.service';
 

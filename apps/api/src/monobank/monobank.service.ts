@@ -1,7 +1,5 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import dayjs from 'dayjs';
-import { formatDateToIso } from 'src/_lib/utils/date.util';
-import { decrypt, encrypt } from 'src/_lib/utils/encryption.util'; // Add this import
 import {
   ConnectMonoBankDto,
   MonoBankAccountResponseDto,
@@ -9,7 +7,9 @@ import {
   SyncProgressResponseDto,
   SyncResultResponseDto,
   SyncTransactionsDto,
-} from 'src/@generated/zod/pfd-dtos';
+} from 'src/_generated/zod/pfd-dtos';
+import { formatDateToIso } from 'src/_lib/utils/date.util';
+import { decrypt, encrypt } from 'src/_lib/utils/encryption.util'; // Add this import
 
 import { ContextBuilderService } from '../ai/services/context-builder.service';
 import { PrismaService } from '../db/prisma.service';

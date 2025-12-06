@@ -12,9 +12,9 @@ export default defineConfig({
   pfd: {
     from: {
       source: 'file',
-      relativePath: '../../@generated/openapi.json',
+      relativePath: '../../_generated/openapi.json',
     },
-    outputDir: 'src/@generated/api',
+    outputDir: 'src/_generated/api',
     to: async context => {
       const filenamePrefix = 'pfd';
 

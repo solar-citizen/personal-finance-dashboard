@@ -1,15 +1,15 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { createId } from '@paralleldrive/cuid2';
 import dayjs from 'dayjs';
-import { formatDateToIso } from 'src/_lib/utils/date.util';
-import { formatEmbeddingVector } from 'src/_lib/utils/vector.util';
-import { MessageRole } from 'src/@generated/prisma-client/client';
+import { MessageRole } from 'src/_generated/prisma-client/client';
 import {
   ConversationDto,
   ConversationListItemDto,
   FinancialContextMetadataDto,
   MessageDto,
-} from 'src/@generated/zod/pfd-dtos';
+} from 'src/_generated/zod/pfd-dtos';
+import { formatDateToIso } from 'src/_lib/utils/date.util';
+import { formatEmbeddingVector } from 'src/_lib/utils/vector.util';
 import { ConfigService } from 'src/config/config.service';
 
 import { PrismaService } from '../../db/prisma.service';

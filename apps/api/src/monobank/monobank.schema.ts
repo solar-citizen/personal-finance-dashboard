@@ -1,4 +1,4 @@
-import { SyncJobStatus } from 'src/@generated/prisma-client/client';
+import { SyncJobStatus } from 'src/_generated/prisma-client/client';
 import { z } from 'zod';
 
 export const ConnectMonoBankSchema = z.object({
