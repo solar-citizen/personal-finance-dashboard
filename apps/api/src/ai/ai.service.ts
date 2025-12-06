@@ -2,12 +2,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import dayjs from 'dayjs';
 import { Response } from 'express';
 import { Observable } from 'rxjs';
-import { MessageRole } from 'src/@generated/prisma-client/client';
+import { MessageRole } from 'src/_generated/prisma-client/client';
 import {
   ChatResponseDto,
   HealthStatusDto,
   SendMessageDto,
-} from 'src/@generated/zod/pfd-dtos';
+} from 'src/_generated/zod/pfd-dtos';
 
 import { ContextBuilderService } from './services/context-builder.service';
 import { ConversationManagerService } from './services/conversation-manager.service';
@@ -60,7 +60,7 @@ export class AiService {
               this.convertToGeminiFormat(messages),
             )
           : await this.ollamaClient.chat(messages);
-      } catch (err) {
+      } catch (err: unknown) {
         this.logger.error('Primary model failed, falling back to Ollama:', err);
         return await this.ollamaClient.chat(messages);
       }
@@ -104,12 +104,14 @@ export class AiService {
       next: (data) => res.write(`data: ${JSON.stringify(data)}\n\n`),
       error: (err: Error) => {
         this.logger.error('Stream error:', err);
+
         res.write(
           `data: ${JSON.stringify({
             type: 'error',
             message: err.message || 'Stream failed',
           })}\n\n`,
         );
+
         res.end();
       },
       complete: () => res.end(),
@@ -127,7 +129,7 @@ export class AiService {
   ): Observable<StreamResponse> {
     return new Observable((subscriber) => {
       const startTime = dayjs();
-      const responseBuilder = { current: '' };
+      let accumulatedResponse = '';
 
       this.prepareConversation(userId, dto)
         .then(({ conversationId, messages, context, selectedModel }) => {
@@ -147,7 +149,7 @@ export class AiService {
                     this.convertToGeminiFormat(messages),
                   )
                 : this.ollamaClient.chatStream(messages);
-            } catch (err) {
+            } catch (err: unknown) {
               this.logger.error(
                 'Primary model failed, falling back to Ollama:',
                 err,
@@ -158,10 +160,10 @@ export class AiService {
 
           stream.subscribe({
             next: (chunk) => {
-              responseBuilder.current += chunk;
+              accumulatedResponse += chunk;
               subscriber.next({ type: 'chunk', content: chunk });
             },
-            error: (err) => {
+            error: (err: unknown) => {
               this.logger.error('Stream error:', err);
               subscriber.error(err);
             },
@@ -172,7 +174,7 @@ export class AiService {
                 .addMessage({
                   conversationId,
                   role: MessageRole.assistant,
-                  content: responseBuilder.current,
+                  content: accumulatedResponse,
                   contextUsed: {
                     ...context.metadata,
                     modelUsed: provider,

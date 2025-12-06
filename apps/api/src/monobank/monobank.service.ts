@@ -7,7 +7,7 @@ import {
   SyncProgressResponseDto,
   SyncResultResponseDto,
   SyncTransactionsDto,
-} from 'src/@generated/zod/pfd-dtos';
+} from 'src/_generated/zod/pfd-dtos';
 import { formatDateToIso } from 'src/_lib/utils/date.util';
 import { decrypt, encrypt } from 'src/_lib/utils/encryption.util'; // Add this import
 
@@ -42,44 +42,51 @@ export class MonoBankService {
   ): Promise<MonoBankAccountResponseDto[]> {
     this.logger.log(`Connecting MonoBank account for user: ${userId}`);
 
-    const clientInfo = await this.apiClient.getClientInfo(token);
+    const { accounts, webHookUrl } = await this.apiClient.getClientInfo(token);
 
-    if (clientInfo.accounts.length === 0) {
+    if (accounts.length === 0) {
       throw new BadRequestException('No accounts found for this token');
     }
 
     const savedAccounts: MonoBankAccountResponseDto[] = [];
     const encryptedToken = encrypt(token);
 
-    for (const account of clientInfo.accounts) {
-      const currency = getCurrencyFromCode(account.currencyCode);
+    for (const {
+      currencyCode,
+      id,
+      iban,
+      type,
+      balance,
+      creditLimit,
+    } of accounts) {
+      const currency = getCurrencyFromCode(currencyCode);
 
       const savedAccount = await this.prismaService.account.upsert({
         where: {
           userId_accountId: {
             userId,
-            accountId: account.id,
+            accountId: id,
           },
         },
         create: {
           userId,
-          accountId: account.id,
-          iban: account.iban,
-          type: account.type,
+          accountId: id,
+          iban,
+          type,
           currency,
-          balance: BigInt(account.balance),
-          creditLimit: BigInt(account.creditLimit),
+          balance: BigInt(balance),
+          creditLimit: BigInt(creditLimit),
           monoToken: encryptedToken,
-          webHookUrl: clientInfo.webHookUrl || null,
+          webHookUrl: webHookUrl || null,
         },
         update: {
-          iban: account.iban,
-          type: account.type,
+          iban,
+          type,
           currency,
-          balance: BigInt(account.balance),
-          creditLimit: BigInt(account.creditLimit),
+          balance: BigInt(balance),
+          creditLimit: BigInt(creditLimit),
           monoToken: encryptedToken,
-          webHookUrl: clientInfo.webHookUrl || null,
+          webHookUrl: webHookUrl || null,
         },
       });
 
@@ -166,10 +173,11 @@ export class MonoBankService {
       `Fetched ${transactions.length} transactions from MonoBank`,
     );
 
-    const result = await this.transactionProcessor.saveTransactions(
-      account.id,
-      transactions,
-    );
+    const { newTransactions, updatedTransactions, errors } =
+      await this.transactionProcessor.saveTransactions(
+        account.id,
+        transactions,
+      );
 
     await this.prismaService.account.update({
       where: { id: account.id },
@@ -180,15 +188,15 @@ export class MonoBankService {
     this.logger.log(`Cleared context cache for user ${userId} after sync`);
 
     this.logger.log(
-      `Sync complete: ${result.newTransactions} new, ${result.updatedTransactions} updated, ${result.errors.length} errors`,
+      `Sync complete: ${newTransactions} new, ${updatedTransactions} updated, ${errors.length} errors`,
     );
 
     return {
       success: true,
       synced: transactions.length,
-      newTransactions: result.newTransactions,
-      updatedTransactions: result.updatedTransactions,
-      errors: result.errors.length > 0 ? result.errors : undefined,
+      newTransactions,
+      updatedTransactions,
+      errors: errors.length > 0 ? errors : undefined,
     };
   }
 

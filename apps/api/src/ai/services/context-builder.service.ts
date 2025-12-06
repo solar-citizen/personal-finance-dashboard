@@ -6,8 +6,7 @@ import {
   ExchangeRatesDto,
   FinancialContextDto,
   TransactionWithRelationsDto,
-} from 'src/@generated/zod/pfd-dtos';
-import { CurrencyService } from 'src/currency/currency.service';
+} from 'src/_generated/zod/pfd-dtos';
 import {
   amountToNumber,
   formatAmount,
@@ -16,6 +15,7 @@ import {
 import { formatDateToIso, getDateRange } from 'src/_lib/utils/date.util';
 import { formatValue } from 'src/_lib/utils/number.util';
 import { formatEmbeddingVector } from 'src/_lib/utils/vector.util';
+import { CurrencyService } from 'src/currency/currency.service';
 import { getAccountTypeName } from 'src/monobank/lib/utils/currency.util';
 
 import { PrismaService } from '../../db/prisma.service';
@@ -188,7 +188,7 @@ export class ContextBuilderService {
       );
 
       return results;
-    } catch (err) {
+    } catch (err: unknown) {
       this.logger.warn('Knowledge base search failed:', err);
 
       return [];

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from 'src/db/prisma.service';
 import { fromUnixTimestamp } from 'src/_lib/utils/date.util';
 import { getErrorMessage } from 'src/_lib/utils/error.util';
+import { PrismaService } from 'src/db/prisma.service';
 
 import type { MonoBankTransaction } from '../lib/monobank.types';
 
@@ -44,7 +44,7 @@ export class TransactionProcessor {
     try {
       const category = await this.getCategoryByMcc(tx.mcc);
 
-      const saved = await this.prismaService.transaction.upsert({
+      const { createdAt } = await this.prismaService.transaction.upsert({
         where: {
           accountId_externalId: {
             accountId,
@@ -81,9 +81,10 @@ export class TransactionProcessor {
         },
       });
 
-      const isNew = saved.createdAt.getTime() > Date.now() - 1000;
+      const isNew = createdAt.getTime() > Date.now() - 1000;
+
       return { success: true, isNew };
-    } catch (err) {
+    } catch (err: unknown) {
       this.logger.error(`Error saving transaction ${tx.id}:`, err);
       return {
         success: false,

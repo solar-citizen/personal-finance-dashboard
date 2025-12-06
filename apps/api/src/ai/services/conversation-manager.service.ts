@@ -1,16 +1,16 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { createId } from '@paralleldrive/cuid2';
 import dayjs from 'dayjs';
-import { MessageRole } from 'src/@generated/prisma-client/client';
+import { MessageRole } from 'src/_generated/prisma-client/client';
 import {
   ConversationDto,
   ConversationListItemDto,
   FinancialContextMetadataDto,
   MessageDto,
-} from 'src/@generated/zod/pfd-dtos';
-import { ConfigService } from 'src/config/config.service';
+} from 'src/_generated/zod/pfd-dtos';
 import { formatDateToIso } from 'src/_lib/utils/date.util';
 import { formatEmbeddingVector } from 'src/_lib/utils/vector.util';
+import { ConfigService } from 'src/config/config.service';
 
 import { PrismaService } from '../../db/prisma.service';
 import { OllamaClientService } from './ollama-client.service';
@@ -69,18 +69,16 @@ export class ConversationManagerService {
     userId: string,
     firstMessage: string,
   ): Promise<string> {
-    const conversation = await this.prismaService.conversation.create({
+    const { id } = await this.prismaService.conversation.create({
       data: {
         userId,
         title: this.generateTitle(firstMessage),
       },
     });
 
-    this.logger.log(
-      `Created conversation ${conversation.id} for user ${userId}`,
-    );
+    this.logger.log(`Created conversation ${id} for user ${userId}`);
 
-    return conversation.id;
+    return id;
   }
 
   async getOrCreateConversation(
@@ -257,13 +255,26 @@ export class ConversationManagerService {
     conversationId: string,
     userId: string,
   ): Promise<void> {
-    await this.validateConversationExists(conversationId, userId);
+    const conversation = await this.prismaService.conversation.findUnique({
+      where: { id: conversationId },
+      select: { id: true, userId: true },
+    });
+
+    if (conversation?.userId !== userId) {
+      if (conversation) {
+        this.logger.warn(
+          `User ${userId} attempted to delete conversation ${conversationId} owned by ${conversation.userId}`,
+        );
+      }
+
+      throw new NotFoundException(`Conversation ${conversationId} not found`);
+    }
 
     await this.prismaService.conversation.delete({
       where: { id: conversationId },
     });
 
-    this.logger.log(`Deleted conversation ${conversationId}`);
+    this.logger.log(`User ${userId} deleted conversation ${conversationId}`);
   }
 
   private async generateAndUpdateEmbedding(
@@ -283,7 +294,7 @@ export class ConversationManagerService {
       this.logger.log(
         `Updated embedding for message ${messageId} (${embedding.length} dimensions)`,
       );
-    } catch (err) {
+    } catch (err: unknown) {
       this.logger.error(
         `Embedding generation failed for message ${messageId}:`,
         err,

@@ -30,7 +30,7 @@ yarn-error.log*
 
 # Prisma
 prisma/migrations/**/migration.sql
-@generated
+_generated
 
 # Uploads
 uploads/

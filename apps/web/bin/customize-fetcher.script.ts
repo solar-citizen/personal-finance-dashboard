@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
-const fetcherPath = join(process.cwd(), 'src/@generated/api/pfd-fetcher.ts');
+const fetcherPath = join(process.cwd(), 'src/_generated/api/pfd-fetcher.ts');
 
 const content = readFileSync(fetcherPath, 'utf-8')
   .replace(/export \* from ['"]\.\/pfd-fetcher['"]/g, "export * from '@/lib/api-client'")
