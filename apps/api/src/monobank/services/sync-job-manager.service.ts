@@ -7,7 +7,7 @@ import {
 } from 'src/@generated/zod/pfd-dtos';
 import { ContextBuilderService } from 'src/ai/services/context-builder.service';
 import { PrismaService } from 'src/db/prisma.service';
-import { decrypt, formatDateToIso, getErrorMessage } from 'src/lib/utils';
+import { decrypt, formatDateToIso, getErrorMessage } from 'src/_lib/utils';
 
 import { MonoBankTransaction } from '../lib/monobank.types';
 import {

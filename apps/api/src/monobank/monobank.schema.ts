@@ -14,7 +14,7 @@ export const SyncTransactionsSchema = z.object({
 export const MonoBankAccountResponseSchema = z.object({
   id: z.string().min(1),
   accountId: z.string().min(1),
-  iban: z.string().min(1),
+  iban: z.string().min(1).nullable(),
   type: z.string().min(1),
   currency: z.string().min(1),
   balance: z.string().min(1),
