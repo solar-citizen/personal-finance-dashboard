@@ -37,6 +37,12 @@ const eslintConfig = defineConfig(
 
       '@typescript-eslint/no-unused-vars': 'error',
       'no-unused-vars': 'off',
+      'react/jsx-no-bind': [
+        'error',
+        {
+          allowArrowFunctions: false,
+        },
+      ],
     },
   },
   {
