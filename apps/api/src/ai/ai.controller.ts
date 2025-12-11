@@ -57,8 +57,7 @@ export class AiController {
   async listConversations(
     @CurrentUser('id') userId: string,
   ): Promise<{ conversations: ConversationListItemDto[] }> {
-    const conversations = await this.aiService.listConversations(userId);
-    return { conversations };
+    return { conversations: await this.aiService.listConversations(userId) };
   }
 
   @Delete('conversations/:id')
