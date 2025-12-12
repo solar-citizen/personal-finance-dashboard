@@ -4,7 +4,7 @@ import {
   AuthResponseDto,
   LoginDto,
   RegisterDto,
-} from 'src/@generated/zod/pfd-dtos';
+} from 'src/_generated/zod/pfd-dtos';
 
 import { AuthService } from './auth.service';
 import { Public } from './decorators/public.decorator';

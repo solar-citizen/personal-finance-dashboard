@@ -17,9 +17,9 @@ dayjs.extend(timezone);
 const timestamp = dayjs().format('YYYY-MM-DD HH:mm:ss [GMT]:Z');
 
 const apiSrcDir = join(__dirname, '../src');
-const rootGeneratedDir = join(__dirname, '../../../@generated/zod');
+const rootGeneratedDir = join(__dirname, '../../../_generated/zod');
 const schemasOutput = join(rootGeneratedDir, 'pfd-schemas.ts');
-const dtosOutput = join(__dirname, '../src/@generated/zod/pfd-dtos.ts');
+const dtosOutput = join(__dirname, '../src/_generated/zod/pfd-dtos.ts');
 
 type SchemaInfo = {
   name: string;
@@ -38,7 +38,7 @@ function findSchemaFiles(
     const stat = statSync(fullPath);
 
     if (stat.isDirectory()) {
-      return ['node_modules', 'dist', '@generated', '.git'].includes(entry)
+      return ['node_modules', 'dist', '_generated', '.git'].includes(entry)
         ? []
         : findSchemaFiles(fullPath, schemas);
     }
@@ -150,7 +150,7 @@ async function generateDtos(schemas: SchemaInfo[]) {
 
   // Import all schemas from the root schemas file
   const allSchemaNames = schemas.map(({ name }) => `${name}Schema`);
-  output += `// Schema imports from root @generated\n`;
+  output += `// Schema imports from root _generated\n`;
   output += `import {\n  ${allSchemaNames.join(',\n  ')}\n} from '${schemasImportPath}';\n\n`;
   output += '// Generated DTOs\n';
 

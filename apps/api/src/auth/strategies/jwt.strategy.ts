@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { JwtPayloadDto } from 'src/@generated/zod/pfd-dtos';
+import { JwtPayloadDto } from 'src/_generated/zod/pfd-dtos';
 import { ConfigService } from 'src/config/config.service';
 
 import { PrismaService } from '../../db/prisma.service';

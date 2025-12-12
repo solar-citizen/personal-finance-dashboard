@@ -14,7 +14,7 @@ export default defineConfig(
       '**/node_modules/**',
       '**/dist/**',
       '**/build/**',
-      '**/@generated/**',
+      '**/_generated/**',
       '**/eslint.config.mjs',
     ],
   },

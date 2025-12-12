@@ -1,13 +1,13 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import dayjs from 'dayjs';
-import { Account, SyncJobStatus } from 'src/@generated/prisma-client/client';
+import { Account, SyncJobStatus } from 'src/_generated/prisma-client/client';
 import {
   SyncJobResponseDto,
   SyncProgressResponseDto,
-} from 'src/@generated/zod/pfd-dtos';
+} from 'src/_generated/zod/pfd-dtos';
+import { decrypt, formatDateToIso, getErrorMessage } from 'src/_lib/utils';
 import { ContextBuilderService } from 'src/ai/services/context-builder.service';
 import { PrismaService } from 'src/db/prisma.service';
-import { decrypt, formatDateToIso, getErrorMessage } from 'src/_lib/utils';
 
 import { MonoBankTransaction } from '../lib/monobank.types';
 import {
@@ -44,7 +44,7 @@ export class SyncJobManager {
   ): Promise<SyncJobResponseDto> {
     const chunks = calculateChunkCount(from, to, this.maxDaysPerRequest);
 
-    const syncJob = await this.prismaService.syncJob.create({
+    const { id } = await this.prismaService.syncJob.create({
       data: {
         accountId: account.id,
         status: SyncJobStatus.pending,
@@ -55,15 +55,15 @@ export class SyncJobManager {
       },
     });
 
-    this.processSyncJob(syncJob.id, account, from, to).catch((err: unknown) => {
-      this.logger.error(`Background sync job ${syncJob.id} failed:`, err);
+    this.processSyncJob(id, account, from, to).catch((err: unknown) => {
+      this.logger.error(`Background sync job ${id} failed:`, err);
     });
 
     const estimatedTime = chunks * 60; // seconds
 
     return {
-      jobId: syncJob.id,
-      message: `Date range exceeds 31 days. Background sync started. Estimated time: ~${Math.ceil(estimatedTime / 60)} minutes. Track progress at GET /api/mono/sync-status/${syncJob.id}`,
+      jobId: id,
+      message: `Date range exceeds 31 days. Background sync started. Estimated time: ~${Math.ceil(estimatedTime / 60)} minutes. Track progress at GET /api/mono/sync-status/${id}`,
     };
   }
 
@@ -115,10 +115,8 @@ export class SyncJobManager {
         `Job ${jobId}: Fetched ${allTransactions.length} total transactions`,
       );
 
-      const result = await this.transactionProcessor.saveTransactions(
-        id,
-        allTransactions,
-      );
+      const { newTransactions, updatedTransactions, errors } =
+        await this.transactionProcessor.saveTransactions(id, allTransactions);
 
       await this.prismaService.account.update({
         where: { id },
@@ -134,15 +132,14 @@ export class SyncJobManager {
         where: { id: jobId },
         data: {
           status: SyncJobStatus.completed,
-          newCount: result.newTransactions,
-          updatedCount: result.updatedTransactions,
-          errorMessage:
-            result.errors.length > 0 ? result.errors.join('; ') : null,
+          newCount: newTransactions,
+          updatedCount: updatedTransactions,
+          errorMessage: errors.length > 0 ? errors.join('; ') : null,
         },
       });
 
       this.logger.log(`Job ${jobId}: Completed successfully`);
-    } catch (err) {
+    } catch (err: unknown) {
       this.logger.error(`Job ${jobId}: Failed with error:`, err);
 
       await this.prismaService.syncJob.update({

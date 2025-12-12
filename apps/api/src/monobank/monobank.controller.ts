@@ -7,7 +7,7 @@ import {
   SyncProgressResponseDto,
   SyncResultResponseDto,
   SyncTransactionsDto,
-} from 'src/@generated/zod/pfd-dtos';
+} from 'src/_generated/zod/pfd-dtos';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -24,16 +24,14 @@ export class MonoBankController {
     @CurrentUser('id') userId: string,
     @Body() dto: ConnectMonoBankDto,
   ): Promise<{ accounts: MonoBankAccountResponseDto[] }> {
-    const accounts = await this.monoBankService.connectAccount(userId, dto);
-    return { accounts };
+    return { accounts: await this.monoBankService.connectAccount(userId, dto) };
   }
 
   @Get('accounts')
   async getAccounts(
     @CurrentUser('id') userId: string,
   ): Promise<{ accounts: MonoBankAccountResponseDto[] }> {
-    const accounts = await this.monoBankService.getUserAccounts(userId);
-    return { accounts };
+    return { accounts: await this.monoBankService.getUserAccounts(userId) };
   }
 
   @Post('sync/:accountId')

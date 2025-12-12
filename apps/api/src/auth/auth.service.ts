@@ -11,7 +11,7 @@ import {
   JwtPayloadDto,
   LoginDto,
   RegisterDto,
-} from 'src/@generated/zod/pfd-dtos';
+} from 'src/_generated/zod/pfd-dtos';
 
 import { PrismaService } from '../db/prisma.service';
 

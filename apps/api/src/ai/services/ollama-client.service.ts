@@ -51,7 +51,7 @@ export class OllamaClientService {
         response: message.content,
         tokensUsed: eval_count,
       };
-    } catch (err) {
+    } catch (err: unknown) {
       this.logger.error('Ollama chat error:', err);
 
       return { response: '', tokensUsed: undefined };
@@ -69,12 +69,12 @@ export class OllamaClientService {
           stream: true,
         });
 
-        for await (const chunk of stream) {
-          if (chunk.message.content) {
-            subscriber.next(chunk.message.content);
+        for await (const { message, done } of stream) {
+          if (message.content) {
+            subscriber.next(message.content);
           }
 
-          if (chunk.done) {
+          if (done) {
             this.logDuration('Stream completed', startTime);
             subscriber.complete();
           }
@@ -88,13 +88,13 @@ export class OllamaClientService {
 
   async generateEmbedding(text: string): Promise<number[]> {
     try {
-      const response = await this.ollama.embeddings({
-        model: this.embeddingModel,
-        prompt: text,
-      });
-
-      return response.embedding;
-    } catch (err) {
+      return (
+        await this.ollama.embeddings({
+          model: this.embeddingModel,
+          prompt: text,
+        })
+      ).embedding;
+    } catch (err: unknown) {
       this.logger.error('Embedding generation error:', err);
 
       return [];
@@ -105,7 +105,7 @@ export class OllamaClientService {
     try {
       await this.ollama.list();
       return true;
-    } catch (err) {
+    } catch (err: unknown) {
       this.logger.error('Ollama health check failed:', err);
       return false;
     }

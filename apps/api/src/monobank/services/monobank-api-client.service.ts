@@ -45,7 +45,7 @@ export class MonoBankApiClient {
       );
 
       return response.data;
-    } catch (err) {
+    } catch (err: unknown) {
       this.handleMonoBankError(err);
     }
   }
@@ -72,7 +72,7 @@ export class MonoBankApiClient {
       );
 
       return response.data;
-    } catch (err) {
+    } catch (err: unknown) {
       this.handleMonoBankError(err);
     }
   }

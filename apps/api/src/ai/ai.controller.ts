@@ -16,7 +16,7 @@ import {
   ConversationListItemDto,
   HealthStatusDto,
   SendMessageDto,
-} from 'src/@generated/zod/pfd-dtos';
+} from 'src/_generated/zod/pfd-dtos';
 
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -57,9 +57,7 @@ export class AiController {
   async listConversations(
     @CurrentUser('id') userId: string,
   ): Promise<{ conversations: ConversationListItemDto[] }> {
-    const conversations = await this.aiService.listConversations(userId);
-
-    return { conversations };
+    return { conversations: await this.aiService.listConversations(userId) };
   }
 
   @Delete('conversations/:id')
@@ -68,7 +66,6 @@ export class AiController {
     @Param('id') conversationId: string,
   ): Promise<{ success: boolean }> {
     await this.aiService.deleteConversation(conversationId, userId);
-
     return { success: true };
   }
 

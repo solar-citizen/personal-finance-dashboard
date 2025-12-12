@@ -77,8 +77,7 @@ export class GeminiClientService {
       });
 
       const lastMessage = messages[messages.length - 1];
-      const result = await chat.sendMessage(lastMessage.parts[0].text);
-      const response = result.response;
+      const { response } = await chat.sendMessage(lastMessage.parts[0].text);
 
       this.logDuration('Chat completed', startTime);
 
@@ -86,7 +85,7 @@ export class GeminiClientService {
         response: response.text(),
         tokensUsed: response.usageMetadata?.totalTokenCount,
       };
-    } catch (err) {
+    } catch (err: unknown) {
       this.logger.error('Gemini chat error:', err);
       throw err;
     }
@@ -113,9 +112,11 @@ export class GeminiClientService {
         });
 
         const lastMessage = messages[messages.length - 1];
-        const result = await chat.sendMessageStream(lastMessage.parts[0].text);
+        const { stream } = await chat.sendMessageStream(
+          lastMessage.parts[0].text,
+        );
 
-        for await (const chunk of result.stream) {
+        for await (const chunk of stream) {
           const text = chunk.text();
 
           if (text) {
@@ -139,7 +140,7 @@ export class GeminiClientService {
 
     try {
       return !!(await this.model.generateContent('test')).response.text();
-    } catch (err) {
+    } catch (err: unknown) {
       this.logger.error('Gemini health check failed:', err);
       return false;
     }
@@ -195,7 +196,7 @@ export class GeminiClientService {
         ),
         allModels: models.map(({ name }) => name),
       };
-    } catch (err) {
+    } catch (err: unknown) {
       this.logger.error('Error listing models:', err);
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
 

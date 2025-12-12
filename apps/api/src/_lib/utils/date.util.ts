@@ -31,11 +31,9 @@ export function getDateRange(items: TimeEntry[]): IsoDateRange {
   }
 
   const dates = items.map(({ time }) => dayjs(time).valueOf());
-  const earliest = dayjs(Math.min(...dates));
-  const latest = dayjs(Math.max(...dates));
 
   return {
-    from: formatDateToIso(earliest.toDate()),
-    to: formatDateToIso(latest.toDate()),
+    from: formatDateToIso(dayjs(Math.min(...dates)).toDate()),
+    to: formatDateToIso(dayjs(Math.max(...dates)).toDate()),
   };
 }
