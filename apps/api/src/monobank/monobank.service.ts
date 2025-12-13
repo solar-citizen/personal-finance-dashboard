@@ -9,7 +9,7 @@ import {
   SyncTransactionsDto,
 } from 'src/_generated/zod/pfd-dtos';
 import { formatDateToIso } from 'src/_lib/utils/date.util';
-import { decrypt, encrypt } from 'src/_lib/utils/encryption.util'; // Add this import
+import { decrypt, encrypt } from 'src/_lib/utils/encryption.util';
 
 import { ContextBuilderService } from '../ai/services/context-builder.service';
 import { PrismaService } from '../db/prisma.service';

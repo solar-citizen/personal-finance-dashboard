@@ -1,3 +1,3 @@
-export const formatEmbeddingVector = (embedding: number[]): string => {
+export function formatEmbeddingVector(embedding: number[]): string {
   return `[${embedding.join(',')}]`;
-};
+}

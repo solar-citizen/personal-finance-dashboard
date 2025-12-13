@@ -1,26 +1,113 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
+/* global project styles */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  /* Light Mode: Warm Paper & Deep Green */
+  --background: 48 15% 96%; /* #F7F6F2 */
+  --foreground: 160 12% 12%; /* #1A211E */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --card: 0 0% 100%; /* White */
+  --card-foreground: 160 12% 12%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 160 12% 12%;
+
+  --primary: 163 35% 22%; /* #244A3F (Deep Emerald) */
+  --primary-foreground: 48 15% 96%;
+
+  --secondary: 45 20% 90%; /* #EAE8DF (Sand) */
+  --secondary-foreground: 163 35% 22%;
+
+  --muted: 160 5% 90%;
+  --muted-foreground: 160 5% 40%;
+
+  --accent: 14 60% 60%; /* #D97757 (Terracotta) */
+  --accent-foreground: 48 15% 96%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+
+  --border: 45 10% 88%;
+  --input: 45 10% 88%;
+  --ring: 163 35% 22%;
+
+  --radius: 0.75rem;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Dark Mode: Deep Forest */
+    --background: 160 15% 8%; /* #111715 */
+    --foreground: 45 10% 92%; /* #ECEBE6 */
+
+    --card: 160 15% 12%;
+    --card-foreground: 45 10% 92%;
+
+    --popover: 160 15% 12%;
+    --popover-foreground: 45 10% 92%;
+
+    --primary: 160 30% 50%; /* #5FB396 (Sage) */
+    --primary-foreground: 160 15% 8%;
+
+    --secondary: 160 15% 18%;
+    --secondary-foreground: 45 10% 92%;
+
+    --muted: 160 15% 18%;
+    --muted-foreground: 160 5% 65%;
+
+    --accent: 14 60% 66%;
+    --accent-foreground: 48 15% 96%;
+
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 85% 95%;
+
+    --border: 160 15% 18%;
+    --input: 160 15% 18%;
+    --ring: 160 30% 50%;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
 }
