@@ -1,6 +1,5 @@
 @import 'tailwindcss';
 
-/* global project styles */
 :root {
   /* Light Mode: Warm Paper & Deep Green */
   --background: 48 15% 96%; /* #F7F6F2 */
