@@ -14,17 +14,13 @@ export default function LoginForm() {
 
   const { mutate, isPending } = useLogin({
     onMutate: () => {
-      // FIXME: Replace with toast.info or alternative
-      console.log('Logging in...');
+      // TODO: Add toast.info or alternative
     },
     onError: () => {
-      // FIXME: Replace with toast.error or alternative
-      console.log('Failed to log in');
+      // TODO: Add toast.error or alternative
     },
     onSuccess: () => {
-      // FIXME: Replace with toast.success or alternative
-      console.log('Logged in successfully');
-
+      // TODO: Add toast.success or alternative
       router.replace('/dashboard');
     },
   });
