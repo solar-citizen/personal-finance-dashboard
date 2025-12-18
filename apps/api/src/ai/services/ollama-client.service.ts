@@ -9,14 +9,6 @@ export type OllamaChatMessage = {
   content: string;
 };
 
-export type OllamaStreamChunk = {
-  message: {
-    role: string;
-    content: string;
-  };
-  done: boolean;
-};
-
 @Injectable()
 export class OllamaClientService {
   private readonly logger = new Logger(OllamaClientService.name);
