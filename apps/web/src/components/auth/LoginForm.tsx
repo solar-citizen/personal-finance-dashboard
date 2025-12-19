@@ -42,43 +42,42 @@ export default function LoginForm() {
       footerLink={'/register'}
       footerLinkText={'Create one'}
     >
-      {isPending ? (
-        // FIXME: Replace with actual loading spinner component
-        'Loading spinner here'
-      ) : (
-        <Form
-          defaultValues={{
-            email: '',
-            password: '',
-          }}
-          validationSchema={loginSchema}
-          onSubmit={handleSubmit}
-          className={'space-y-4'}
+      <Form
+        defaultValues={{
+          email: '',
+          password: '',
+        }}
+        validationSchema={loginSchema}
+        onSubmit={handleSubmit}
+        className={'space-y-4'}
+      >
+        <FormInput
+          name={'email'}
+          type={'email'}
+          label={'Email'}
+          placeholder={'admin@finance.ua'}
+          disabled={isPending}
+          className={'space-y-2'}
+        />
+
+        <FormInput
+          name={'password'}
+          type={'password'}
+          label={'Password'}
+          disabled={isPending}
+          className={'space-y-2'}
+        />
+
+        <button
+          type={'submit'}
+          disabled={isPending}
+          className={
+            'cursor-pointer inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full mt-4'
+          }
         >
-          <FormInput
-            name={'email'}
-            type={'email'}
-            label={'Email'}
-            placeholder={'admin@finance.ua'}
-            className={'space-y-2'}
-          />
-
-          <div className={'space-y-2'}>
-            <div className={'flex items-center justify-between'}>
-              <FormInput name={'password'} type={'password'} label={'Password'} />
-            </div>
-          </div>
-
-          <button
-            type={'submit'}
-            className={
-              'cursor-pointer inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full mt-4'
-            }
-          >
-            {'Sign In'}
-          </button>
-        </Form>
-      )}
+          {'Sign In'}
+        </button>
+      </Form>
     </AuthCard>
   );
 }

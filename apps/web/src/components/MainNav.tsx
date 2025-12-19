@@ -38,6 +38,7 @@ export default function MainNav() {
         </Link>
       ))}
 
+      {/* FIXME: Temporary unstyled button */}
       <button onClick={handleLogout}>{'Logout'}</button>
     </nav>
   );

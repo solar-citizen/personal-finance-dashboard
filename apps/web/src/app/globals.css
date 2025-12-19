@@ -28,6 +28,7 @@
 
   --border: 45 10% 88%;
   --input: 45 10% 88%;
+  --input-disabled: 45 10% 94%;
   --ring: 163 35% 22%;
 
   --radius: 0.75rem;
@@ -62,6 +63,7 @@
 
     --border: 160 15% 18%;
     --input: 160 15% 18%;
+    --input-disabled: 160 15% 15%;
     --ring: 160 30% 50%;
   }
 }
@@ -93,6 +95,7 @@
 
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
+  --color-input-disabled: hsl(var(--input-disabled));
   --color-ring: hsl(var(--ring));
 
   --radius-lg: var(--radius);
