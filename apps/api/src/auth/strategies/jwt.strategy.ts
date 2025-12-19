@@ -13,10 +13,6 @@ type RequestWithCookies = Request & {
   };
 };
 
-const cookieExtractor = (req: RequestWithCookies): string | null => {
-  return req.cookies.token ?? null;
-};
-
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
@@ -26,7 +22,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const secretOrKey = configService.jwtSecret;
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
-        cookieExtractor,
+        (req: RequestWithCookies): string | null => req.cookies.token ?? null,
         ExtractJwt.fromAuthHeaderAsBearerToken(),
       ]),
       ignoreExpiration: false,
