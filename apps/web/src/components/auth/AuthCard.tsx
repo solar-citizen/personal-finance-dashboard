@@ -2,10 +2,10 @@ import Link from 'next/link';
 
 type AuthCardProps = {
   title: string;
-  description?: string;
-  footerText?: string;
-  footerLink?: string;
-  footerLinkText?: string;
+  description: string;
+  footerText: string;
+  footerLink: string;
+  footerLinkText: string;
 };
 
 export default function AuthCard({
@@ -40,30 +40,27 @@ export default function AuthCard({
 
         <h1 className={'text-2xl font-semibold tracking-tight text-primary'}>{title}</h1>
 
-        {description && <p className={'text-sm text-muted-foreground mt-2'}>{description}</p>}
+        <p className={'text-sm text-muted-foreground mt-2'}>{description}</p>
       </div>
 
       <div className={'px-8 py-4'}>{children}</div>
 
-      {(footerText ?? footerLink) && (
-        <div
+      <div
+        className={
+          'px-8 py-6 bg-muted/30 text-center text-sm text-muted-foreground border-t border-border/40'
+        }
+      >
+        {footerText}
+
+        <Link
+          href={footerLink}
           className={
-            'px-8 py-6 bg-muted/30 text-center text-sm text-muted-foreground border-t border-border/40'
+            'font-medium text-primary hover:text-accent transition-colors underline underline-offset-4'
           }
         >
-          {`${footerText} `}
-          {footerLink && (
-            <Link
-              href={footerLink}
-              className={
-                'font-medium text-primary hover:text-accent transition-colors underline underline-offset-4'
-              }
-            >
-              {footerLinkText}
-            </Link>
-          )}
-        </div>
-      )}
+          {footerLinkText}
+        </Link>
+      </div>
     </>
   );
 }
