@@ -16,7 +16,6 @@ type Props<T extends FieldValues> = {
   mode?: Mode;
   className?: string | string[];
   onSubmit: (form: T) => void;
-  ref?: React.Ref<HTMLFormElement>;
   children: React.ReactNode | ChildrenFn<T>;
 };
 
@@ -26,7 +25,6 @@ export default function Form<T extends FieldValues>({
   mode = 'onSubmit',
   className,
   onSubmit,
-  ref,
   children,
 }: Props<T>) {
   const form = useForm<T>({
@@ -51,7 +49,6 @@ export default function Form<T extends FieldValues>({
         })}
         onSubmit={handleSubmit}
         onReset={handleReset}
-        ref={ref}
       >
         {typeof children === 'function' ? children(form.watch()) : children}
       </form>
