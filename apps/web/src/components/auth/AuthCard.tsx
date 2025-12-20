@@ -50,7 +50,7 @@ export default function AuthCard({
           'px-8 py-6 bg-muted/30 text-center text-sm text-muted-foreground border-t border-border/40'
         }
       >
-        {footerText}
+        {`${footerText} `}
 
         <Link
           href={footerLink}
