@@ -15,6 +15,7 @@ import {
   AuthResponseDto,
   LoginDto,
   RegisterDto,
+  UserDto,
 } from 'src/_generated/zod/pfd-dtos';
 
 import { AuthService } from './auth.service';
@@ -43,7 +44,7 @@ export class AuthController {
   }
 
   @Get('me')
-  getCurrentUser(@CurrentUser() { id, email, name }: User) {
+  getCurrentUser(@CurrentUser() { id, email, name }: User): UserDto {
     return {
       id,
       email,
