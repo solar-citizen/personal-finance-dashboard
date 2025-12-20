@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 
-// FIXME: Switch to shared package schemas in future instead of using these:
+// FIXME: Consider using shared package schemas for consistency and reusability
 export const loginSchema = z.object({
   email: z.email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
