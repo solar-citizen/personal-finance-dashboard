@@ -1,6 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+
+import { useLogout } from '#src/_generated/api/pfd-components';
 
 type NavLink = {
   name: `${Uppercase<string>}${string}`;
@@ -14,6 +17,15 @@ const links: NavLink[] = [
 ];
 
 export default function MainNav() {
+  const router = useRouter();
+
+  const { mutate } = useLogout();
+
+  const handleLogout = () => {
+    mutate({});
+    router.replace('/login');
+  };
+
   return (
     <nav
       className={
@@ -25,6 +37,9 @@ export default function MainNav() {
           {name}
         </Link>
       ))}
+
+      {/* FIXME: Temporary unstyled button */}
+      <button onClick={handleLogout}>{'Logout'}</button>
     </nav>
   );
 }

@@ -96,6 +96,7 @@ export async function apiFetch<
       },
       data: body,
       signal,
+      withCredentials: true,
     };
 
     const response = await axiosAgent<TData>(axiosConfig);

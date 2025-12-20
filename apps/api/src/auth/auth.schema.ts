@@ -7,8 +7,8 @@ export const RegisterSchema = z.object({
 });
 
 export const LoginSchema = z.object({
-  email: z.email(),
-  password: z.string(),
+  email: z.email('Invalid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
 export const UserSchema = z.object({
@@ -20,4 +20,8 @@ export const UserSchema = z.object({
 export const AuthResponseSchema = z.object({
   accessToken: z.string(),
   user: UserSchema,
+});
+
+export const LogoutResponseSchema = z.object({
+  message: z.string(),
 });
