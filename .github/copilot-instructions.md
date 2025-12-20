@@ -51,9 +51,7 @@ correct:
 
 export default FooPage
 
-- Shadcn components (in components/ui folder) must not be edited directly
-
-- Prohibit memoizing simple values like strings, numbers, booleans
+- Shadcn components (in components/ui folder) must not be edited directly (structure and styles) and are able to use named exports
 
 - Always prefer putting loaders in a parent component instead of passing `isLoading` props down
 
@@ -73,9 +71,7 @@ correct:
 
 - When creating pages, all included components should be extracted to a separate file
 
-- Always wrap callbacks in useCallback, unless using React Compiler (which should be specified in project guidelines)
-
-- Always wrap computed object values in useMemo, unless using React Compiler (which should be specified in project guidelines)
+- There's no need to have memoization, using useMemo, useCallback, React.memo for optimization, as React Compiler is use in the project
 
 - Avoid using extra `div`s. Use fragments (`<>...</>`) when possible. Flatten multiple nested elements when possible
 
@@ -102,7 +98,7 @@ function Foo({onChange}:FooProps) {
 return <button onClick={onChange}>...</button>
 }
 
-- Prohibit defining `children` in prop types. Instead, use PropsWithChildren:
+- Prohibit defining `children` in prop types. Instead, use React.PropsWithChildren:
 
 wrong:
 
@@ -112,8 +108,7 @@ children: React.ReactNode
 
 correct:
 
-import { PropsWithChildren } from 'react'
-type Props = PropsWithChildren<{
+type Props = React.PropsWithChildren<{
 // other props
 }>
 

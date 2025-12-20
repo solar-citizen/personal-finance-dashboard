@@ -2,7 +2,6 @@ import './globals.css';
 
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import type { PropsWithChildren } from 'react';
 
 import { cn } from '#src/lib/utils';
 
@@ -18,7 +17,7 @@ export const metadata: Metadata = {
   description: 'AI-powered personal finance management with banks integration',
 };
 
-export default function RootLayout({ children }: Readonly<PropsWithChildren>) {
+export default function RootLayout({ children }: Readonly<React.PropsWithChildren>) {
   return (
     <html lang={'en'} suppressHydrationWarning>
       <body className={cn(inter.variable, 'antialiased')}>
