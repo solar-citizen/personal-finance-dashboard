@@ -21,3 +21,7 @@ export const AuthResponseSchema = z.object({
   accessToken: z.string(),
   user: UserSchema,
 });
+
+export const LogoutResponseSchema = z.object({
+  message: z.string(),
+});

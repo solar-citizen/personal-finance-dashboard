@@ -5,15 +5,14 @@ import {
   HttpCode,
   HttpStatus,
   Post,
-  Res,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import type { Response } from 'express';
 import type { User } from 'src/_generated/prisma-client/client';
 import {
   AuthResponseDto,
   LoginDto,
+  LogoutResponseDto,
   RegisterDto,
   UserDto,
 } from 'src/_generated/zod/pfd-dtos';
@@ -22,6 +21,7 @@ import { AuthService } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { Public } from './decorators/public.decorator';
 import { AuthCookieInterceptor } from './interceptors/auth-cookie.interceptor';
+import { LogoutCookieInterceptor } from './interceptors/logout-cookie.interceptor';
 
 @ApiTags('Auth')
 @Controller('api/auth')
@@ -54,14 +54,8 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  logout(@Res({ passthrough: true }) response: Response) {
-    response.clearCookie('token', {
-      httpOnly: true,
-      secure: process.env.APP_ENV === 'production',
-      sameSite: 'strict',
-      path: '/',
-    });
-
+  @UseInterceptors(LogoutCookieInterceptor)
+  logout(): LogoutResponseDto {
     return { message: 'Logged out successfully' };
   }
 }
