@@ -1,14 +1,28 @@
 import { z } from 'zod';
 
-export const RegisterSchema = z.object({
-  email: z.email(),
-  password: z.string().min(8).max(100),
-  name: z.string().min(1).max(100),
-});
+const password = z
+  .string()
+  .min(8, 'Password must be at least 8 characters')
+  .max(100);
+
+export const RegisterSchema = z
+  .object({
+    email: z.email('Invalid email address'),
+    name: z
+      .string()
+      .min(1, 'Name is required')
+      .max(100, 'Name must be at most 100 characters'),
+    password,
+    repeatPassword: password,
+  })
+  .refine(({ password, repeatPassword }) => password === repeatPassword, {
+    message: "Passwords don't match",
+    path: ['repeatPassword'],
+  });
 
 export const LoginSchema = z.object({
   email: z.email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password,
 });
 
 export const UserSchema = z.object({
