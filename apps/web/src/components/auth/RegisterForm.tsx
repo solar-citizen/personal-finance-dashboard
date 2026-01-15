@@ -2,17 +2,17 @@
 
 import { useRouter } from 'next/navigation';
 
-import { useLogin } from '#src/_generated/api/pfd-components';
+import { useRegister } from '#src/_generated/api/pfd-components';
 
 import Form from '../form/Form';
 import FormInput from '../form/FormInput';
-import { type LoginFormData, loginSchema } from './auth.schema';
+import { type RegisterFormData, registerSchema } from './auth.schema';
 import AuthCard from './AuthCard';
 
-export default function LoginForm() {
+export default function RegisterForm() {
   const router = useRouter();
 
-  const { mutate, isPending } = useLogin({
+  const { mutate, isPending } = useRegister({
     onMutate: () => {
       // TODO: Add toast.info or alternative
     },
@@ -25,47 +25,67 @@ export default function LoginForm() {
     },
   });
 
-  const handleSubmit = ({ email, password }: LoginFormData) => {
+  const handleSubmit = ({ email, password, repeatPassword, name }: RegisterFormData) => {
     mutate({
       body: {
         email,
         password,
+        repeatPassword,
+        name,
       },
     });
   };
 
   return (
     <AuthCard
-      title={'Welcome Back'}
-      description={'Enter your credentials to access your finance dashboard.'}
-      footerText={"Don't have an account?"}
-      footerLink={'/register'}
-      footerLinkText={'Create one'}
+      title={'Create Account'}
+      description={'Enter your details to create an account.'}
+      footerText={'Already have an account?'}
+      footerLink={'/login'}
+      footerLinkText={'Sign in'}
     >
       <Form
         defaultValues={{
           email: '',
+          name: '',
           password: '',
+          repeatPassword: '',
         }}
-        validationSchema={loginSchema}
+        validationSchema={registerSchema}
         onSubmit={handleSubmit}
-        className={'space-y-4'}
+        className={'[&>*:not(button)]:space-y-4'}
       >
+        <FormInput
+          name={'name'}
+          type={'text'}
+          label={'Full Name'}
+          placeholder={'John Doe'}
+          disabled={isPending}
+        />
+
         <FormInput
           name={'email'}
           type={'email'}
           label={'Email'}
           placeholder={'admin@finance.ua'}
           disabled={isPending}
-          className={'space-y-2'}
         />
 
         <FormInput
           name={'password'}
           type={'password'}
           label={'Password'}
+          placeholder={'At least 8 characters'}
           disabled={isPending}
-          className={'space-y-2'}
+          deps={['repeatPassword']}
+        />
+
+        <FormInput
+          name={'repeatPassword'}
+          type={'password'}
+          label={'Confirm Password'}
+          placeholder={'Re-enter your password'}
+          disabled={isPending}
         />
 
         {/* FIXME: Consider using shadcn/custom component */}
@@ -76,7 +96,7 @@ export default function LoginForm() {
             'cursor-pointer inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full mt-4'
           }
         >
-          {'Sign In'}
+          {'Create Account'}
         </button>
       </Form>
     </AuthCard>
