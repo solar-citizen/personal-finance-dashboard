@@ -14,6 +14,7 @@ const eslintConfig = defineConfig(
   },
   {
     plugins: {
+      // @ts-expect-error - plugin has ESM/CJS compatibility issue with flat config types
       react: pluginReact,
       // @ts-expect-error - plugin has ESM/CJS compatibility issue with flat config types
       'react-hooks': pluginReactHooks,
