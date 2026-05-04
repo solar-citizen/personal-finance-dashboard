@@ -42,7 +42,7 @@ export class MonoBankService {
   ): Promise<MonoBankAccountResponseDto[]> {
     this.logger.log(`Connecting MonoBank account for user: ${userId}`);
 
-    const { accounts, webHookUrl } = await this.apiClient.getClientInfo(token);
+    const { accounts } = await this.apiClient.getClientInfo(token);
 
     if (accounts.length === 0) {
       throw new BadRequestException('No accounts found for this token');
@@ -77,7 +77,6 @@ export class MonoBankService {
           balance: BigInt(balance),
           creditLimit: BigInt(creditLimit),
           monoToken: encryptedToken,
-          webHookUrl: webHookUrl || null,
         },
         update: {
           iban,
@@ -86,7 +85,6 @@ export class MonoBankService {
           balance: BigInt(balance),
           creditLimit: BigInt(creditLimit),
           monoToken: encryptedToken,
-          webHookUrl: webHookUrl || null,
         },
       });
 
