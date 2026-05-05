@@ -74,13 +74,13 @@ export class CurrencyService {
       this.logger.error('Failed to fetch Mono exchange rates', err);
 
       if (this.cachedRates) {
-        this.logger.warn('Returning stale cached rates due to API error');
+        this.logger.warn('Returning stale cached rates');
         return this.cachedRates;
       }
 
-      this.logger.warn('Falling back to default exchange rates');
-
-      return this.getFallbackRates();
+      throw new Error('Exchange rates unavailable and no cache exists', {
+        cause: err,
+      });
     }
   }
 
@@ -92,16 +92,6 @@ export class CurrencyService {
     return dayjs().diff(this.cacheTimestamp, 'milliseconds') < this.cacheTtlMs
       ? this.cachedRates
       : null;
-  }
-
-  private getFallbackRates(): ExchangeRatesDto {
-    this.logger.warn('Using hardcoded fallback rates');
-
-    return {
-      UAH: 1,
-      USD: 0.024,
-      EUR: 0.022,
-    };
   }
 
   private findCurrencyPair(
