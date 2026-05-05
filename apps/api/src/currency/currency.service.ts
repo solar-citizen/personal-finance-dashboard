@@ -1,10 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import dayjs from 'dayjs';
+import { Currency } from 'src/_generated/prisma-client/enums';
 import { Decimal } from 'src/_generated/prisma-client/internal/prismaNamespaceBrowser';
 import {
   ExchangeRatesDto,
   MonoExchangeRateDto,
 } from 'src/_generated/zod/pfd-dtos';
+import { currencyToIso4217 } from 'src/monobank/lib/utils';
 import { MonoBankApiClient } from 'src/monobank/services';
 
 @Injectable()
@@ -26,12 +28,26 @@ export class CurrencyService {
 
     try {
       const monoExchangeRates = await this.monoApiClient.getExchangeRates();
+      const uahIsoCode = currencyToIso4217[Currency.uah];
 
-      const usdUah = this.findCurrencyPair(monoExchangeRates, 840, 980);
-      const eurUah = this.findCurrencyPair(monoExchangeRates, 978, 980);
+      const usdUah = this.findCurrencyPair(
+        monoExchangeRates,
+        currencyToIso4217[Currency.usd],
+        uahIsoCode,
+      );
 
-      if (!usdUah || !eurUah) {
-        throw new Error('Missing UAH pairs');
+      const eurUah = this.findCurrencyPair(
+        monoExchangeRates,
+        currencyToIso4217[Currency.eur],
+        uahIsoCode,
+      );
+
+      if (!usdUah) {
+        throw new Error('Missing USD/UAH currency pair from Monobank API');
+      }
+
+      if (!eurUah) {
+        throw new Error('Missing EUR/UAH currency pair from Monobank API');
       }
 
       const usdMid = new Decimal(usdUah.rateBuy ?? 0)

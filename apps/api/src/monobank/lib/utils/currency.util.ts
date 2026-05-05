@@ -1,23 +1,7 @@
 import { Currency } from 'src/_generated/prisma-client/client';
 
-/**
- * MonoBank uses ISO 4217 numeric currency codes
- */
-const currencyMap: Record<number, Currency> = {
-  980: Currency.uah,
-  840: Currency.usd,
-  978: Currency.eur,
+export const currencyToIso4217: Record<Currency, number> = {
+  [Currency.uah]: 980,
+  [Currency.usd]: 840,
+  [Currency.eur]: 978,
 };
-
-export const getCurrencyFromCode = (code: number) => currencyMap[code];
-
-export function getAccountTypeName(type: string): string {
-  const typeMap: Record<string, string> = {
-    black: 'Чорна',
-    white: 'Біла',
-    eAid: 'єПідтримка',
-    madeInUkraine: 'Національний Кешбек',
-  };
-
-  return typeMap[type] || type;
-}

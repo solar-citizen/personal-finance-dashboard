@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import dayjs from 'dayjs';
+import { Currency } from 'src/_generated/prisma-client/enums';
 import {
   ConnectMonoBankDto,
   MonoBankAccountResponseDto,
@@ -13,11 +14,7 @@ import { decrypt, encrypt } from 'src/_lib/utils/encryption.util';
 
 import { ContextBuilderService } from '../ai/services/context-builder.service';
 import { PrismaService } from '../db/prisma.service';
-import {
-  calculateSyncDateRange,
-  formatAccountResponse,
-  getCurrencyFromCode,
-} from './lib/utils';
+import { calculateSyncDateRange, formatAccountResponse } from './lib/utils';
 import {
   MonoBankApiClient,
   SyncJobManager,
@@ -40,6 +37,12 @@ export class MonoBankService {
     userId: string,
     { token }: ConnectMonoBankDto,
   ): Promise<MonoBankAccountResponseDto[]> {
+    const iso4217ToCurrency: Record<number, Currency> = {
+      980: Currency.uah,
+      840: Currency.usd,
+      978: Currency.eur,
+    };
+
     this.logger.log(`Connecting MonoBank account for user: ${userId}`);
 
     const { accounts } = await this.apiClient.getClientInfo(token);
@@ -59,7 +62,7 @@ export class MonoBankService {
       balance,
       creditLimit,
     } of accounts) {
-      const currency = getCurrencyFromCode(currencyCode);
+      const currency = iso4217ToCurrency[currencyCode];
 
       const savedAccount = await this.prismaService.account.upsert({
         where: {
