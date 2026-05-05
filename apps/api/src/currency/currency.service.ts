@@ -1,59 +1,68 @@
-import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger } from '@nestjs/common';
 import dayjs from 'dayjs';
-import { firstValueFrom } from 'rxjs';
-import { ExchangeRatesDto } from 'src/_generated/zod/pfd-dtos';
-import { ConfigService } from 'src/config/config.service';
-
-import { ExchangeRateApiResponseSchema } from './currency.schema';
+import { Decimal } from 'src/_generated/prisma-client/internal/prismaNamespaceBrowser';
+import {
+  ExchangeRatesDto,
+  MonoExchangeRateDto,
+} from 'src/_generated/zod/pfd-dtos';
+import { MonoBankApiClient } from 'src/monobank/services';
 
 @Injectable()
 export class CurrencyService {
   private readonly logger = new Logger(CurrencyService.name);
-  private readonly apiUrl: string;
   private readonly cacheTtlMs = 60 * 60 * 1000;
 
   private cachedRates: ExchangeRatesDto | null = null;
   private cacheTimestamp: dayjs.Dayjs | null = null;
 
-  constructor(
-    private readonly httpService: HttpService,
-    private readonly configService: ConfigService,
-  ) {
-    this.apiUrl = this.configService.exchangeApiUrl;
-  }
+  constructor(private readonly monoApiClient: MonoBankApiClient) {}
 
   async getExchangeRates(): Promise<ExchangeRatesDto> {
     const cached = this.getValidCache();
 
     if (cached) {
-      this.logger.log('Returning cached exchange rates');
       return cached;
     }
 
     try {
-      const { data } = await firstValueFrom(
-        this.httpService.get<unknown>(this.apiUrl),
-      );
+      const monoExchangeRates = await this.monoApiClient.getExchangeRates();
 
-      const { rates } = ExchangeRateApiResponseSchema.parse(data);
-      const { EUR, USD } = rates;
+      const usdUah = this.findCurrencyPair(monoExchangeRates, 840, 980);
+      const eurUah = this.findCurrencyPair(monoExchangeRates, 978, 980);
+
+      if (!usdUah || !eurUah) {
+        throw new Error('Missing UAH pairs');
+      }
+
+      const usdMid = new Decimal(usdUah.rateBuy ?? 0)
+        .plus(usdUah.rateSell ?? 0)
+        .div(2)
+        .toNumber();
+
+      const eurMid = new Decimal(eurUah.rateBuy ?? 0)
+        .plus(eurUah.rateSell ?? 0)
+        .div(2)
+        .toNumber();
+
+      const rates: ExchangeRatesDto = {
+        UAH: 1,
+        USD: new Decimal(1).div(usdMid).toNumber(),
+        EUR: new Decimal(1).div(eurMid).toNumber(),
+      };
 
       this.cachedRates = rates;
       this.cacheTimestamp = dayjs();
 
-      this.logger.log(
-        `Fresh exchange rates fetched: 1 UAH = ${USD} USD, ${EUR} EUR`,
-      );
-
-      return this.cachedRates;
+      return rates;
     } catch (err: unknown) {
-      this.logger.error('Failed to fetch exchange rates', err);
+      this.logger.error('Failed to fetch Mono exchange rates', err);
 
       if (this.cachedRates) {
         this.logger.warn('Returning stale cached rates due to API error');
         return this.cachedRates;
       }
+
+      this.logger.warn('Falling back to default exchange rates');
 
       return this.getFallbackRates();
     }
@@ -77,5 +86,16 @@ export class CurrencyService {
       USD: 0.024,
       EUR: 0.022,
     };
+  }
+
+  private findCurrencyPair(
+    rates: MonoExchangeRateDto[],
+    currencyCodeA: number,
+    currencyCodeB: number,
+  ): MonoExchangeRateDto | undefined {
+    return rates.find(
+      (r) =>
+        r.currencyCodeA === currencyCodeA && r.currencyCodeB === currencyCodeB,
+    );
   }
 }

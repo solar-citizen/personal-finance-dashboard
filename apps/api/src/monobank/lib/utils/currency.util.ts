@@ -16,6 +16,7 @@ export function getAccountTypeName(type: string): string {
     black: 'Чорна',
     white: 'Біла',
     eAid: 'єПідтримка',
+    madeInUkraine: 'Національний Кешбек',
   };
 
   return typeMap[type] || type;

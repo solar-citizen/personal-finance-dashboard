@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import {
   ConnectMonoBankDto,
+  ExchangeRatesDto,
   MonoBankAccountResponseDto,
   SyncJobResponseDto,
   SyncProgressResponseDto,
@@ -9,6 +10,7 @@ import {
   SyncTransactionsDto,
 } from 'src/_generated/zod/pfd-dtos';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { CurrencyService } from 'src/currency/currency.service';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { MonoBankService } from './monobank.service';
@@ -17,7 +19,10 @@ import { MonoBankService } from './monobank.service';
 @Controller('api/mono')
 @UseGuards(JwtAuthGuard)
 export class MonoBankController {
-  constructor(private readonly monoBankService: MonoBankService) {}
+  constructor(
+    private readonly monoBankService: MonoBankService,
+    private readonly currencyService: CurrencyService,
+  ) {}
 
   @Post('connect')
   async connectAccount(
@@ -48,5 +53,10 @@ export class MonoBankController {
     @Param('jobId') jobId: string,
   ): Promise<SyncProgressResponseDto> {
     return await this.monoBankService.getSyncJobStatus(jobId);
+  }
+
+  @Get('exchange-rates')
+  async getExchangeRates(): Promise<ExchangeRatesDto> {
+    return await this.currencyService.getExchangeRates();
   }
 }

@@ -1,6 +1,7 @@
 import { HttpService } from '@nestjs/axios';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
+import { MonoExchangeRateDto } from 'src/_generated/zod/pfd-dtos';
 import { toUnixTimestamp } from 'src/_lib/utils/date.util';
 import { ConfigService } from 'src/config/config.service';
 
@@ -121,5 +122,19 @@ export class MonoBankApiClient {
       'Failed to connect to MonoBank API',
       HttpStatus.INTERNAL_SERVER_ERROR,
     );
+  }
+
+  async getExchangeRates(): Promise<MonoExchangeRateDto[]> {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get<MonoExchangeRateDto[]>(
+          `${this.apiUrl}/bank/currency`,
+        ),
+      );
+
+      return response.data;
+    } catch (err: unknown) {
+      this.handleMonoBankError(err);
+    }
   }
 }
