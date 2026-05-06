@@ -24,6 +24,7 @@ enum AccountType {
   fop
   yellow
   eAid
+  madeInUkraine
 }
 
 enum SyncJobStatus {
@@ -123,7 +124,6 @@ model Account {
   // Sync metadata
   monoToken    String?
   lastSyncedAt DateTime?
-  webHookUrl   String?
 
   syncJobs  SyncJob[]
   

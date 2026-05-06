@@ -1,6 +1,6 @@
 import { formatAccountResponse } from './account.util';
 import { isAxiosErrorWithResponse } from './common.util';
-import { getAccountTypeName, getCurrencyFromCode } from './currency.util';
+import { currencyToIso4217 } from './currency.util';
 import {
   calculateChunkCount,
   calculateSyncDateRange,
@@ -10,9 +10,8 @@ import {
 export {
   calculateChunkCount,
   calculateSyncDateRange,
+  currencyToIso4217,
   formatAccountResponse,
-  getAccountTypeName,
-  getCurrencyFromCode,
   isAxiosErrorWithResponse,
   splitDateRangeIntoChunks,
 };

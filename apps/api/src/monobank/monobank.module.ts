@@ -2,6 +2,7 @@ import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AiModule } from 'src/ai/ai.module';
+import { CurrencyService } from 'src/currency/currency.service';
 
 import { PrismaModule } from '../db/prisma.module';
 import { MonoBankController } from './monobank.controller';
@@ -26,6 +27,7 @@ import { TransactionProcessor } from './services/transaction-processor.service';
     MonoBankApiClient,
     SyncJobManager,
     TransactionProcessor,
+    CurrencyService,
   ],
   exports: [MonoBankService],
 })

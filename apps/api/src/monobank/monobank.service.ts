@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import dayjs from 'dayjs';
+import { Currency } from 'src/_generated/prisma-client/enums';
 import {
   ConnectMonoBankDto,
   MonoBankAccountResponseDto,
@@ -13,11 +14,7 @@ import { decrypt, encrypt } from 'src/_lib/utils/encryption.util';
 
 import { ContextBuilderService } from '../ai/services/context-builder.service';
 import { PrismaService } from '../db/prisma.service';
-import {
-  calculateSyncDateRange,
-  formatAccountResponse,
-  getCurrencyFromCode,
-} from './lib/utils';
+import { calculateSyncDateRange, formatAccountResponse } from './lib/utils';
 import {
   MonoBankApiClient,
   SyncJobManager,
@@ -40,9 +37,15 @@ export class MonoBankService {
     userId: string,
     { token }: ConnectMonoBankDto,
   ): Promise<MonoBankAccountResponseDto[]> {
+    const iso4217ToCurrency: Record<number, Currency> = {
+      980: Currency.uah,
+      840: Currency.usd,
+      978: Currency.eur,
+    };
+
     this.logger.log(`Connecting MonoBank account for user: ${userId}`);
 
-    const { accounts, webHookUrl } = await this.apiClient.getClientInfo(token);
+    const { accounts } = await this.apiClient.getClientInfo(token);
 
     if (accounts.length === 0) {
       throw new BadRequestException('No accounts found for this token');
@@ -59,7 +62,7 @@ export class MonoBankService {
       balance,
       creditLimit,
     } of accounts) {
-      const currency = getCurrencyFromCode(currencyCode);
+      const currency = iso4217ToCurrency[currencyCode];
 
       const savedAccount = await this.prismaService.account.upsert({
         where: {
@@ -77,7 +80,6 @@ export class MonoBankService {
           balance: BigInt(balance),
           creditLimit: BigInt(creditLimit),
           monoToken: encryptedToken,
-          webHookUrl: webHookUrl || null,
         },
         update: {
           iban,
@@ -86,7 +88,6 @@ export class MonoBankService {
           balance: BigInt(balance),
           creditLimit: BigInt(creditLimit),
           monoToken: encryptedToken,
-          webHookUrl: webHookUrl || null,
         },
       });
 

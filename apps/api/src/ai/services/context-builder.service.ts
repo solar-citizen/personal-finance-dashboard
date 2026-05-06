@@ -16,7 +16,6 @@ import { formatDateToIso, getDateRange } from 'src/_lib/utils/date.util';
 import { formatValue } from 'src/_lib/utils/number.util';
 import { formatEmbeddingVector } from 'src/_lib/utils/vector.util';
 import { CurrencyService } from 'src/currency/currency.service';
-import { getAccountTypeName } from 'src/monobank/lib/utils/currency.util';
 
 import { PrismaService } from '../../db/prisma.service';
 import {
@@ -249,6 +248,17 @@ export class ContextBuilderService {
     knowledgeBase,
     exchangeRates,
   }: SystemPromptData): string {
+    const accountTypeNames: Record<string, string> = {
+      black: 'Чорна',
+      white: 'Біла',
+      platinum: 'Платинова',
+      iron: 'Залізна',
+      fop: 'ФОП',
+      yellow: 'Жовта',
+      eAid: 'єПідтримка',
+      madeInUkraine: 'Національний Кешбек',
+    };
+
     const { USD, EUR } = exchangeRates;
     const usdToUah = 1 / USD;
     const eurToUah = 1 / EUR;
@@ -268,7 +278,7 @@ export class ContextBuilderService {
           : '';
 
       return {
-        line: `- ${getAccountTypeName(type)} (${currency.toUpperCase()}): ${formatCurrency(balance, currency)}${suffix}`,
+        line: `- ${accountTypeNames[type] || type} (${currency.toUpperCase()}): ${formatCurrency(balance, currency)}${suffix}`,
         amount: uahAmount,
       };
     });
