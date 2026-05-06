@@ -6,9 +6,11 @@ export const ExchangeRatesSchema = z.looseObject({
   EUR: z.number().positive(),
 });
 
-export const ExchangeRateApiResponseSchema = z.object({
-  base: z.literal('UAH'),
-  date: z.string(),
-  time_last_updated: z.number(),
-  rates: ExchangeRatesSchema,
+export const MonoExchangeRateSchema = z.object({
+  currencyCodeA: z.number().positive().int(),
+  currencyCodeB: z.number().positive().int(),
+  date: z.number().int(),
+  rateSell: z.number().optional(),
+  rateBuy: z.number().optional(),
+  rateCross: z.number().optional(),
 });

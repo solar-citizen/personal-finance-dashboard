@@ -2,13 +2,30 @@
  * MonoBank API response for client info
  * https://api.monobank.ua/docs/#/definitions/UserInfo
  */
+
+export type ManagedClientAccount = {
+  id: string;
+  balance: number;
+  creditLimit: number;
+  type: 'fop';
+  currencyCode: number;
+  iban: string;
+};
+
+export type ManagedClient = {
+  clientId: string;
+  tin: number;
+  name: string;
+  accounts: ManagedClientAccount[];
+};
+
 export type MonoBankClientInfo = {
   clientId: string;
   name: string;
-  webHookUrl: string;
   permissions: string;
   accounts: MonoBankAccount[];
   jars?: MonoBankJar[];
+  managedClients?: ManagedClient[];
 };
 
 export type MonoBankAccount = {
@@ -16,7 +33,15 @@ export type MonoBankAccount = {
   sendId: string; // Identifier for P2P
   balance: number; // Balance in minimal units (kopiykas)
   creditLimit: number; // Credit limit in minimal units
-  type: 'black' | 'white' | 'platinum' | 'iron' | 'fop' | 'yellow' | 'eAid';
+  type:
+    | 'black'
+    | 'white'
+    | 'platinum'
+    | 'iron'
+    | 'fop'
+    | 'yellow'
+    | 'eAid'
+    | 'madeInUkraine';
   currencyCode: number; // ISO 4217 currency code
   cashbackType?: 'None' | 'UAH' | 'Miles';
   maskedPan: string[]; // Masked card numbers
