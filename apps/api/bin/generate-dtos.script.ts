@@ -48,9 +48,9 @@ function findSchemaFiles(
     }
 
     const content = readFileSync(fullPath, 'utf-8');
-    const schemaMatches = Array.from(
-      content.matchAll(/export const (\w+)Schema\s*=/g),
-    );
+    const schemaMatches = [
+      ...content.matchAll(/export const (\w+)Schema\s*=/g),
+    ];
 
     return schemaMatches.map((match) => {
       const schemaName = match[1];
@@ -61,15 +61,6 @@ function findSchemaFiles(
 
       if (!relativeFromSchemas.startsWith('.')) {
         relativeFromSchemas = './' + relativeFromSchemas;
-      }
-
-      const dtosDir = dirname(dtosOutput);
-      let relativeFromDtos = relative(dtosDir, fullPath)
-        .replace(/\.ts$/, '')
-        .replace(/\\/g, '/');
-
-      if (!relativeFromDtos.startsWith('.')) {
-        relativeFromDtos = './' + relativeFromDtos;
       }
 
       return {
