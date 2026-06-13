@@ -216,16 +216,16 @@ async function main() {
     default:
       console.log('Usage:');
       console.log(
-        '  npm run mcc analyze  - Analyze uncategorized transactions',
+        '  bun run mcc analyze  - Analyze uncategorized transactions',
       );
       console.log(
-        '  npm run mcc update   - Update transactions with new categories',
+        '  bun run mcc update   - Update transactions with new categories',
       );
-      console.log('  npm run mcc verify   - Verify categorization results');
+      console.log('  bun run mcc verify   - Verify categorization results');
       console.log('\nWorkflow:');
       console.log('  1. Run "analyze" to see which MCCs need categories');
       console.log('  2. Research MCCs and add new categories to seed.ts');
-      console.log('  3. Run "npm run seed" to add new categories to database');
+      console.log('  3. Run "bun run seed" to add new categories to database');
       console.log('  4. Run "update" to categorize existing transactions');
       console.log('  5. Run "verify" to check results');
   }
