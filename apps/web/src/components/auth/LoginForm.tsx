@@ -2,11 +2,12 @@
 
 import { useRouter } from 'next/navigation';
 
+import { LoginSchema } from '#pfd-schemas';
 import { useLogin } from '#src/_generated/api/pfd-components';
 
 import Form from '../form/Form';
 import FormInput from '../form/FormInput';
-import { type LoginFormData, loginSchema } from './auth.schema';
+import { type LoginFormData } from './auth.types';
 import AuthCard from './AuthCard';
 
 export default function LoginForm() {
@@ -47,7 +48,7 @@ export default function LoginForm() {
           email: '',
           password: '',
         }}
-        validationSchema={loginSchema}
+        validationSchema={LoginSchema}
         onSubmit={handleSubmit}
         className={'space-y-4'}
       >

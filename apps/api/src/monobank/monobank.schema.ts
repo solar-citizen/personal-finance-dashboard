@@ -1,5 +1,8 @@
-import { SyncJobStatus } from 'src/_generated/prisma-client/client';
 import { z } from 'zod';
+
+// Import has to be relative, because it's used on the client as well
+// and we don't want to expose the whole prisma client there
+import { SyncJobStatus } from '../_generated/prisma-client/browser';
 
 export const ConnectMonoBankSchema = z.object({
   token: z.string().min(1),

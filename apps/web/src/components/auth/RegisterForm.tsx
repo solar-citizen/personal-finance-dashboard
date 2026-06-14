@@ -2,11 +2,12 @@
 
 import { useRouter } from 'next/navigation';
 
+import { RegisterSchema } from '#pfd-schemas';
 import { useRegister } from '#src/_generated/api/pfd-components';
 
 import Form from '../form/Form';
 import FormInput from '../form/FormInput';
-import { type RegisterFormData, registerSchema } from './auth.schema';
+import { type RegisterFormData } from './auth.types';
 import AuthCard from './AuthCard';
 
 export default function RegisterForm() {
@@ -51,7 +52,7 @@ export default function RegisterForm() {
           password: '',
           repeatPassword: '',
         }}
-        validationSchema={registerSchema}
+        validationSchema={RegisterSchema}
         onSubmit={handleSubmit}
         className={'[&>*:not(button)]:space-y-4'}
       >
