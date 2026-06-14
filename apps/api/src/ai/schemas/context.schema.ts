@@ -1,5 +1,8 @@
-import { AccountType, Currency } from 'src/_generated/prisma-client/client';
 import { z } from 'zod';
+
+// Import has to be relative, because it's used on the client as well
+// and we don't want to expose the whole prisma client there
+import { AccountType, Currency } from '../../_generated/prisma-client/browser';
 
 export const AccountSummarySchema = z.object({
   id: z.string(),
