@@ -7,7 +7,7 @@ import { useLogin } from '#src/_generated/api/pfd-components';
 
 import Form from '../form/Form';
 import FormInput from '../form/FormInput';
-import { type LoginFormData } from './auth.schema';
+import { type LoginFormData } from './auth.types';
 import AuthCard from './AuthCard';
 
 export default function LoginForm() {

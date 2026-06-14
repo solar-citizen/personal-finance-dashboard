@@ -7,7 +7,7 @@ import { useRegister } from '#src/_generated/api/pfd-components';
 
 import Form from '../form/Form';
 import FormInput from '../form/FormInput';
-import { type RegisterFormData } from './auth.schema';
+import { type RegisterFormData } from './auth.types';
 import AuthCard from './AuthCard';
 
 export default function RegisterForm() {
