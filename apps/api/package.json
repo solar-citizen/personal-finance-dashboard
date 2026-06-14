@@ -23,7 +23,8 @@
     "openapi:generate": "bun run build && bun run ./dist/apps/api/bin/generate-openapi.script.js",
     "dtos:generate": "bun run bin/generate-dtos.script.ts",
     "codegen": "bun run db:generate && bun run dtos:generate && bun run openapi:generate",
-    "mcc": "bun run prisma/scripts/analyze-mcc.script.ts"
+    "mcc": "bun run prisma/scripts/analyze-mcc.script.ts",
+    "generate-key": "bun run bin/generate-key.script.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

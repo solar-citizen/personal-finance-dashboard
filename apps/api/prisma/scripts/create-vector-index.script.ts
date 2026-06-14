@@ -1,4 +1,4 @@
-import { prisma } from 'prisma/client';
+import { prisma } from '../client';
 
 async function createVectorIndex() {
   console.log('🔧 Creating vector index for Message.embedding...');

@@ -30,17 +30,13 @@ function getEncryptionKey(): Buffer {
  * @returns Encrypted string in format: iv:authTag:encryptedData (base64)
  */
 export function encrypt(plaintext: string): string {
-  const key = getEncryptionKey();
   const iv = randomBytes(ivLength);
-
-  const cipher = createCipheriv(algorithm, key, iv);
+  const cipher = createCipheriv(algorithm, getEncryptionKey(), iv);
 
   let encrypted = cipher.update(plaintext, 'utf8', 'base64');
   encrypted += cipher.final('base64');
 
-  const authTag = cipher.getAuthTag();
-
-  return `${iv.toString('base64')}:${authTag.toString('base64')}:${encrypted}`;
+  return `${iv.toString('base64')}:${cipher.getAuthTag().toString('base64')}:${encrypted}`;
 }
 
 /**
@@ -50,8 +46,6 @@ export function encrypt(plaintext: string): string {
  * @returns Decrypted plaintext string
  */
 export function decrypt(encryptedData: string): string {
-  const key = getEncryptionKey();
-
   const parts = encryptedData.split(':');
 
   if (parts.length !== 3) {
@@ -60,11 +54,13 @@ export function decrypt(encryptedData: string): string {
 
   const [ivBase64, authTagBase64, encrypted] = parts;
 
-  const iv = Buffer.from(ivBase64, 'base64');
-  const authTag = Buffer.from(authTagBase64, 'base64');
+  const decipher = createDecipheriv(
+    algorithm,
+    getEncryptionKey(),
+    Buffer.from(ivBase64, 'base64'),
+  );
 
-  const decipher = createDecipheriv(algorithm, key, iv);
-  decipher.setAuthTag(authTag);
+  decipher.setAuthTag(Buffer.from(authTagBase64, 'base64'));
 
   let decrypted = decipher.update(encrypted, 'base64', 'utf8');
   decrypted += decipher.final('utf8');

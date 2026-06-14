@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "#src/*": ["./src/*"]
+      "#src/*": ["./src/*"],
+      "#pfd-schemas": ["../../_generated/zod/pfd-schemas.ts"]
     }
   },
   "include": [

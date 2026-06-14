@@ -1,6 +1,5 @@
-import { prisma } from 'prisma/client';
-
 import { encrypt } from '../../src/_lib/utils/encryption.util';
+import { prisma } from '../client';
 
 async function main() {
   console.log('🔐 Starting token encryption migration...\n');

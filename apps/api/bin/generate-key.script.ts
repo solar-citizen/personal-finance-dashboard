@@ -1,8 +1,4 @@
-import { randomBytes } from 'crypto';
-
-function generateEncryptionKey(): string {
-  return randomBytes(32).toString('base64');
-}
+import { generateEncryptionKey } from 'src/_lib/utils';
 
 console.log('\n🔐 Encryption Key Generator\n');
 console.log('Add this to your .env file:\n');
