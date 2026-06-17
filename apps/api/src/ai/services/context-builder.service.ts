@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { accountTypeNames } from '@pfd/shared';
 import dayjs from 'dayjs';
 import {
   AccountSummaryDto,
@@ -248,17 +249,6 @@ export class ContextBuilderService {
     knowledgeBase,
     exchangeRates,
   }: SystemPromptData): string {
-    const accountTypeNames: Record<string, string> = {
-      black: 'Чорна',
-      white: 'Біла',
-      platinum: 'Платинова',
-      iron: 'Залізна',
-      fop: 'ФОП',
-      yellow: 'Жовта',
-      eAid: 'єПідтримка',
-      madeInUkraine: 'Національний Кешбек',
-    };
-
     const { USD, EUR } = exchangeRates;
     const usdToUah = 1 / USD;
     const eurToUah = 1 / EUR;

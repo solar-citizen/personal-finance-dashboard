@@ -27,6 +27,7 @@
     "generate-key": "bun run bin/generate-key.script.ts"
   },
   "dependencies": {
+    "@pfd/shared": "workspace:*",
     "@google/generative-ai": "^0.24.1",
     "@nestjs/axios": "^4.0.1",
     "@nestjs/common": "^11.1.26",
