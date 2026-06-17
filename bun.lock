@@ -42,6 +42,7 @@
         "@nestjs/platform-express": "^11.1.26",
         "@nestjs/swagger": "^11.4.4",
         "@paralleldrive/cuid2": "^3.3.0",
+        "@pfd/shared": "workspace:*",
         "@prisma/adapter-pg": "^7.8.0",
         "@prisma/client": "^7.8.0",
         "bcrypt": "^6.0.0",
@@ -78,6 +79,7 @@
       "name": "web",
       "dependencies": {
         "@hookform/resolvers": "^5.4.0",
+        "@pfd/shared": "workspace:*",
         "@tanstack/react-query": "^5.101.0",
         "@tanstack/react-query-devtools": "^5.101.0",
         "next": "16.2.9",
@@ -99,6 +101,9 @@
         "eslint-plugin-react-hooks": "^7.1.1",
         "tailwindcss": "^4",
       },
+    },
+    "packages/shared": {
+      "name": "@pfd/shared",
     },
   },
   "packages": {
@@ -351,6 +356,8 @@
     "@openapi-codegen/typescript": ["@openapi-codegen/typescript@11.1.0", "", { "dependencies": { "case": "^1.6.3", "lodash": "^4.17.21", "openapi3-ts": "^4.4.0", "pluralize": "^8.0.0", "tslib": "^2.3.1", "tsutils": "^3.21.0", "typescript": "4.8.2" } }, "sha512-MFWXzxum9gNBKpVucnDZX9SVSYZBRi2+LFt0DsJ+AkYjrGKHDHYsardxapVarhiWOmPsSZ0TMPhUe4rebyY85g=="],
 
     "@paralleldrive/cuid2": ["@paralleldrive/cuid2@3.3.0", "", { "dependencies": { "@noble/hashes": "^2.0.1", "bignumber.js": "^9.3.1", "error-causes": "^3.0.2" }, "bin": { "cuid2": "bin/cuid2.js" } }, "sha512-OqiFvSOF0dBSesELYY2CAMa4YINvlLpvKOz/rv6NeZEqiyttlHgv98Juwv4Ch+GrEV7IZ8jfI2VcEoYUjXXCjw=="],
+
+    "@pfd/shared": ["@pfd/shared@workspace:packages/shared"],
 
     "@pkgr/core": ["@pkgr/core@0.3.6", "", {}, "sha512-SEeaJLb3qBNF/OaXnaR1NmmBbFYk1zC0ZH/52fATcRPLFg/p791YrcyFFy44Bo9sLaGuSuLp5Q6axbb/O+v/RA=="],
 

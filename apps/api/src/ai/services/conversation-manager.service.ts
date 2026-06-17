@@ -191,6 +191,36 @@ export class ConversationManagerService {
     return conversation.messages.reverse();
   }
 
+  async isConversationLockedToGemini(
+    conversationId: string,
+    userId: string,
+  ): Promise<boolean> {
+    const conversation = await this.prismaService.conversation.findFirst({
+      where: { id: conversationId, userId },
+      include: {
+        messages: {
+          select: {
+            contextUsed: true,
+          },
+        },
+      },
+    });
+
+    if (!conversation) {
+      throw new NotFoundException('Conversation not found');
+    }
+
+    return conversation.messages.some(
+      ({ contextUsed }) =>
+        typeof contextUsed === 'object' &&
+        contextUsed !== null &&
+        !Array.isArray(contextUsed) &&
+        Object.entries(contextUsed).some(
+          ([key, value]) => key === 'modelUsed' && value === 'gemini',
+        ),
+    );
+  }
+
   async getConversation(
     conversationId: string,
     userId: string,

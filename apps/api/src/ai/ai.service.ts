@@ -236,23 +236,30 @@ export class AiService {
   }
 
   private async prepareConversation(userId: string, dto: SendMessageDto) {
-    const { contextLevel, provider, reason, type } =
-      this.queryStrategy.analyzeQuery(
-        dto.message,
-        this.geminiClient.isAvailable(),
-      );
-
-    this.queryStrategy.logStrategy(
-      { provider, contextLevel, reason, type },
-      dto.message,
-    );
-
     const conversationId =
       await this.conversationManager.getOrCreateConversation(
         userId,
         dto.conversationId,
         dto.message,
       );
+
+    const isLockedToGemini =
+      await this.conversationManager.isConversationLockedToGemini(
+        conversationId,
+        userId,
+      );
+
+    const { contextLevel, provider, reason, type } =
+      this.queryStrategy.analyzeQuery(
+        dto.message,
+        this.geminiClient.isAvailable(),
+        isLockedToGemini,
+      );
+
+    this.queryStrategy.logStrategy(
+      { provider, contextLevel, reason, type },
+      dto.message,
+    );
 
     await this.conversationManager.addMessage({
       conversationId,
