@@ -32,13 +32,17 @@ export class QueryStrategyService {
     );
 
     if (isLockedToGemini || isFinancial) {
+      const provider = geminiAvailable ? 'gemini' : 'ollama';
+
       return {
         type: 'financial',
-        provider: geminiAvailable ? 'gemini' : 'ollama',
+        provider,
         contextLevel: 'full',
         reason: isLockedToGemini
-          ? 'Conversation locked to Gemini'
-          : 'Financial analysis with Gemini + full context',
+          ? geminiAvailable
+            ? 'Conversation locked to Gemini'
+            : 'Conversation locked to Gemini — falling back to Ollama'
+          : `Financial analysis with ${provider}`,
       };
     }
 
