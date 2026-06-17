@@ -16,19 +16,33 @@ type QueryStrategy = {
 export class QueryStrategyService {
   private readonly logger = new Logger(QueryStrategyService.name);
 
-  analyzeQuery(message: string, geminiAvailable: boolean): QueryStrategy {
+  analyzeQuery(
+    message: string,
+    geminiAvailable: boolean,
+    isLockedToGemini: boolean,
+  ): QueryStrategy {
+    if (isLockedToGemini && !geminiAvailable) {
+      throw new Error(
+        'Conversation is locked to Gemini but Gemini is currently unavailable',
+      );
+    }
+
     const isFinancial = analyticalFinancePatterns.some((pattern) =>
       pattern.test(message),
     );
 
-    if (isFinancial) {
+    if (isLockedToGemini || isFinancial) {
+      const provider = geminiAvailable ? 'gemini' : 'ollama';
+
       return {
         type: 'financial',
-        provider: geminiAvailable ? 'gemini' : 'ollama',
+        provider,
         contextLevel: 'full',
-        reason: geminiAvailable
-          ? 'Financial analysis with Gemini + full context'
-          : 'Financial analysis with Ollama fallback + full context',
+        reason: isLockedToGemini
+          ? geminiAvailable
+            ? 'Conversation locked to Gemini'
+            : 'Conversation locked to Gemini — falling back to Ollama'
+          : `Financial analysis with ${provider}`,
       };
     }
 
