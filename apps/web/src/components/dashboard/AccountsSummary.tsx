@@ -4,7 +4,7 @@ import { accountTypeNames } from '@pfd/shared';
 
 import { useGetAccounts } from '#src/_generated/api/pfd-components';
 import { MonoBankAccountResponseDto } from '#src/_generated/api/pfd-types';
-import FetchErrorMessage from '#src/components/common/FetchErrorMessage';
+import QueryState from '#src/components/common/QueryState';
 import { SkeletonList } from '#src/components/common/Skeleton';
 
 type AccountsListProps = {
@@ -47,13 +47,19 @@ export default function AccountsSummary() {
   return (
     <div className={'p-4 border rounded-lg shadow-sm min-h-[360px]'}>
       <h2 className={'text-xl font-bold mb-4'}>{'Accounts/Cards'}</h2>
-      {isLoading && (
-        <div className={'space-y-2'}>
-          <SkeletonList length={6} className={`${rowClassName} w-full`} />
-        </div>
-      )}
-      {error && <FetchErrorMessage message={'Failed to load accounts.'} />}
-      {!isLoading && !error && <AccountsList accounts={data} />}
+      <QueryState
+        isLoading={isLoading}
+        error={error}
+        data={data}
+        errorMessage={'Failed to load accounts.'}
+        loadingFallback={
+          <div className={'space-y-2'}>
+            <SkeletonList length={6} className={`${rowClassName} w-full`} />
+          </div>
+        }
+      >
+        {accounts => <AccountsList accounts={accounts} />}
+      </QueryState>
     </div>
   );
 }
