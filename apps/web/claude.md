@@ -135,4 +135,4 @@ All layout, composition, and child component imports live in the root component 
 
 Tailwind v4 with a custom design token palette defined in `src/app/globals.css`.
 Use semantic tokens — `bg-primary`, `text-accent`, `border-border`, etc. — not raw
-Tailwind colors like `bg-emerald-800`. The full token list is in `globals.css
+Tailwind colors like `bg-emerald-800`. The full token list is in `globals.css`

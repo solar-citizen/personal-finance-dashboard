@@ -30,40 +30,40 @@ export class CurrencyService {
       const monoExchangeRates = await this.monoApiClient.getExchangeRates();
       const uahIsoCode = currencyToIso4217[Currency.uah];
 
-      const usdUah = this.findCurrencyPair(
+      const usdToUah = this.findCurrencyPair(
         monoExchangeRates,
         currencyToIso4217[Currency.usd],
         uahIsoCode,
       );
 
-      const eurUah = this.findCurrencyPair(
+      const eurToUah = this.findCurrencyPair(
         monoExchangeRates,
         currencyToIso4217[Currency.eur],
         uahIsoCode,
       );
 
-      if (!usdUah) {
+      if (!usdToUah) {
         throw new Error('Missing USD/UAH currency pair from Monobank API');
       }
 
-      if (!eurUah) {
+      if (!eurToUah) {
         throw new Error('Missing EUR/UAH currency pair from Monobank API');
       }
 
-      const usdMid = new Decimal(usdUah.rateBuy ?? 0)
-        .plus(usdUah.rateSell ?? 0)
+      const usdMid = new Decimal(usdToUah.rateBuy ?? 0)
+        .plus(usdToUah.rateSell ?? 0)
         .div(2)
         .toNumber();
 
-      const eurMid = new Decimal(eurUah.rateBuy ?? 0)
-        .plus(eurUah.rateSell ?? 0)
+      const eurMid = new Decimal(eurToUah.rateBuy ?? 0)
+        .plus(eurToUah.rateSell ?? 0)
         .div(2)
         .toNumber();
 
       const rates: ExchangeRatesDto = {
-        UAH: 1,
-        USD: new Decimal(1).div(usdMid).toNumber(),
-        EUR: new Decimal(1).div(eurMid).toNumber(),
+        uahToUah: 1,
+        usdToUah: usdMid,
+        eurToUah: eurMid,
       };
 
       this.cachedRates = rates;

@@ -28,15 +28,15 @@ export class MonoBankController {
   async connectAccount(
     @CurrentUser('id') userId: string,
     @Body() dto: ConnectMonoBankDto,
-  ): Promise<{ accounts: MonoBankAccountResponseDto[] }> {
-    return { accounts: await this.monoBankService.connectAccount(userId, dto) };
+  ): Promise<MonoBankAccountResponseDto[]> {
+    return await this.monoBankService.connectAccount(userId, dto);
   }
 
   @Get('accounts')
   async getAccounts(
     @CurrentUser('id') userId: string,
-  ): Promise<{ accounts: MonoBankAccountResponseDto[] }> {
-    return { accounts: await this.monoBankService.getUserAccounts(userId) };
+  ): Promise<MonoBankAccountResponseDto[]> {
+    return await this.monoBankService.getUserAccounts(userId);
   }
 
   @Post('sync/:accountId')
