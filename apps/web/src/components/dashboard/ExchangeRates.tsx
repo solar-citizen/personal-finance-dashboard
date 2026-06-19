@@ -14,7 +14,7 @@ export default function ExchangeRates() {
   const { data, isLoading, error } = useGetExchangeRates({});
 
   return (
-    <div
+    <section
       className={
         'w-full py-1 px-4 bg-gray-100 dark:bg-gray-800 rounded flex items-center justify-center gap-6 text-xs'
       }
@@ -46,6 +46,6 @@ export default function ExchangeRates() {
           </div>
         )}
       </QueryState>
-    </div>
+    </section>
   );
 }

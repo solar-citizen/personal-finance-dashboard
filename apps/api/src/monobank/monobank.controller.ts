@@ -1,13 +1,25 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import {
   ConnectMonoBankDto,
   ExchangeRatesDto,
+  ExpenseCategoryResponseDto,
+  GetExpensesQueryDto,
+  GetTransactionsQueryDto,
   MonoBankAccountResponseDto,
   SyncJobResponseDto,
   SyncProgressResponseDto,
   SyncResultResponseDto,
   SyncTransactionsDto,
+  TransactionResponseDto,
 } from 'src/_generated/zod/pfd-dtos';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { CurrencyService } from 'src/currency/currency.service';
@@ -37,6 +49,22 @@ export class MonoBankController {
     @CurrentUser('id') userId: string,
   ): Promise<MonoBankAccountResponseDto[]> {
     return await this.monoBankService.getUserAccounts(userId);
+  }
+
+  @Get('transactions')
+  async getLatestTransactions(
+    @CurrentUser('id') userId: string,
+    @Query() { limit }: GetTransactionsQueryDto,
+  ): Promise<TransactionResponseDto[]> {
+    return await this.monoBankService.getLatestTransactions(userId, limit);
+  }
+
+  @Get('expenses')
+  async getHighestExpenses(
+    @CurrentUser('id') userId: string,
+    @Query() { period }: GetExpensesQueryDto,
+  ): Promise<ExpenseCategoryResponseDto[]> {
+    return await this.monoBankService.getHighestExpenses(userId, period);
   }
 
   @Post('sync/:accountId')

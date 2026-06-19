@@ -11,7 +11,7 @@ type AccountsListProps = {
   accounts: MonoBankAccountResponseDto[] | undefined;
 };
 
-const rowClassName = 'h-10 p-2';
+export const rowClassName = 'h-10 p-2';
 
 function AccountsList({ accounts }: AccountsListProps) {
   if (!accounts || accounts.length === 0) {
@@ -45,7 +45,7 @@ export default function AccountsSummary() {
   const { data, isLoading, error } = useGetAccounts({});
 
   return (
-    <div className={'p-4 border rounded-lg shadow-sm min-h-[360px]'}>
+    <section className={'p-4 border rounded-lg shadow-sm max-h-[360px] h-full overflow-auto'}>
       <h2 className={'text-xl font-bold mb-4'}>{'Accounts/Cards'}</h2>
       <QueryState
         isLoading={isLoading}
@@ -60,6 +60,6 @@ export default function AccountsSummary() {
       >
         {accounts => <AccountsList accounts={accounts} />}
       </QueryState>
-    </div>
+    </section>
   );
 }

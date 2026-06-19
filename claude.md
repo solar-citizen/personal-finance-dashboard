@@ -26,8 +26,18 @@ It is bun-based monorepo, orchestrated with Turbo:
 ## Conventions
 
 - TypeScript strict mode is enforced — respect `tsconfig.json` and the ESLint config (`eslint.config.mjs`)
+- Use types, don't use interfaces
 - Each app has its own `.env` file (see `env.example` in each app)
 - Database is managed via Docker
+
+### Naming Conventions
+
+- **camelCase** for all variables, constants, function names, and object keys — including zod schemas etc.
+  - Correct: `usdToUah`, `eurToUah`, `exchangeRates`
+  - Wrong: `USD_UAH`, `EUR_UAH`, `EXCHANGE_RATES`
+- **PascalCase** for classes, types, enums, and Zod schemas
+  - ✅ `ExchangeRatesSchema`, `CurrencyPair`
+- **SCREAMING_SNAKE_CASE** — used only to name env variables, not for constants, not for object keys, not for schema field names
 
 ## API types & data fetching — generated layer, don't bypass it
 
@@ -45,7 +55,7 @@ DTO backed by a Zod schema) → OpenAPI spec → codegen produces, in order:
 
 Rules:
 
-- Never define a manual TS type/interface for API request/response data.
+- Never define a manual TS type for API request/response data.
   Check `#pfd-schemas` for an existing Zod schema first and derive the type with
   `z.infer<typeof SomeSchema>`. Only write a new Zod schema if none exists, and
   put it in the relevant NestJS module's \*.schema.ts file — not in the frontend.

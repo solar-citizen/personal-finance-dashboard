@@ -1,3 +1,4 @@
+import { periods } from '@pfd/shared';
 import { z } from 'zod';
 
 // Import has to be relative, because it's used on the client as well
@@ -46,4 +47,34 @@ export const SyncProgressResponseSchema = z.object({
 export const SyncJobResponseSchema = z.object({
   jobId: z.string().min(1),
   message: z.string(),
+});
+
+export const TransactionCategorySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  icon: z.string(),
+});
+
+export const TransactionResponseSchema = z.object({
+  id: z.string(),
+  category: TransactionCategorySchema.nullable(),
+  account: z.object({ id: z.string(), type: z.string() }),
+  amount: z.number(),
+  currencyCode: z.string(),
+  time: z.string(),
+  description: z.string(),
+});
+
+export const ExpenseCategoryResponseSchema = z.object({
+  category: TransactionCategorySchema,
+  amount: z.number(),
+  currency: z.string(),
+});
+
+export const GetTransactionsQuerySchema = z.object({
+  limit: z.coerce.number().int().positive().max(100).default(10),
+});
+
+export const GetExpensesQuerySchema = z.object({
+  period: z.enum(periods).default('month'),
 });

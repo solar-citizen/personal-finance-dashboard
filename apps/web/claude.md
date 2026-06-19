@@ -57,7 +57,7 @@ function Foo({ onChange }: FooProps) {
 }
 ```
 
-- Don't declare `children` in prop types — use `React.PropsWithChildren`:
+- Don't declare `children` in simple children prop types — use `React.PropsWithChildren`:
 
 ```tsx
 // correct
