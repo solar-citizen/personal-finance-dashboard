@@ -271,7 +271,6 @@ export class MonoBankService {
       }
 
       const { id, name, icon } = category;
-      const processedAmount = Math.abs(Number(amount)) / 100;
 
       let entry = acc[id];
 
@@ -287,7 +286,7 @@ export class MonoBankService {
         };
         acc[id] = entry;
       }
-      entry.amount += processedAmount;
+      entry.amount += Math.abs(Number(amount)) / 100;
 
       return acc;
     }, {});
