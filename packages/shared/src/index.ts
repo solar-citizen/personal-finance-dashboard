@@ -8,3 +8,6 @@ export const accountTypeNames: Record<string, string> = {
   eAid: 'єПідтримка',
   madeInUkraine: 'Національний Кешбек',
 };
+
+export const periods = ['day', 'week', 'month', 'year'] as const;
+export type Period = (typeof periods)[number];

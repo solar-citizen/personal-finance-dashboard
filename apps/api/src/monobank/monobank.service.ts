@@ -1,20 +1,27 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { type Period } from '@pfd/shared';
 import dayjs from 'dayjs';
 import { Currency } from 'src/_generated/prisma-client/enums';
 import {
   ConnectMonoBankDto,
+  ExpenseCategoryResponseDto,
   MonoBankAccountResponseDto,
   SyncJobResponseDto,
   SyncProgressResponseDto,
   SyncResultResponseDto,
   SyncTransactionsDto,
+  TransactionResponseDto,
 } from 'src/_generated/zod/pfd-dtos';
 import { formatDateToIso } from 'src/_lib/utils/date.util';
 import { decrypt, encrypt } from 'src/_lib/utils/encryption.util';
 
 import { ContextBuilderService } from '../ai/services/context-builder.service';
 import { PrismaService } from '../db/prisma.service';
-import { calculateSyncDateRange, formatAccountResponse } from './lib/utils';
+import {
+  calculateSyncDateRange,
+  formatAccountResponse,
+  iso4217ToCurrency,
+} from './lib/utils';
 import {
   MonoBankApiClient,
   SyncJobManager,
@@ -203,5 +210,89 @@ export class MonoBankService {
 
   async getSyncJobStatus(jobId: string): Promise<SyncProgressResponseDto> {
     return await this.syncJobManager.getJobStatus(jobId);
+  }
+
+  async getLatestTransactions(
+    userId: string,
+    limit: number,
+  ): Promise<TransactionResponseDto[]> {
+    const transactions = await this.prismaService.transaction.findMany({
+      where: { account: { userId } },
+      orderBy: { time: 'desc' },
+      take: limit,
+      include: {
+        category: {
+          select: { id: true, name: true, icon: true },
+        },
+        account: {
+          select: { id: true, type: true },
+        },
+      },
+    });
+
+    return transactions.map(
+      ({ id, category, account, amount, currencyCode, time, description }) => ({
+        id,
+        category: category
+          ? { id: category.id, name: category.name, icon: category.icon }
+          : null,
+        account: { id: account.id, type: account.type },
+        amount: Number(amount) / 100,
+        currencyCode: iso4217ToCurrency[currencyCode],
+        time: time.toISOString(),
+        description,
+      }),
+    );
+  }
+
+  async getHighestExpenses(
+    userId: string,
+    period: Period,
+  ): Promise<ExpenseCategoryResponseDto[]> {
+    const from = dayjs().subtract(1, period).toDate();
+
+    const transactions = await this.prismaService.transaction.findMany({
+      where: {
+        account: { userId },
+        time: { gte: from },
+        amount: { lt: 0 },
+        category: { isNot: null },
+      },
+      include: {
+        category: { select: { id: true, name: true, icon: true } },
+      },
+    });
+
+    const expensesByCategory = transactions.reduce<
+      Record<string, ExpenseCategoryResponseDto | undefined>
+    >((acc, { category, amount, currencyCode }) => {
+      if (!category) {
+        return acc;
+      }
+
+      const { id, name, icon } = category;
+
+      let entry = acc[id];
+
+      if (!entry) {
+        entry = {
+          category: {
+            id,
+            name,
+            icon,
+          },
+          amount: 0,
+          currency: iso4217ToCurrency[currencyCode],
+        };
+        acc[id] = entry;
+      }
+      entry.amount += Math.abs(Number(amount)) / 100;
+
+      return acc;
+    }, {});
+
+    return Object.values(expensesByCategory)
+      .filter((val): val is ExpenseCategoryResponseDto => val !== undefined)
+      .sort((a, b) => b.amount - a.amount);
   }
 }

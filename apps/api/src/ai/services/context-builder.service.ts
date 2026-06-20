@@ -249,9 +249,7 @@ export class ContextBuilderService {
     knowledgeBase,
     exchangeRates,
   }: SystemPromptData): string {
-    const { USD, EUR } = exchangeRates;
-    const usdToUah = 1 / USD;
-    const eurToUah = 1 / EUR;
+    const { usdToUah, eurToUah } = exchangeRates;
 
     const conversionRates: Record<string, number> = {
       usd: usdToUah,
