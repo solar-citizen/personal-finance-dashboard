@@ -33,13 +33,13 @@ export default function HighestExpenses() {
   };
 
   return (
-    <section className={'p-4 border rounded-lg shadow-sm max-h-[360px] h-full overflow-auto'}>
+    <section className={'p-4 border rounded-lg shadow-sm max-h-80 h-full overflow-auto'}>
       <div className={'flex justify-between items-center mb-4'}>
         <h2 className={'text-xl font-bold'}>{'Highest Expenses'}</h2>
         <select
           value={period}
           onChange={handlePeriodChange}
-          className={'p-1 border rounded text-sm bg-input'}
+          className={'p-1 border rounded text-sm bg-input cursor-pointer'}
         >
           {periods.map(value => (
             <option key={value} value={value}>

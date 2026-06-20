@@ -8,7 +8,7 @@ export default function LatestTransactions() {
   const { data, isLoading, error } = useGetLatestTransactions({});
 
   return (
-    <section className={'p-4 border rounded-lg shadow-sm max-h-[360px] h-full overflow-auto'}>
+    <section className={'p-4 border rounded-lg shadow-sm max-h-80 h-full overflow-auto'}>
       <h2 className={'text-xl font-bold mb-4'}>{'Latest Transactions'}</h2>
       <QueryState
         isLoading={isLoading}
