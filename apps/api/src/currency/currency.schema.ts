@@ -1,9 +1,9 @@
 import { z } from 'zod';
 
 export const ExchangeRatesSchema = z.looseObject({
-  UAH: z.number().positive(),
-  USD: z.number().positive(),
-  EUR: z.number().positive(),
+  uahToUah: z.number().positive(),
+  usdToUah: z.number().positive(),
+  eurToUah: z.number().positive(),
 });
 
 export const MonoExchangeRateSchema = z.object({

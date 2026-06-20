@@ -57,7 +57,7 @@ function Foo({ onChange }: FooProps) {
 }
 ```
 
-- Don't declare `children` in prop types — use `React.PropsWithChildren`:
+- Don't declare `children` in simple children prop types — use `React.PropsWithChildren`:
 
 ```tsx
 // correct
@@ -99,3 +99,40 @@ type Props = {
 - `pfdFetch` throws on non-2xx responses: if the body parses as JSON it throws that parsed body directly (shape depends on the Nest exception, typically `{ statusCode, message, error }`); if parsing fails or the fetch itself fails (network/CORS), it throws a plain `Error` with `name: 'unknown'`
 - Not wired up at the React Query layer yet — `onError` callbacks need to distinguish the Nest error shape from the generic `Error` case
 - No global error UI (toasts, etc.) exists — first usage establishes the convention
+
+## Import paths for generated code
+
+Generated code under `_generated/` uses Node subpath imports (the `#...` aliases
+defined in tsconfig.json `paths`), not the regular `@/` alias used for the rest
+of src. Always use the `#` alias when importing from `_generated/`.
+
+Correct:
+import { useGetAccounts } from '#src/\_generated/api/pfd-components';
+import { ExchangeRatesSchema } from '#pfd-schemas';
+
+Wrong:
+import { useGetAccounts } from '@/\_generated/api/pfd-components';
+
+If you're not sure which `#` alias maps to a given generated file, check the
+`paths` field in tsconfig.json rather than guessing or falling back to `@/`.
+
+## Page structure
+
+Pages are thin wrappers — they import and render a single root component, nothing else:
+
+```tsx
+// app/dashboard/page.tsx
+import Dashboard from '#src/components/dashboard/Dashboard';
+
+export default function DashboardPage() {
+  return <Dashboard />;
+}
+```
+
+All layout, composition, and child component imports live in the root component (`Dashboard.tsx`), not in `page.tsx`.
+
+## Styling
+
+Tailwind v4 with a custom design token palette defined in `src/app/globals.css`.
+Use semantic tokens — `bg-primary`, `text-accent`, `border-border`, etc. — not raw
+Tailwind colors like `bg-emerald-800`. The full token list is in `globals.css`
