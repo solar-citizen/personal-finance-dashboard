@@ -198,13 +198,16 @@ export default function ChatWindow({ isOpen, onHide }: ChatWindowProps) {
                 setConversationId(parsed.conversationId);
               } else if (parsed.type === 'chunk' && parsed.content) {
                 setMessages(prev => {
-                  const newMessages = [...prev];
-                  const lastIndex = newMessages.length - 1;
-                  newMessages[lastIndex] = {
-                    ...newMessages[lastIndex],
-                    content: newMessages[lastIndex].content + parsed.content,
-                  };
-                  return newMessages;
+                  const last = prev[prev.length - 1];
+
+                  if (last.role !== 'assistant') {
+                    return prev;
+                  }
+
+                  return [
+                    ...prev.slice(0, -1),
+                    { ...last, content: last.content + parsed.content },
+                  ];
                 });
               }
             }
@@ -261,6 +264,8 @@ export default function ChatWindow({ isOpen, onHide }: ChatWindowProps) {
 
         <button
           onClick={onHide}
+          title={'Hide chat window'}
+          aria-label={'Hide chat window'}
           className={'text-muted-foreground hover:text-foreground cursor-pointer'}
         >
           {'✕'}
