@@ -1,11 +1,11 @@
 type ChatBubbleProps = {
-  onClick: () => void;
+  onShow: () => void;
 };
 
-export default function ChatBubble({ onClick }: ChatBubbleProps) {
+export default function ChatBubble({ onShow }: ChatBubbleProps) {
   return (
     <button
-      onClick={onClick}
+      onClick={onShow}
       className={
         'fixed bottom-6 right-6 z-50 rounded-full bg-primary p-4 text-primary-foreground shadow-lg transition-transform hover:scale-105 cursor-pointer'
       }

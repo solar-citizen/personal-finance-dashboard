@@ -227,8 +227,12 @@ export default function ChatWindow({ isOpen, onHide }: ChatWindowProps) {
   return (
     <div
       className={cn(
-        'fixed bottom-6 right-6 z-50 flex h-[500px] w-[400px] flex-col rounded-lg border border-border bg-card shadow-xl animate-in fade-in zoom-in duration-300',
-        { hidden: !isOpen },
+        'fixed bottom-6 right-6 z-50 flex h-[500px] w-[400px] flex-col',
+        'rounded-lg border border-border bg-card shadow-xl',
+        'origin-bottom-right transition-[opacity,transform] duration-300 ease-out',
+        isOpen
+          ? 'pointer-events-auto translate-y-0 scale-100 opacity-100'
+          : 'pointer-events-none translate-y-3 scale-95 opacity-0',
       )}
     >
       <div className={'relative flex items-center justify-between border-b border-border p-4'}>

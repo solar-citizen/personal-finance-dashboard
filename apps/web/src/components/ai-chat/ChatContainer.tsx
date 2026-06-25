@@ -10,7 +10,7 @@ export default function ChatContainer() {
 
   return (
     <>
-      {!isOpen && <ChatBubble onClick={() => setIsOpen(true)} />}
+      {!isOpen && <ChatBubble onShow={() => setIsOpen(true)} />}
       <ChatWindow isOpen={isOpen} onHide={() => setIsOpen(false)} />
     </>
   );
