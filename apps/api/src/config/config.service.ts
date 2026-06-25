@@ -8,7 +8,9 @@ const validationObject = z.object({
   APP_ENV: z.enum(envs),
   APP_PORT: z.coerce.number().int().min(0).max(65535),
   WEB_URL: z.url(),
-  REDIS_URL: z.string(),
+  REDIS_URL: z.url({
+    pattern: /^redis:\/\/(?:[^:]+(?::[^@]+)?@)?([^:/]+)(?::\d+)?(?:\/\d+)?$/,
+  }),
   JWT_SECRET: z.string(),
   MONOBANK_API_URL: z.url(),
   LLM_HOST: z.url(),

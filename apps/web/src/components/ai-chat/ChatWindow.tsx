@@ -25,12 +25,41 @@ function isStreamResponse(obj: Record<string, unknown>): obj is StreamResponse {
   }
 }
 
-type Message = {
-  role: Extract<MessageRole, 'user' | 'assistant'>;
+function isDisplayableMessage<T extends { role: string }>(
+  m: T,
+): m is T & { role: 'user' | 'assistant' } {
+  return m.role === 'user' || m.role === 'assistant';
+}
+
+type FetchedMessage = {
+  id: string;
+  role: MessageRole;
   content: string;
 };
 
-function MessageBubble({ role, content }: Message) {
+type Message = {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+};
+
+type MessageListProps = {
+  messages: FetchedMessage[];
+};
+
+function MessageList({ messages }: MessageListProps) {
+  return (
+    <>
+      {messages.filter(isDisplayableMessage).map(({ id, role, content }) => (
+        <MessageBubble key={id} role={role} content={content} />
+      ))}
+    </>
+  );
+}
+
+type MessageBubbleProps = Pick<Message, 'role' | 'content'>;
+
+function MessageBubble({ role, content }: MessageBubbleProps) {
   return (
     <div className={`flex ${role === 'user' ? 'justify-end' : 'justify-start'}`}>
       <div
@@ -88,11 +117,8 @@ export default function ChatWindow({ isOpen, onHide }: ChatWindowProps) {
     setConversationId(pendingConversationId);
     setMessages(
       selectedConversation.messages
-        .filter(
-          (m): m is typeof m & { role: 'user' | 'assistant' } =>
-            m.role === 'user' || m.role === 'assistant',
-        )
-        .map(({ role, content }) => ({ role, content })),
+        .filter(isDisplayableMessage)
+        .map(({ role, content }) => ({ id: crypto.randomUUID(), role, content })),
     );
     setPendingConversationId(undefined);
   }, [selectedConversation, pendingConversationId]);
@@ -121,8 +147,8 @@ export default function ChatWindow({ isOpen, onHide }: ChatWindowProps) {
 
     setMessages(prev => [
       ...prev,
-      { role: 'user', content: userMessage },
-      { role: 'assistant', content: '' },
+      { id: crypto.randomUUID(), role: 'user', content: userMessage },
+      { id: crypto.randomUUID(), role: 'assistant', content: '' },
     ]);
 
     try {
@@ -188,7 +214,7 @@ export default function ChatWindow({ isOpen, onHide }: ChatWindowProps) {
       console.error('Streaming error:', error);
       setMessages(prev => [
         ...prev.slice(0, -1),
-        { role: 'assistant', content: 'Sorry, I encountered an error.' },
+        { id: crypto.randomUUID(), role: 'assistant', content: 'Sorry, I encountered an error.' },
       ]);
     } finally {
       setIsStreaming(false);
@@ -251,22 +277,11 @@ export default function ChatWindow({ isOpen, onHide }: ChatWindowProps) {
                   </div>
                 }
               >
-                {({ messages }) =>
-                  messages
-                    .filter(
-                      (m): m is typeof m & { role: 'user' | 'assistant' } =>
-                        m.role === 'user' || m.role === 'assistant',
-                    )
-                    .map(({ role, content }, i) => (
-                      <MessageBubble key={i} role={role} content={content} />
-                    ))
-                }
+                {({ messages }) => <MessageList messages={messages} />}
               </QueryState>
             ) : (
               <>
-                {messages.map(({ role, content }, i) => (
-                  <MessageBubble key={i} role={role} content={content} />
-                ))}
+                <MessageList messages={messages} />
                 <div ref={messagesEndRef} />
               </>
             )}
