@@ -1,4 +1,10 @@
-import { useGetConversationsList } from '#src/_generated/api/pfd-components';
+import { skipToken, useQueryClient } from '@tanstack/react-query';
+
+import {
+  getConversationsListQuery,
+  useDeleteConversation,
+  useGetConversationsList,
+} from '#src/_generated/api/pfd-components';
 
 import QueryState from '../common/QueryState';
 
@@ -7,7 +13,16 @@ type ChatHistoryProps = {
 };
 
 export default function ChatHistory({ onSelectConversation }: ChatHistoryProps) {
+  const queryClient = useQueryClient();
   const { data, isLoading, error } = useGetConversationsList({});
+  const { mutate: deleteConversation } = useDeleteConversation({
+    onSuccess: async () => {
+      // Safe invalidation of ALL conversation lists regardless of merged context variables
+      await queryClient.invalidateQueries({
+        queryKey: getConversationsListQuery(skipToken).queryKey,
+      });
+    },
+  });
 
   return (
     <div className={'flex flex-col overflow-y-auto'}>
@@ -23,17 +38,31 @@ export default function ChatHistory({ onSelectConversation }: ChatHistoryProps) 
       >
         {conversations =>
           conversations.map(({ id, title }) => (
-            <button
+            <div
               key={id}
-              onClick={() => {
-                onSelectConversation(id);
-              }}
               className={
-                'p-4 text-left border-b border-border hover:bg-secondary text-foreground cursor-pointer'
+                'flex items-center justify-between border-b border-border hover:bg-secondary text-foreground'
               }
             >
-              {title}
-            </button>
+              <button
+                onClick={() => {
+                  onSelectConversation(id);
+                }}
+                className={'grow p-4 text-left cursor-pointer'}
+              >
+                {title}
+              </button>
+              <button
+                onClick={() => {
+                  deleteConversation({ pathParams: { id } });
+                }}
+                className={'p-4 text-muted-foreground hover:text-destructive'}
+                title={'Delete conversation'}
+                aria-label={'Delete conversation'}
+              >
+                {'Remove'}
+              </button>
+            </div>
           ))
         }
       </QueryState>
