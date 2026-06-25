@@ -166,9 +166,12 @@ export default function ChatWindow({ isOpen, onHide }: ChatWindowProps) {
       }
 
       let buffer = '';
+      const decoder = new TextDecoder();
 
       for await (const chunk of response.body) {
-        buffer += new TextDecoder().decode(chunk, { stream: true });
+        buffer += decoder.decode(chunk, {
+          stream: true,
+        });
 
         const lines = buffer.split('\n');
 
