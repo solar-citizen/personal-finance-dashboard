@@ -8,6 +8,7 @@ const validationObject = z.object({
   APP_ENV: z.enum(envs),
   APP_PORT: z.coerce.number().int().min(0).max(65535),
   WEB_URL: z.url(),
+  REDIS_URL: z.string(),
   JWT_SECRET: z.string(),
   MONOBANK_API_URL: z.url(),
   LLM_HOST: z.url(),
@@ -73,5 +74,9 @@ export class ConfigService {
 
   get geminiModel(): string {
     return this.configService.get<string>('GEMINI_MODEL');
+  }
+
+  get redisUrl(): string {
+    return this.configService.getOrThrow<string>('REDIS_URL');
   }
 }

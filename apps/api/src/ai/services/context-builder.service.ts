@@ -1,6 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { accountTypeNames } from '@pfd/shared';
+import type { Cache } from 'cache-manager';
 import dayjs from 'dayjs';
+import { Currency } from 'src/_generated/prisma-client/enums';
 import {
   AccountSummaryDto,
   CategorySummaryDto,
@@ -53,7 +56,6 @@ type ContextData = {
 
 type CachedPrompt = {
   prompt: string;
-  timestamp: number;
   metadata: {
     accountCount: number;
     transactionCount: number;
@@ -62,16 +64,18 @@ type CachedPrompt = {
   };
 };
 
+const cacheKeyPrefix = 'context';
+const cacheTtlMs = 600_000;
+
 @Injectable()
 export class ContextBuilderService {
   private readonly logger = new Logger(ContextBuilderService.name);
-  private promptCache = new Map<string, CachedPrompt>();
-  private readonly cacheTtl = 10 * 60 * 1000;
 
   constructor(
     private readonly prismaService: PrismaService,
     private readonly ollamaClient: OllamaClientService,
     private readonly currencyService: CurrencyService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
   async buildContext({
@@ -99,10 +103,10 @@ export class ContextBuilderService {
       };
     }
 
-    const cached = this.promptCache.get(userId);
-    const now = dayjs();
+    const cacheKey = `${cacheKeyPrefix}:${userId}`;
+    const cached = await this.cacheManager.get<CachedPrompt>(cacheKey);
 
-    if (cached && now.valueOf() - cached.timestamp < this.cacheTtl) {
+    if (cached) {
       this.logger.log(`Using cached context for user ${userId}`);
 
       return {
@@ -111,7 +115,7 @@ export class ContextBuilderService {
           ...cached.metadata,
           knowledgeBaseHits: 0,
           cached: true,
-          minimal: true,
+          minimal: false,
         },
       };
     }
@@ -149,11 +153,13 @@ export class ContextBuilderService {
       minimal: false,
     };
 
-    this.promptCache.set(userId, {
-      prompt: systemPrompt,
-      timestamp: now.valueOf(),
-      metadata,
-    });
+    await this.cacheManager.set(
+      cacheKey,
+      { prompt: systemPrompt, metadata },
+      cacheTtlMs,
+    );
+
+    this.logger.log(`Cached context for user ${userId}`);
 
     return {
       systemPrompt,
@@ -251,23 +257,23 @@ export class ContextBuilderService {
   }: SystemPromptData): string {
     const { usdToUah, eurToUah } = exchangeRates;
 
-    const conversionRates: Record<string, number> = {
-      usd: usdToUah,
-      eur: eurToUah,
-      uah: 1,
+    const conversionRates: Record<Currency, number> = {
+      [Currency.usd]: usdToUah,
+      [Currency.eur]: eurToUah,
+      [Currency.uah]: 1,
     };
 
     const formatted = accounts.map(({ balance, currency, type }) => {
       const amount = amountToNumber(balance);
-      const uahAmount = amount * (conversionRates[currency] ?? 1);
+      const amountInUah = amount * conversionRates[currency];
       const suffix =
-        currency !== 'uah' && amount !== 0
-          ? ` = ${uahAmount.toFixed(2)} UAH`
+        currency !== Currency.uah && amount !== 0
+          ? ` = ${amountInUah.toFixed(2)} UAH`
           : '';
 
       return {
         line: `- ${accountTypeNames[type] || type} (${currency.toUpperCase()}): ${formatCurrency(balance, currency)}${suffix}`,
-        amount: uahAmount,
+        amount: amountInUah,
       };
     });
 
@@ -444,12 +450,12 @@ export class ContextBuilderService {
     `;
   }
 
-  clearCache(userId?: string): void {
+  async clearCache(userId?: string): Promise<void> {
     if (userId) {
-      this.promptCache.delete(userId);
+      await this.cacheManager.del(`${cacheKeyPrefix}:${userId}`);
       this.logger.log(`Cleared cache for user ${userId}`);
     } else {
-      this.promptCache.clear();
+      await this.cacheManager.clear();
       this.logger.log('Cleared all cached prompts');
     }
   }

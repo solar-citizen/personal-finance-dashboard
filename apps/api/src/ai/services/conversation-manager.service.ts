@@ -260,7 +260,9 @@ export class ConversationManagerService {
     };
   }
 
-  async listConversations(userId: string): Promise<ConversationListItemDto[]> {
+  async getConversationsList(
+    userId: string,
+  ): Promise<ConversationListItemDto[]> {
     const conversations = await this.prismaService.conversation.findMany({
       where: { userId },
       orderBy: { updatedAt: 'desc' },

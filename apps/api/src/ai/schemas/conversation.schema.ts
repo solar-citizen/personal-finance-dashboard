@@ -1,8 +1,9 @@
+import { messageRoles } from '@pfd/shared';
 import { z } from 'zod';
 
 export const MessageSchema = z.object({
   id: z.string(),
-  role: z.enum(['system', 'user', 'assistant']),
+  role: z.enum(messageRoles),
   content: z.string(),
   createdAt: z.string(),
 });

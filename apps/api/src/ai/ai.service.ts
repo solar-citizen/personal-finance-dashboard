@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import type { StreamResponse } from '@pfd/shared';
 import dayjs from 'dayjs';
 import { Response } from 'express';
 import { Observable } from 'rxjs';
@@ -21,15 +22,6 @@ import {
 } from './services/ollama-client.service';
 import { QueryStrategyService } from './services/query-strategy.service';
 
-type StreamResponse = {
-  type: 'start' | 'chunk' | 'end';
-  conversationId?: string;
-  content?: string;
-  tokensUsed?: number;
-  responseTimeMs?: number;
-  modelUsed?: string;
-};
-
 @Injectable()
 export class AiService {
   private readonly logger = new Logger(AiService.name);
@@ -46,8 +38,13 @@ export class AiService {
     userId: string,
     dto: SendMessageDto,
   ): Promise<ChatResponseDto> {
-    const { conversationId, messages, context, selectedModel } =
-      await this.prepareConversation(userId, dto);
+    const {
+      conversationId,
+      messages,
+      context,
+      selectedModel,
+      isLockedToGemini,
+    } = await this.prepareConversation(userId, dto);
 
     const { provider, reason } = selectedModel;
     const startTime = dayjs();
@@ -61,6 +58,10 @@ export class AiService {
             )
           : await this.ollamaClient.chat(messages);
       } catch (err: unknown) {
+        if (isLockedToGemini) {
+          throw err;
+        }
+
         this.logger.error('Primary model failed, falling back to Ollama:', err);
         return await this.ollamaClient.chat(messages);
       }
@@ -132,72 +133,84 @@ export class AiService {
       let accumulatedResponse = '';
 
       this.prepareConversation(userId, dto)
-        .then(({ conversationId, messages, context, selectedModel }) => {
-          const { provider, reason } = selectedModel;
-
-          subscriber.next({
-            type: 'start',
+        .then(
+          ({
             conversationId,
-            modelUsed: provider,
-          });
+            messages,
+            context,
+            selectedModel,
+            isLockedToGemini,
+          }) => {
+            const { provider, reason } = selectedModel;
 
-          const stream = (() => {
-            try {
-              return provider === 'gemini'
-                ? this.geminiClient.chatStream(
-                    context.systemPrompt,
-                    this.convertToGeminiFormat(messages),
-                  )
-                : this.ollamaClient.chatStream(messages);
-            } catch (err: unknown) {
-              this.logger.error(
-                'Primary model failed, falling back to Ollama:',
-                err,
-              );
-              return this.ollamaClient.chatStream(messages);
-            }
-          })();
+            subscriber.next({
+              type: 'start',
+              conversationId,
+              modelUsed: provider,
+            });
 
-          stream.subscribe({
-            next: (chunk) => {
-              accumulatedResponse += chunk;
-              subscriber.next({ type: 'chunk', content: chunk });
-            },
-            error: (err: unknown) => {
-              this.logger.error('Stream error:', err);
-              subscriber.error(err);
-            },
-            complete: () => {
-              const responseTimeMs = dayjs().diff(startTime, 'millisecond');
+            const stream = (() => {
+              try {
+                return provider === 'gemini'
+                  ? this.geminiClient.chatStream(
+                      context.systemPrompt,
+                      this.convertToGeminiFormat(messages),
+                    )
+                  : this.ollamaClient.chatStream(messages);
+              } catch (err: unknown) {
+                if (isLockedToGemini) {
+                  throw err;
+                }
 
-              this.conversationManager
-                .addMessage({
-                  conversationId,
-                  role: MessageRole.assistant,
-                  content: accumulatedResponse,
-                  contextUsed: {
-                    ...context.metadata,
-                    modelUsed: provider,
-                    modelReason: reason,
-                  },
-                  tokensUsed: undefined,
-                  responseTimeMs,
-                })
-                .then(() => {
-                  subscriber.next({
-                    type: 'end',
+                this.logger.error(
+                  'Primary model failed, falling back to Ollama:',
+                  err,
+                );
+                return this.ollamaClient.chatStream(messages);
+              }
+            })();
+
+            stream.subscribe({
+              next: (chunk) => {
+                accumulatedResponse += chunk;
+                subscriber.next({ type: 'chunk', content: chunk });
+              },
+              error: (err: unknown) => {
+                this.logger.error('Stream error:', err);
+                subscriber.error(err);
+              },
+              complete: () => {
+                const responseTimeMs = dayjs().diff(startTime, 'millisecond');
+
+                this.conversationManager
+                  .addMessage({
+                    conversationId,
+                    role: MessageRole.assistant,
+                    content: accumulatedResponse,
+                    contextUsed: {
+                      ...context.metadata,
+                      modelUsed: provider,
+                      modelReason: reason,
+                    },
+                    tokensUsed: undefined,
                     responseTimeMs,
-                    modelUsed: provider,
+                  })
+                  .then(() => {
+                    subscriber.next({
+                      type: 'end',
+                      responseTimeMs,
+                      modelUsed: provider,
+                    });
+                    subscriber.complete();
+                  })
+                  .catch((err: unknown) => {
+                    this.logger.error('Complete handler error:', err);
+                    subscriber.error(err);
                   });
-                  subscriber.complete();
-                })
-                .catch((err: unknown) => {
-                  this.logger.error('Complete handler error:', err);
-                  subscriber.error(err);
-                });
-            },
-          });
-        })
+              },
+            });
+          },
+        )
         .catch((err: unknown) => {
           this.logger.error('Stream setup error:', err);
           subscriber.error(err);
@@ -212,8 +225,8 @@ export class AiService {
     );
   }
 
-  async listConversations(userId: string) {
-    return await this.conversationManager.listConversations(userId);
+  async getConversationsList(userId: string) {
+    return await this.conversationManager.getConversationsList(userId);
   }
 
   async deleteConversation(conversationId: string, userId: string) {
@@ -243,11 +256,12 @@ export class AiService {
         dto.message,
       );
 
-    const isLockedToGemini =
-      await this.conversationManager.isConversationLockedToGemini(
-        conversationId,
-        userId,
-      );
+    const isLockedToGemini = dto.conversationId
+      ? await this.conversationManager.isConversationLockedToGemini(
+          conversationId,
+          userId,
+        )
+      : false;
 
     const { contextLevel, provider, reason, type } =
       this.queryStrategy.analyzeQuery(
@@ -294,6 +308,7 @@ export class AiService {
         provider,
         reason,
       },
+      isLockedToGemini,
     };
   }
 

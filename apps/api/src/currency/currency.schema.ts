@@ -1,7 +1,6 @@
 import { z } from 'zod';
 
 export const ExchangeRatesSchema = z.looseObject({
-  uahToUah: z.number().positive(),
   usdToUah: z.number().positive(),
   eurToUah: z.number().positive(),
 });
