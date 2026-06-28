@@ -1,5 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
-import dayjs from 'dayjs';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import type { Cache } from 'cache-manager';
 import { Currency } from 'src/_generated/prisma-client/enums';
 import { Decimal } from 'src/_generated/prisma-client/internal/prismaNamespaceBrowser';
 import {
@@ -9,21 +10,25 @@ import {
 import { currencyToIso4217 } from 'src/monobank/lib/utils';
 import { MonoBankApiClient } from 'src/monobank/services';
 
+const ratesFreshKey = 'currency:rates:fresh';
+const ratesStaleKey = 'currency:rates:stale';
+const freshTtlMs = 3_600_000; // 1 hour
+const staleTtlMs = 604_800_000; // 7 days
+
 @Injectable()
 export class CurrencyService {
   private readonly logger = new Logger(CurrencyService.name);
-  private readonly cacheTtlMs = 60 * 60 * 1000;
 
-  private cachedRates: ExchangeRatesDto | null = null;
-  private cacheTimestamp: dayjs.Dayjs | null = null;
-
-  constructor(private readonly monoApiClient: MonoBankApiClient) {}
+  constructor(
+    private readonly monoApiClient: MonoBankApiClient,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+  ) {}
 
   async getExchangeRates(): Promise<ExchangeRatesDto> {
-    const cached = this.getValidCache();
+    const fresh = await this.cacheManager.get<ExchangeRatesDto>(ratesFreshKey);
 
-    if (cached) {
-      return cached;
+    if (fresh) {
+      return fresh;
     }
 
     try {
@@ -61,37 +66,31 @@ export class CurrencyService {
         .toNumber();
 
       const rates: ExchangeRatesDto = {
-        uahToUah: 1,
         usdToUah: usdMid,
         eurToUah: eurMid,
       };
 
-      this.cachedRates = rates;
-      this.cacheTimestamp = dayjs();
+      await Promise.all([
+        this.cacheManager.set(ratesFreshKey, rates, freshTtlMs),
+        this.cacheManager.set(ratesStaleKey, rates, staleTtlMs),
+      ]);
 
       return rates;
     } catch (err: unknown) {
       this.logger.error('Failed to fetch Mono exchange rates', err);
 
-      if (this.cachedRates) {
-        this.logger.warn('Returning stale cached rates');
-        return this.cachedRates;
+      const stale =
+        await this.cacheManager.get<ExchangeRatesDto>(ratesStaleKey);
+
+      if (stale) {
+        this.logger.warn('Returning stale cached rates from Redis');
+        return stale;
       }
 
       throw new Error('Exchange rates unavailable and no cache exists', {
         cause: err,
       });
     }
-  }
-
-  private getValidCache(): ExchangeRatesDto | null {
-    if (!this.cachedRates || !this.cacheTimestamp) {
-      return null;
-    }
-
-    return dayjs().diff(this.cacheTimestamp, 'milliseconds') < this.cacheTtlMs
-      ? this.cachedRates
-      : null;
   }
 
   private findCurrencyPair(
