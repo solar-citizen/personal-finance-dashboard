@@ -4,8 +4,7 @@ import { useGetExchangeRates } from '#src/_generated/api/pfd-components';
 import QueryState from '#src/components/common/QueryState';
 import { SkeletonList } from '#src/components/common/Skeleton';
 
-const currencyPairsDisplayMap: Record<string, string> = {
-  uahToUah: 'UAH/UAH',
+const currencyPairLabels: Record<string, string> = {
   usdToUah: 'USD/UAH',
   eurToUah: 'EUR/UAH',
 };
@@ -36,7 +35,7 @@ export default function ExchangeRates() {
             {Object.entries(rates).map(([pair, value]) => (
               <div key={pair} className={'flex items-center gap-1'}>
                 <span className={'text-gray-500 dark:text-gray-400 font-medium'}>
-                  {currencyPairsDisplayMap[pair] || pair}
+                  {currencyPairLabels[pair] || pair}
                 </span>
                 <span className={'font-bold text-gray-900 dark:text-gray-100'}>
                   {value.toFixed(2)}

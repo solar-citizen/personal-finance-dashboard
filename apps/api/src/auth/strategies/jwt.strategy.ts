@@ -22,7 +22,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const secretOrKey = configService.jwtSecret;
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
-        (req: RequestWithCookies): string | null => req.cookies.token ?? null,
+        ({ cookies }: RequestWithCookies): string | null =>
+          cookies.token ?? null,
         ExtractJwt.fromAuthHeaderAsBearerToken(),
       ]),
       ignoreExpiration: false,

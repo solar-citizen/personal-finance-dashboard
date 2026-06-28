@@ -45,19 +45,19 @@ export class AiController {
     return this.aiService.streamChat(userId, dto, res);
   }
 
+  @Get('conversations')
+  async getConversationsList(
+    @CurrentUser('id') userId: string,
+  ): Promise<ConversationListItemDto[]> {
+    return await this.aiService.getConversationsList(userId);
+  }
+
   @Get('conversations/:id')
   async getConversation(
     @CurrentUser('id') userId: string,
     @Param('id') conversationId: string,
   ): Promise<ConversationDto> {
     return await this.aiService.getConversation(conversationId, userId);
-  }
-
-  @Get('conversations')
-  async listConversations(
-    @CurrentUser('id') userId: string,
-  ): Promise<{ conversations: ConversationListItemDto[] }> {
-    return { conversations: await this.aiService.listConversations(userId) };
   }
 
   @Delete('conversations/:id')
