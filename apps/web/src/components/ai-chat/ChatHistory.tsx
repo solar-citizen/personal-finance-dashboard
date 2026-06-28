@@ -17,7 +17,6 @@ export default function ChatHistory({ onSelectConversation }: ChatHistoryProps) 
   const { data, isLoading, error } = useGetConversationsList({});
   const { mutate: deleteConversation } = useDeleteConversation({
     onSuccess: async () => {
-      // Safe invalidation of ALL conversation lists regardless of merged context variables
       await queryClient.invalidateQueries({
         queryKey: getConversationsListQuery(skipToken).queryKey,
       });
