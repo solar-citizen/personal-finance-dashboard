@@ -6,7 +6,6 @@ import {
   Param,
   Post,
   Res,
-  UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
@@ -19,12 +18,10 @@ import {
 } from 'src/_generated/zod/pfd-dtos';
 
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AiService } from './ai.service';
 
 @ApiTags('AI')
 @Controller('api/ai')
-@UseGuards(JwtAuthGuard)
 export class AiController {
   constructor(private readonly aiService: AiService) {}
 
