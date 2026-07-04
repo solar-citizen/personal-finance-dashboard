@@ -1,13 +1,6 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import {
   ConnectMonoBankDto,
   ExchangeRatesDto,
@@ -24,12 +17,11 @@ import {
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { CurrencyService } from 'src/currency/currency.service';
 
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { MonoBankService } from './monobank.service';
 
 @ApiTags('Mono')
+@Throttle({ default: { limit: 10, ttl: 60_000 } })
 @Controller('api/mono')
-@UseGuards(JwtAuthGuard)
 export class MonoBankController {
   constructor(
     private readonly monoBankService: MonoBankService,

@@ -2,8 +2,10 @@ import KeyvRedis from '@keyv/redis';
 import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
 import { APP_GUARD, APP_PIPE } from '@nestjs/core';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { ZodValidationPipe } from 'nestjs-zod';
 
+import { PfdThrottlerGuard } from './_lib/guards/throttler.guard';
 import { AiModule } from './ai/ai.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
@@ -15,6 +17,12 @@ import { MonoBankModule } from './monobank/monobank.module';
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60_000, // 1 minute in ms
+        limit: 100, // requests per window
+      },
+    ]),
     CacheModule.registerAsync({
       isGlobal: true,
       useFactory: ({ redisUrl }: ConfigService) => ({
@@ -33,6 +41,10 @@ import { MonoBankModule } from './monobank/monobank.module';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: PfdThrottlerGuard,
     },
     {
       provide: APP_PIPE,
