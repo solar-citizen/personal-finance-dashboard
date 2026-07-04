@@ -49,6 +49,7 @@
     "class-validator": "^0.15.1",
     "cookie-parser": "^1.4.7",
     "decimal.js": "^10.6.0",
+    "helmet": "^8.2.0",
     "nestjs-zod": "^5.4.0",
     "ollama": "^0.6.3",
     "passport": "^0.7.0",
