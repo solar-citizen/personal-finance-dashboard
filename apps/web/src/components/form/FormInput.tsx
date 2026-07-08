@@ -18,25 +18,29 @@ export default function FormInput<T extends FieldValues = FieldValues>({
   ...props
 }: Props<T>) {
   const { control } = useFormContext<T>();
-  const { field, fieldState } = useController<T>({
+  const {
+    field: { ref, onBlur, onChange, value },
+    fieldState,
+  } = useController<T>({
     name,
     control,
     rules: deps ? { deps } : undefined,
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value === '' ? null : e.target.value;
-    field.onChange(value);
+  const handleChange = ({
+    target: { value: targetValue },
+  }: React.ChangeEvent<HTMLInputElement>) => {
+    onChange(targetValue === '' ? null : targetValue);
   };
 
   return (
     <Input
       {...props}
-      ref={field.ref}
-      name={field.name}
-      onBlur={field.onBlur}
+      ref={ref}
+      name={name}
+      onBlur={onBlur}
       onChange={handleChange}
-      value={field.value ?? ''}
+      value={value ?? ''}
       tooltip={tooltip}
       error={fieldState.error?.message}
     />
