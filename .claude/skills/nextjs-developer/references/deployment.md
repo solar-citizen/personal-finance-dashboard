@@ -218,7 +218,7 @@ const nextConfig: NextConfig = {
 };
 ```
 
-## CORS — the thing most likely to bite you in production
+## CORS
 
 Since auth is cookie-based across two separately-deployed apps (`apps/api`,
 `apps/web`), production CORS config on the API side needs:
