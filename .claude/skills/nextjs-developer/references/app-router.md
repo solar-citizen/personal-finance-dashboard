@@ -142,17 +142,33 @@ app/
 
 ## Dynamic & Catch-All Routes
 
+This project is on Next.js 16+, where dynamic route params (and
+`searchParams`, `headers()`, `cookies()`) are **asynchronous** — a Promise,
+not a plain object. This is a continuation of the Next 15 change and applies
+regardless of whether the project currently has any dynamic routes:
+
 ```tsx
 // app/blog/[slug]/page.tsx
-export default function BlogPost({ params }: { params: { slug: string } }) {
-  return <h1>{`Post: ${params.slug}`}</h1>;
+export default async function BlogPost({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  return <h1>{`Post: ${slug}`}</h1>;
 }
 
 // app/docs/[...slug]/page.tsx — matches /docs/a, /docs/a/b, etc.
-export default function Docs({ params }: { params: { slug: string[] } }) {
-  return <div>{`Docs: ${params.slug.join('/')}`}</div>;
+export default async function Docs({ params }: { params: Promise<{ slug: string[] }> }) {
+  const { slug } = await params;
+  return <div>{`Docs: ${slug.join('/')}`}</div>;
 }
 ```
+
+Don't write `params: { slug: string }` (synchronous) — it will silently break
+at runtime, not just fail to type-check, since Next actually passes a
+Promise. The same applies if `searchParams`, `headers()`, or `cookies()` are
+ever read anywhere in this app — all require `await`.
+
+This project currently has no dynamic routes and no Route Handlers (see
+below), so this hasn't come up yet in practice — but it's the first thing to
+get right the moment a dynamic segment or Route Handler is added.
 
 ## Route Handlers — not used in this project
 
