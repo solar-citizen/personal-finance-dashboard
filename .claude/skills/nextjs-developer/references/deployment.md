@@ -8,7 +8,7 @@ relying on Vercel's zero-config handling.
 
 ```bash
 # Install deps (from repo root)
-bun i
+bun install
 
 # Build everything
 bun turbo build
@@ -17,7 +17,7 @@ bun turbo build
 cd apps/web && bun run dev
 ```
 
-Do not use plain `npm run build`/`npm ci` for this project — it's a bun +
+Do not use plain `bun run build`/`bun install` for this project — it's a bun +
 Turbo monorepo (`apps/api`, `apps/web`), and build ordering matters: web's
 `gen:api` codegen step depends on the API's OpenAPI output. If unsure whether
 generated types are fresh, run root `bun run codegen` once before building —
