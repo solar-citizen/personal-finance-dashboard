@@ -32,13 +32,14 @@ this wrong.
    Anything using a generated hook must be `'use client'`.
 3. **Build the component** — thin `page.tsx` importing one root component;
    composition lives in that root component.
-4. **Forms/mutations** use react-hook-form + generated `useCreateXxx`/`useUpdateXxx` hooks — never a Server Action.
+4. **Forms/mutations** use react-hook-form + generated `useCreateXxx`/
+   `useUpdateXxx` hooks — never a Server Action.
 5. **Validate** — `next build` (via `bun turbo build`) with zero type errors.
 
 ## Reference Guide
 
 | Topic                    | Reference                         | Load When                                                           |
-|------------------------|--------------------------------- |------------------------------------------------------------------- |
+| ------------------------ | --------------------------------- | ------------------------------------------------------------------- |
 | App Router               | `references/app-router.md`        | File-based routing, layouts, loading/error, page-wrapper convention |
 | Server/Client Components | `references/server-components.md` | Deciding component boundaries — note the generated-hook caveat      |
 | Data Fetching            | `references/data-fetching.md`     | TanStack Query generated hooks, `<QueryState>`, no raw fetch/SWR    |
