@@ -252,13 +252,13 @@ function UserList({ users, loading }: UserListProps) {
 
 ```bash
 # Run full test suite
-npm test
+bun test
 
 # Run specific component tests
-npm test UserList
+bun test UserList
 
 # Run integration tests
-npm run test:integration
+bun run test:integration
 
 # Verify in browser
 # 1. Normal case: 50 users

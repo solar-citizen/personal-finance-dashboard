@@ -128,7 +128,7 @@ JSON.stringify(a, (key, value) => {
 # Error: Cannot find module 'x'
 
 # Fix 1: Install the package
-npm install x
+bun add x
 
 # Fix 2: Check import path
 import x from './x';     # Relative - needs ./
@@ -139,7 +139,7 @@ import x from './x.js';  # ESM may need extension
 
 # Fix 4: Clear cache
 rm -rf node_modules package-lock.json
-npm install
+bun install
 ```
 
 ## Async/Await Issues

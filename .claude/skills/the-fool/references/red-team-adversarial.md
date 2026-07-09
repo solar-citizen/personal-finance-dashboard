@@ -59,7 +59,7 @@ Generic "attackers" produce generic findings. Specific personas produce actionab
 | **Technical** | Injection, auth bypass, race conditions, SSRF | SQL injection in search parameter |
 | **Business Logic** | Workflow bypass, state manipulation, price tampering | Applying expired coupon via API replay |
 | **Social** | Phishing, pretexting, authority exploitation | "I'm the CEO, I need access now" |
-| **Operational** | Supply chain, dependency poisoning, insider threat | Compromised npm package in build pipeline |
+| **Operational** | Supply chain, dependency poisoning, insider threat | Compromised bun package in build pipeline |
 | **Information** | Data leakage, metadata exposure, timing attacks | User enumeration via login error messages |
 | **Economic** | Resource exhaustion, denial of wallet, asymmetric cost | Lambda invocation flood causing $50K bill |
 

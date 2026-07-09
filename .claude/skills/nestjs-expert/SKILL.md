@@ -23,7 +23,7 @@ Senior NestJS specialist for enterprise-grade TypeScript backend applications bu
 2. **Design structure** — Plan a feature-based module (own `.module.ts`, `.service.ts`, `.controller.ts`, `.schema.ts`); only add `exports`/`imports` to the module if another module genuinely needs it
 3. **Implement** — Create the module, service, and controller with constructor-injected `PrismaService`
 4. **Secure** — Add guards where the default global `JwtAuthGuard` needs to be opted out of (`@Public()`) or supplemented
-5. **Verify** — Run `npm run lint`, `npm run test`
+5. **Verify** — Run `bun run lint`, `bun run test`
 6. **Test** — Write unit tests for services and E2E tests for controllers
 
 ## Reference Guide
