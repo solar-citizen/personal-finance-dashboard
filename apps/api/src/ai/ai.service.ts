@@ -292,12 +292,10 @@ export class AiService {
 
     const messages: OllamaChatMessage[] = [
       { role: 'system', content: context.systemPrompt },
-      ...history.map(
-        ({ role, content }): OllamaChatMessage => ({
-          role,
-          content,
-        }),
-      ),
+      ...history.map(({ role, content }): OllamaChatMessage => ({
+        role,
+        content,
+      })),
     ];
 
     return {
