@@ -30,7 +30,7 @@ No authorization/scope sign-off, no CVSS scoring, no stakeholder report, no pene
 
 ## Core Workflow
 
-1. **Quick automated pass** — run `npm audit` and, if installed, `gitleaks detect --source .`
+1. **Quick automated pass** — run `bun audit` and, if installed, `gitleaks detect --source .`
 2. **Pattern review** — check the code you just wrote against `references/vulnerability-patterns.md`: SQL injection, XSS, IDOR, path traversal, command injection, insecure deserialization, sensitive data exposure
 3. **Fix and re-check** — apply the secure version shown in the reference, re-run step 1 if relevant
 
@@ -39,7 +39,7 @@ No authorization/scope sign-off, no CVSS scoring, no stakeholder report, no pene
 | Topic | Reference | Load When |
 |-------|-----------|-----------|
 | Vulnerability Patterns | `references/vulnerability-patterns.md` | Reviewing any endpoint/component that touches user input, DB, or auth |
-| SAST & Dependency Tools | `references/sast-tools.md` | Running `npm audit` / ESLint security / Semgrep against this repo |
+| SAST & Dependency Tools | `references/sast-tools.md` | Running `bun audit` / ESLint security / Semgrep against this repo |
 | Secret Scanning | `references/secret-scanning.md` | Checking for hardcoded secrets before a commit |
 
 ## Constraints
@@ -68,4 +68,4 @@ No severity scoring, no executive summary — just the list.
 
 ## Knowledge Reference
 
-OWASP Top 10, CWE references (for context, not formal reporting), Semgrep, ESLint security plugin, npm audit, gitleaks, Prisma-safe query patterns.
+OWASP Top 10, CWE references (for context, not formal reporting), Semgrep, ESLint security plugin, bun audit, gitleaks, Prisma-safe query patterns.

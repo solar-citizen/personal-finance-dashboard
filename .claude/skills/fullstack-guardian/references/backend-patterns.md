@@ -212,7 +212,7 @@ async function processOrder(orderId: string) {
 FROM node:18-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --only=production && npm run build
+RUN bun install --frozen-lockfile && bun run build
 
 FROM node:18-alpine
 WORKDIR /app

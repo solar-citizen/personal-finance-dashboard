@@ -311,9 +311,9 @@ JWT_SECRET=<generate-secure-secret>
 API_PORT=3000
 
 ### Build & Deploy
-npm run build
-npm run migrate
-npm run start:prod
+bun run build
+bun run migrate
+bun run start:prod
 
 ### Health Check
 GET /api/health

@@ -154,22 +154,22 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '18'
-          cache: 'npm'
+          cache: 'bun'
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install
 
       - name: Run linter
-        run: npm run lint
+        run: bun run lint
 
       - name: Run unit tests
-        run: npm run test
+        run: bun run test
 
       - name: Run E2E tests
-        run: npm run test:e2e
+        run: bun run test:e2e
 
       - name: Build
-        run: npm run build
+        run: bun run build
 
   deploy-staging:
     needs: test
@@ -211,8 +211,8 @@ export class AddUserRoles implements MigrationInterface {
   }
 }
 
-// Run: npm run migration:run
-// Revert: npm run migration:revert
+// Run: bun run migration:run
+// Revert: bun run migration:revert
 ```
 
 ### Feature Flags

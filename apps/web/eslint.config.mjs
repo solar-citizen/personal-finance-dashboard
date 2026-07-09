@@ -18,7 +18,6 @@ const eslintConfig = defineConfig(
       react: pluginReact,
       // @ts-expect-error - plugin has ESM/CJS compatibility issue with flat config types
       'react-hooks': pluginReactHooks,
-      // @ts-expect-error - plugin has ESM/CJS compatibility issue with flat config types
       'jsx-a11y': pluginJsxA11y,
     },
   },
@@ -36,6 +35,7 @@ const eslintConfig = defineConfig(
         },
       ],
 
+      '@typescript-eslint/no-shadow': 'error',
       '@typescript-eslint/no-unused-vars': 'error',
       'no-unused-vars': 'off',
       'react/jsx-no-bind': [

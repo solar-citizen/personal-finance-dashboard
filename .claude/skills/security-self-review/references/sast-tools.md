@@ -8,11 +8,11 @@ project.
 
 ```bash
 # Dependency vulnerabilities — cheapest check, run this first
-npm audit
-npm audit --json > npm-audit.json
+bun audit
+bun audit --json > bun-audit.json
 
 # ESLint security plugin
-npm install eslint-plugin-security --save-dev
+bun add -d eslint-plugin-security
 npx eslint --ext .js,.ts . --plugin security
 
 # Semgrep — broader pattern-based SAST, works without a server
@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: npm audit --audit-level=high
+      - run: bun audit --audit-level=high
 ```
 
 Semgrep/Gitleaks GitHub Actions can be added the same way later if this
@@ -45,6 +45,6 @@ project.
 
 | Tool | Purpose | Cost |
 |------|---------|------|
-| `npm audit` | Known-vulnerable dependencies | Free, built-in |
+| `bun audit` | Known-vulnerable dependencies | Free, built-in |
 | `eslint-plugin-security` | Common insecure JS patterns | Free, one-time setup |
 | Semgrep | Broader pattern-based SAST | Free tier, no server needed |
