@@ -289,7 +289,9 @@ export default function ChatWindow({ isOpen, onHide }: ChatWindowProps) {
                   </div>
                 }
               >
-                {({ messages }) => <MessageList messages={messages} />}
+                {({ messages: conversationMessages }) => (
+                  <MessageList messages={conversationMessages} />
+                )}
               </QueryState>
             ) : (
               <>

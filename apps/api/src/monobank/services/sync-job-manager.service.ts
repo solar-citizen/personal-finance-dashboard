@@ -123,7 +123,8 @@ export class SyncJobManager {
         data: { lastSyncedAt: dayjs().toDate() },
       });
 
-      this.contextBuilder.clearCache(userId);
+      await this.contextBuilder.clearCache(userId);
+
       this.logger.log(
         `Cleared context cache for user ${userId} after background sync`,
       );

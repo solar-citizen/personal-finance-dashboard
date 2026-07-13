@@ -9,8 +9,7 @@ export const axiosAgent = axios.create({
 type ErrorWrapper<TError> = TError | { status: 'unknown'; payload: string };
 
 type ApiResult<TData, TError> =
-  | { success: true; data: TData }
-  | { success: false; error: ErrorWrapper<TError> };
+  { success: true; data: TData } | { success: false; error: ErrorWrapper<TError> };
 
 type ApiFetcherOptions<TBody, THeaders, TQueryParams, TPathParams> = {
   url: string;

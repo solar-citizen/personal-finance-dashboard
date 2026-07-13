@@ -29,6 +29,7 @@ It is bun-based monorepo, orchestrated with Turbo:
 - Use types, don't use interfaces
 - Each app has its own `.env` file (see `env.example` in each app)
 - Database is managed via Docker
+- Code style conventions can be explored using eslint config files: root `eslint.config.base.mjs`, `apps/api/eslint.config.mjs` and `apps/web/eslint.config.mjs`
 
 ### Naming Conventions
 
