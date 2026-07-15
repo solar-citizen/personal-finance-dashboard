@@ -16,7 +16,14 @@ import {
   formatAmount,
   formatCurrency,
 } from 'src/_lib/utils/currency.util';
-import { formatDateToIso, getDateRange } from 'src/_lib/utils/date.util';
+import {
+  dayMs,
+  formatDateToIso,
+  getDateRange,
+  hourMs,
+  weekMs,
+} from 'src/_lib/utils/date.util';
+import type { DateRange } from 'src/_lib/utils/date-range.util';
 import { formatValue } from 'src/_lib/utils/number.util';
 import { formatEmbeddingVector } from 'src/_lib/utils/vector.util';
 import { CurrencyService } from 'src/currency/currency.service';
@@ -27,13 +34,9 @@ import {
   languageInstructions,
   nonFinancialInstructions,
 } from './lib/system-prompt-commons';
+import { getCategoryName } from './lib/utils';
 import { OllamaClientService } from './ollama-client.service';
 import type { ContextLevel } from './query-strategy.service';
-
-type CategoryRecord = Record<
-  NonNullable<TransactionWithRelationsDto['category']>['name'],
-  number
->;
 
 type KnowledgeBaseEntry = {
   content: string;
@@ -43,9 +46,16 @@ type KnowledgeBaseEntry = {
 type SystemPromptData = {
   accounts: AccountSummaryDto[];
   transactions: TransactionWithRelationsDto[];
+  wasSampled: boolean;
+  totalTransactionCount: number;
+  dateRange: { from: string; to: string };
   categories: CategorySummaryDto[];
   knowledgeBase: KnowledgeBaseEntry[];
   exchangeRates: ExchangeRatesDto;
+  aggregates: {
+    byCurrency: { currency: Currency; total: number; count: number }[];
+    byCategory: { category: string; total: number }[];
+  };
 };
 
 type ContextData = {
@@ -60,12 +70,19 @@ type CachedPrompt = {
     accountCount: number;
     transactionCount: number;
     categories: string[];
-    dateRange: { from: string; to: string };
+    dateRange: {
+      from: string;
+      to: string;
+    };
   };
 };
 
+const transactionsLimit = 500;
+const maxTransactionsFetch = 20_000;
 const cacheKeyPrefix = 'context';
 const cacheTtlMs = 600_000;
+const isExceedsDay = (diff: number) => diff > dayMs;
+const isExceedsWeek = (diff: number) => diff > weekMs;
 
 @Injectable()
 export class ContextBuilderService {
@@ -82,7 +99,10 @@ export class ContextBuilderService {
     userId,
     userMessage,
     contextLevel,
-  }: ContextData): Promise<FinancialContextDto> {
+    dateRange = null,
+  }: ContextData & {
+    dateRange?: DateRange | null;
+  }): Promise<FinancialContextDto> {
     if (contextLevel === 'minimal') {
       const now = dayjs();
 
@@ -103,7 +123,8 @@ export class ContextBuilderService {
       };
     }
 
-    const cacheKey = `${cacheKeyPrefix}:${userId}`;
+    const effectiveRange = dateRange ?? this.getDefaultRange();
+    const cacheKey = this.buildCacheKey(userId, effectiveRange);
     const cached = await this.cacheManager.get<CachedPrompt>(cacheKey);
 
     if (cached) {
@@ -122,40 +143,63 @@ export class ContextBuilderService {
 
     const [
       accounts,
-      recentTransactions,
       categories,
+      allTransactions,
       relevantKnowledge,
       exchangeRates,
     ] = await Promise.all([
       this.getUserAccounts(userId),
-      this.getRecentTransactions(userId),
       this.getCategories(),
+      this.getAllTransactionsInRange(userId, effectiveRange),
       userMessage
         ? this.findRelevantKnowledge(userMessage)
         : Promise.resolve([]),
       this.currencyService.getExchangeRates(),
     ]);
 
+    const aggregates = await this.getSpendingAggregates(
+      allTransactions,
+      effectiveRange,
+      accounts,
+    );
+
+    const { transactions: sampleTransactions, wasSampled } =
+      this.sampleTransactionsForDisplay(allTransactions);
+
+    const totalTransactionCount = allTransactions.length;
+    const actualDateRange = getDateRange(allTransactions);
+
     const systemPrompt = this.createSystemPrompt({
       accounts,
-      transactions: recentTransactions,
+      transactions: sampleTransactions,
+      wasSampled,
+      totalTransactionCount,
+      dateRange: actualDateRange,
       categories,
       knowledgeBase: relevantKnowledge,
       exchangeRates,
+      aggregates,
     });
 
     const metadata = {
       accountCount: accounts.length,
-      transactionCount: recentTransactions.length,
+      transactionCount: totalTransactionCount,
       categories: categories.map(({ name }) => name),
-      dateRange: getDateRange(recentTransactions),
+      dateRange: actualDateRange,
       knowledgeBaseHits: relevantKnowledge.length,
       minimal: false,
+      requestedRange: {
+        from: formatDateToIso(effectiveRange.from),
+        to: formatDateToIso(effectiveRange.to),
+      },
     };
 
     await this.cacheManager.set(
       cacheKey,
-      { prompt: systemPrompt, metadata },
+      {
+        prompt: systemPrompt,
+        metadata,
+      },
       cacheTtlMs,
     );
 
@@ -171,13 +215,49 @@ export class ContextBuilderService {
     };
   }
 
+  private getDefaultRange(): DateRange {
+    const to = new Date();
+    const from = dayjs(to).subtract(30, 'day').toDate();
+
+    return { from, to };
+  }
+
+  private getBucketSize(diff: number): number {
+    if (isExceedsWeek(diff)) {
+      return dayMs;
+    }
+
+    if (isExceedsDay(diff)) {
+      return hourMs;
+    }
+
+    return cacheTtlMs;
+  }
+
+  private bucketTimestamp(time: number, bucketSize: number): number {
+    return Math.floor(time / bucketSize) * bucketSize;
+  }
+
+  private buildCacheKey(userId: string, { from, to }: DateRange): string {
+    const fromTime = from.getTime();
+    const toTime = to.getTime();
+    const diff = toTime - fromTime;
+
+    const bucketSize = this.getBucketSize(diff);
+    const bucketedFrom = this.bucketTimestamp(fromTime, bucketSize);
+    const bucketedTo = this.bucketTimestamp(toTime, bucketSize);
+
+    return `${cacheKeyPrefix}:${userId}:${bucketedFrom}:${bucketedTo}`;
+  }
+
   private async findRelevantKnowledge(
     query: string,
     limit = 3,
   ): Promise<KnowledgeBaseEntry[]> {
     try {
-      const queryEmbedding = await this.ollamaClient.generateEmbedding(query);
-      const embeddingVector = formatEmbeddingVector(queryEmbedding);
+      const embeddingVector = formatEmbeddingVector(
+        await this.ollamaClient.generateEmbedding(query),
+      );
 
       const results = await this.prismaService.$queryRaw<KnowledgeBaseEntry[]>`
         SELECT 
@@ -214,28 +294,255 @@ export class ContextBuilderService {
     });
   }
 
-  private async getRecentTransactions(
+  private async getAllTransactionsInRange(
     userId: string,
+    dateRange: DateRange,
   ): Promise<TransactionWithRelationsDto[]> {
-    const thirtyDaysAgo = dayjs().subtract(30, 'day').toDate();
-
-    return await this.prismaService.transaction.findMany({
+    const transactions = await this.prismaService.transaction.findMany({
       where: {
         account: { userId },
-        time: { gte: thirtyDaysAgo },
+        time: { gte: dateRange.from, lte: dateRange.to },
       },
       include: {
         category: true,
-        account: {
-          select: {
-            type: true,
-            currency: true,
-          },
-        },
+        account: { select: { type: true, currency: true } },
       },
       orderBy: { time: 'desc' },
-      take: 100,
+      take: maxTransactionsFetch,
     });
+
+    if (transactions.length === maxTransactionsFetch) {
+      this.logger.warn(
+        `User ${userId} hit the ${maxTransactionsFetch}-transaction safety ` +
+          `cap for range ${formatDateToIso(dateRange.from)} - ${formatDateToIso(dateRange.to)}. ` +
+          'Totals/date-range for this request may be incomplete.',
+      );
+    }
+
+    return transactions;
+  }
+
+  private sampleTransactionsForDisplay(
+    allTransactions: TransactionWithRelationsDto[],
+  ): { transactions: TransactionWithRelationsDto[]; wasSampled: boolean } {
+    if (allTransactions.length <= transactionsLimit) {
+      return { transactions: allTransactions, wasSampled: false };
+    }
+
+    const recent = allTransactions.slice(0, 150);
+    const oldest = allTransactions.slice(-50);
+
+    const highValue = [...allTransactions]
+      .sort((a, b) => Math.abs(Number(b.amount)) - Math.abs(Number(a.amount)))
+      .slice(0, 200);
+
+    const seenIds = new Set<string>();
+    const core = [...recent, ...oldest, ...highValue].filter(({ id }) => {
+      if (seenIds.has(id)) {
+        return false;
+      }
+
+      seenIds.add(id);
+
+      return true;
+    });
+
+    const categoryMap = new Map<string, TransactionWithRelationsDto[]>();
+
+    for (const transaction of allTransactions) {
+      const { id, category } = transaction;
+
+      if (seenIds.has(id)) {
+        continue;
+      }
+
+      const categoryName = getCategoryName(category);
+      const bucket = categoryMap.get(categoryName);
+
+      if (bucket) {
+        bucket.push(transaction);
+      } else {
+        categoryMap.set(categoryName, [transaction]);
+      }
+    }
+
+    const remainingBudget = transactionsLimit - core.length;
+    const perCategoryLimit = Math.max(
+      1,
+      Math.floor(remainingBudget / (categoryMap.size || 1)),
+    );
+
+    const categorySamples: TransactionWithRelationsDto[] = [];
+
+    for (const txs of categoryMap.values()) {
+      categorySamples.push(...txs.slice(0, perCategoryLimit));
+    }
+
+    return {
+      transactions: [...core, ...categorySamples].slice(0, transactionsLimit),
+      wasSampled: true,
+    };
+  }
+
+  private async getSpendingAggregates(
+    transactions: TransactionWithRelationsDto[],
+    dateRange: DateRange,
+    accounts: AccountSummaryDto[],
+  ): Promise<{
+    byCurrency: { currency: Currency; total: number; count: number }[];
+    byCategory: { category: string; total: number }[];
+  }> {
+    const currencyByAccountId = new Map(
+      accounts.map(({ id, currency }) => [id, currency]),
+    );
+
+    const totalsByCurrency = new Map<
+      Currency,
+      { total: number; count: number }
+    >();
+
+    for (const transaction of transactions) {
+      const { accountId, amount } = transaction;
+
+      const currency = currencyByAccountId.get(accountId);
+
+      if (!currency) {
+        // account no longer in user's account list
+        continue;
+      }
+
+      const existing = totalsByCurrency.get(currency) ?? {
+        total: 0,
+        count: 0,
+      };
+      existing.total += amountToNumber(amount);
+      existing.count += 1;
+      totalsByCurrency.set(currency, existing);
+    }
+
+    const byCurrency = Array.from(totalsByCurrency.entries()).map(
+      ([currency, { total, count }]) => ({ currency, total, count }),
+    );
+
+    const currenciesInUse = Array.from(
+      new Set(
+        transactions
+          .map(({ accountId }) => currencyByAccountId.get(accountId))
+          .filter((c): c is Currency => !!c && c !== Currency.uah),
+      ),
+    );
+
+    const rateMaps = await this.getDailyRateMaps(
+      currenciesInUse,
+      dateRange.from,
+      dateRange.to,
+    );
+
+    const totalsByCategory = new Map<string, number>();
+
+    for (const { accountId, amount, time, category } of transactions) {
+      const currency = currencyByAccountId.get(accountId);
+
+      if (!currency) {
+        continue;
+      }
+
+      const dateKey = dayjs(time).format('YYYY-MM-DD');
+      const rate =
+        currency === Currency.uah
+          ? 1
+          : (rateMaps.get(currency)?.get(dateKey) ?? null);
+
+      if (rate === null) {
+        this.logger.warn(
+          `No exchange rate for ${currency} on ${dateKey}; excluding transaction from Top Spending`,
+        );
+        continue;
+      }
+
+      const categoryName = getCategoryName(category);
+
+      totalsByCategory.set(
+        categoryName,
+        (totalsByCategory.get(categoryName) ?? 0) +
+          amountToNumber(amount) * rate,
+      );
+    }
+
+    const byCategory = Array.from(totalsByCategory.entries())
+      .map(([category, total]) => ({ category, total }))
+      .sort((a, b) => Math.abs(b.total) - Math.abs(a.total))
+      .slice(0, 5);
+
+    return { byCurrency, byCategory };
+  }
+
+  private async getDailyRateMaps(
+    currencies: Currency[],
+    from: Date,
+    to: Date,
+  ): Promise<Map<Currency, Map<string, number>>> {
+    const result = new Map<Currency, Map<string, number>>();
+
+    if (currencies.length === 0) {
+      return result;
+    }
+
+    const rows = await this.prismaService.exchangeRateHistory.findMany({
+      where: {
+        currency: { in: currencies },
+        date: { gte: dayjs(from).subtract(7, 'day').toDate(), lte: to },
+      },
+      orderBy: { date: 'asc' },
+      select: { date: true, currency: true, rateToUah: true },
+    });
+
+    const ratesByCurrency = new Map<Currency, { date: Date; rate: number }[]>();
+
+    for (const { date, currency, rateToUah } of rows) {
+      const list = ratesByCurrency.get(currency) ?? [];
+      list.push({ date, rate: Number(rateToUah) });
+      ratesByCurrency.set(currency, list);
+    }
+
+    for (const currency of currencies) {
+      result.set(
+        currency,
+        this.buildDailyRateMap(ratesByCurrency.get(currency) ?? [], from, to),
+      );
+    }
+
+    return result;
+  }
+
+  private buildDailyRateMap(
+    rates: { date: Date; rate: number }[],
+    from: Date,
+    to: Date,
+  ): Map<string, number> {
+    const map = new Map<string, number>();
+    let rateIndex = 0;
+    let currentRate: number | null = null;
+
+    let cursor = dayjs(from).startOf('day');
+
+    while (cursor.valueOf() <= dayjs(to).startOf('day').valueOf()) {
+      while (
+        rateIndex < rates.length &&
+        dayjs(rates[rateIndex].date).valueOf() <= cursor.valueOf()
+      ) {
+        currentRate = rates[rateIndex].rate;
+        rateIndex++;
+      }
+
+      if (currentRate !== null) {
+        map.set(cursor.format('YYYY-MM-DD'), currentRate);
+      }
+
+      cursor = cursor.add(1, 'day');
+    }
+
+    return map;
   }
 
   private async getCategories(): Promise<CategorySummaryDto[]> {
@@ -254,8 +561,16 @@ export class ContextBuilderService {
     categories,
     knowledgeBase,
     exchangeRates,
+    wasSampled,
+    totalTransactionCount,
+    dateRange,
+    aggregates,
   }: SystemPromptData): string {
     const { usdToUah, eurToUah } = exchangeRates;
+    const { from, to } = dateRange;
+
+    const dateRangeLabel =
+      totalTransactionCount > 0 ? `${from} to ${to}` : 'No recent transactions';
 
     const conversionRates: Record<Currency, number> = {
       [Currency.usd]: usdToUah,
@@ -285,33 +600,19 @@ export class ContextBuilderService {
 
     const totalInUah = formatted.reduce((sum, { amount }) => sum + amount, 0);
 
-    const txByCurrency = transactions.reduce<
-      Partial<Record<string, TransactionWithRelationsDto[]>>
-    >((acc, tx) => {
-      const currency = tx.account.currency;
+    const { byCurrency, byCategory } = aggregates;
 
-      acc[currency] = acc[currency] ?? [];
-      acc[currency].push(tx);
-
-      return acc;
-    }, {});
-
-    const txSummary = Object.entries(txByCurrency)
-      .flatMap(([currency, txs]) => {
-        if (!txs) {
-          return [];
-        }
-
-        const total = txs.reduce((sum, { amount }) => sum + Number(amount), 0);
-
-        return [
-          `- ${currency.toUpperCase()}: ${txs.length} transactions, ${formatCurrency(total.toString(), currency)}`,
-        ];
-      })
+    const txSummary = byCurrency
+      .map(
+        ({ currency, count, total }) =>
+          `- ${currency.toUpperCase()}: ${count} transactions, ${formatCurrency(total.toString(), currency)}`,
+      )
       .join('\n');
 
     const categoryList = categories.map(({ name }) => name).join(', ');
-    const topSpending = this.formatTopSpending(transactions);
+    const topSpending = byCategory
+      .map(({ category, total }) => `- ${category}: ${total.toFixed(2)}`)
+      .join('\n');
     const knowledgeSection = this.formatKnowledgeSection(knowledgeBase);
 
     return `
@@ -337,7 +638,17 @@ export class ContextBuilderService {
       === FINANCIAL SUMMARY ===
       Total Balance: ${formatAmount(totalInUah, { decimals: 2, divisor: 1 })} UAH
       Accounts: ${accounts.length}
-      Recent Transactions (30 days): ${transactions.length}
+      Total Transactions (${dateRangeLabel}): ${totalTransactionCount}
+      ${
+        wasSampled
+          ? `
+              Note: all totals and breakdowns below are calculated from all 
+              ${totalTransactionCount} transactions. Only ${transactions.length} representative 
+              examples are listed individually below (sampled for importance) - do not treat 
+              ${transactions.length} as the real count.
+            `
+          : ''
+      }
 
       Transactions by Currency:
       ${txSummary || 'No transactions'}
@@ -348,14 +659,14 @@ export class ContextBuilderService {
       All Accounts:
       ${allAccountsList}
 
-      Top Spending (30 days):
+      Top Spending (${dateRangeLabel}):
       ${topSpending || 'No data'}
 
       Categories: ${categoryList}
       ${knowledgeSection}
 
       === CRITICAL RULES ===
-      1. **TONE & STYLE**: 
+      1. **TONE & STYLE**:
         - Be warm, polite, and conversational.
         - Write like a helpful human, not a robot.
         - Use natural language, avoid overly technical or formal tone.
@@ -396,21 +707,6 @@ export class ContextBuilderService {
       Remember: You have ALL data needed. Be confident, precise, helpful, and most importantly - human!`;
   }
 
-  private formatTopSpending(
-    transactions: TransactionWithRelationsDto[],
-  ): string {
-    const spendingByCategory = this.calculateSpendingByCategory(transactions);
-
-    return Object.entries(spendingByCategory)
-      .sort(([, a], [, b]) => Math.abs(b) - Math.abs(a))
-      .slice(0, 5)
-      .map(
-        ([category, amount]) =>
-          `- ${category}: ${formatCurrency(amount, 'UAH')}`,
-      )
-      .join('\n');
-  }
-
   private formatKnowledgeSection(knowledgeBase: KnowledgeBaseEntry[]): string {
     if (knowledgeBase.length === 0) {
       return '';
@@ -424,22 +720,6 @@ export class ContextBuilderService {
       .join('\n');
 
     return `\n\nRelevant Information:\n${entries}`;
-  }
-
-  private calculateSpendingByCategory(
-    transactions: TransactionWithRelationsDto[],
-  ): CategoryRecord {
-    return transactions.reduce<CategoryRecord>(
-      (spending, { amount, category }) => {
-        const categoryName = category?.name ?? 'Uncategorized';
-
-        return {
-          ...spending,
-          [categoryName]: (spending[categoryName] || 0) + Number(amount),
-        };
-      },
-      {},
-    );
   }
 
   private createMinimalSystemPrompt(): string {

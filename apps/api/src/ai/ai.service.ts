@@ -263,7 +263,7 @@ export class AiService {
         )
       : false;
 
-    const { contextLevel, provider, reason, type } =
+    const { contextLevel, provider, reason, type, dateRange } =
       this.queryStrategy.analyzeQuery(
         dto.message,
         this.geminiClient.isAvailable(),
@@ -281,11 +281,18 @@ export class AiService {
       content: dto.message,
     });
 
+    if (!dateRange) {
+      this.logger.debug(
+        `No date range parsed, falling back to default window: "${dto.message.slice(0, 50)}"`,
+      );
+    }
+
     const [context, history] = await Promise.all([
       this.contextBuilder.buildContext({
         userId,
         userMessage: dto.message,
         contextLevel,
+        dateRange,
       }),
       this.conversationManager.getConversationHistory(conversationId, userId),
     ]);

@@ -1,4 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
+import {
+  type DateRange,
+  extractDateRangeFromMessage,
+} from 'src/_lib/utils/date-range.util';
 
 import { analyticalFinancePatterns } from './lib/analytical-patterns';
 
@@ -10,6 +14,7 @@ type QueryStrategy = {
   provider: Provider;
   contextLevel: ContextLevel;
   reason: string;
+  dateRange?: DateRange | null;
 };
 
 @Injectable()
@@ -31,6 +36,8 @@ export class QueryStrategyService {
       pattern.test(message),
     );
 
+    const dateRange = extractDateRangeFromMessage(message);
+
     if (isLockedToGemini || isFinancial) {
       const provider = geminiAvailable ? 'gemini' : 'ollama';
 
@@ -43,6 +50,7 @@ export class QueryStrategyService {
             ? 'Conversation locked to Gemini'
             : 'Conversation locked to Gemini — falling back to Ollama'
           : `Financial analysis with ${provider}`,
+        dateRange,
       };
     }
 
@@ -51,6 +59,7 @@ export class QueryStrategyService {
       provider: 'ollama',
       contextLevel: 'minimal',
       reason: 'Non-financial chat with Ollama + minimal context',
+      dateRange,
     };
   }
 

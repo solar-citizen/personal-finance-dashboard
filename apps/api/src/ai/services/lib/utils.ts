@@ -1,5 +1,9 @@
 import type { GeminiModel } from './gemini-client.types';
 
+type CategoryWithName = {
+  name?: string | null;
+} | null;
+
 export function isGeminiModelsListResponse(
   data: unknown,
 ): data is { models: GeminiModel[] } {
@@ -31,4 +35,8 @@ export function isGeminiModelsListResponse(
       Array.isArray(model.supportedGenerationMethods)
     );
   });
+}
+
+export function getCategoryName(category?: CategoryWithName | null): string {
+  return category?.name ?? 'Uncategorized';
 }

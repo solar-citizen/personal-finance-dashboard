@@ -1,3 +1,4 @@
+/* eslint-disable padding-line-between-statements */
 import dayjs from 'dayjs';
 
 type IsoDateRange = {
@@ -8,6 +9,11 @@ type IsoDateRange = {
 type TimeEntry = {
   time: Date | string;
 };
+
+export const hourMs = 3_600_000;
+export const dayMs = 86_400_000;
+export const weekMs = 604_800_000;
+export const tenYearsMs = 315_360_000_000;
 
 export function toUnixTimestamp(date: Date): number {
   return dayjs(date).unix();
