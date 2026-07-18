@@ -1,3 +1,4 @@
+import { isJsonRecord } from '@pfd/shared';
 import { en, uk } from 'chrono-node';
 import dayjs from 'dayjs';
 
@@ -126,5 +127,15 @@ export function extractDateRangeFromMessage(
     tryChrono(message, referenceDate) ??
     tryUnitRootFallback(message, referenceDate) ??
     tryRelativeSingleUnitFallback(message, referenceDate)
+  );
+}
+
+export function isStoredDateRange(
+  value: unknown,
+): value is { from: string; to: string } {
+  return (
+    isJsonRecord(value) &&
+    typeof value.from === 'string' &&
+    typeof value.to === 'string'
   );
 }

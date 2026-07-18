@@ -213,7 +213,7 @@ export class TransactionAggregationService {
         (a, b) =>
           Math.abs(b.incoming + b.outgoing) - Math.abs(a.incoming + a.outgoing),
       )
-      .slice(0, 5);
+      .slice(0, 20);
 
     return { byCurrency, byCategory, totalCashOut, totalCashIn };
   }

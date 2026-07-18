@@ -19,3 +19,11 @@ export type StreamResponse =
   | { type: 'start'; conversationId: string; modelUsed: string }
   | { type: 'chunk'; content: string }
   | { type: 'end'; responseTimeMs: number; modelUsed: string };
+
+export function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+export function isJsonRecord(value: unknown): value is Record<string, unknown> {
+  return isRecord(value) && !Array.isArray(value);
+}
