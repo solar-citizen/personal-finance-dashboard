@@ -8,8 +8,8 @@ import {
   AvailableModelsErrorResponse,
   AvailableModelsResponse,
   GeminiModel,
-} from './lib/gemini-client.types';
-import { isGeminiModelsListResponse } from './lib/utils';
+} from './_lib/gemini-client.types';
+import { isGeminiModelsListResponse } from './_lib/utils';
 
 export type GeminiChatMessage = {
   role: 'user' | 'model';

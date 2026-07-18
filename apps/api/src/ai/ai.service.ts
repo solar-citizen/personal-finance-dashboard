@@ -10,7 +10,7 @@ import {
   SendMessageDto,
 } from 'src/_generated/zod/pfd-dtos';
 
-import { ContextBuilderService } from './services/context-builder.service';
+import { ContextBuilderService } from './services/context-builder/context-builder.service';
 import { ConversationManagerService } from './services/conversation-manager.service';
 import {
   type GeminiChatMessage,

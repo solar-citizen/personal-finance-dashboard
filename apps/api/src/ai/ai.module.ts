@@ -5,7 +5,15 @@ import { CurrencyModule } from 'src/currency/currency.module';
 import { PrismaModule } from '../db/prisma.module';
 import { AiController } from './ai.controller';
 import { AiService } from './ai.service';
-import { ContextBuilderService } from './services/context-builder.service';
+import {
+  ContextBuilderService,
+  ContextCacheService,
+  KnowledgeBaseService,
+  SystemPromptBuilderService,
+  TransactionAggregationService,
+  TransactionFetchService,
+  TransactionSearchService,
+} from './services/context-builder';
 import { ConversationManagerService } from './services/conversation-manager.service';
 import { GeminiClientService } from './services/gemini-client.service';
 import { OllamaClientService } from './services/ollama-client.service';
@@ -19,6 +27,12 @@ import { QueryStrategyService } from './services/query-strategy.service';
     OllamaClientService,
     ConversationManagerService,
     ContextBuilderService,
+    ContextCacheService,
+    KnowledgeBaseService,
+    SystemPromptBuilderService,
+    TransactionAggregationService,
+    TransactionFetchService,
+    TransactionSearchService,
     GeminiClientService,
     QueryStrategyService,
   ],

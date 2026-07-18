@@ -4,7 +4,7 @@ import {
   extractDateRangeFromMessage,
 } from 'src/_lib/utils/date-range.util';
 
-import { analyticalFinancePatterns } from './lib/analytical-patterns';
+import { analyticalFinancePatterns } from './_lib/analytical-patterns';
 
 export type ContextLevel = 'full' | 'minimal';
 type QueryType = 'financial' | 'casual';
