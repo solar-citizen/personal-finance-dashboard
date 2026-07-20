@@ -1,4 +1,4 @@
-import type { MessageRole, StreamResponse } from '@pfd/shared';
+import { isRecord, type MessageRole, type StreamResponse } from '@pfd/shared';
 import { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 
@@ -7,10 +7,6 @@ import QueryState from '#src/components/common/QueryState';
 import { cn } from '#src/lib/utils';
 
 import ChatHistory from './ChatHistory';
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
 
 function isStreamResponse(obj: Record<string, unknown>): obj is StreamResponse {
   switch (obj.type) {

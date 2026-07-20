@@ -81,7 +81,7 @@ export default defineConfig(
     },
   },
   {
-    files: ['**/*.script.ts', '**/prisma/seed.ts'],
+    files: ['**/*.script.ts', '**/prisma/seed.ts', '**/prisma/backfill-exchange-rates.ts'],
     rules: {
       'no-console': 'off',
     },

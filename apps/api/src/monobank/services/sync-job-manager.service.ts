@@ -6,7 +6,7 @@ import {
   SyncProgressResponseDto,
 } from 'src/_generated/zod/pfd-dtos';
 import { decrypt, formatDateToIso, getErrorMessage } from 'src/_lib/utils';
-import { ContextBuilderService } from 'src/ai/services/context-builder.service';
+import { ContextBuilderService } from 'src/ai/services/context-builder/context-builder.service';
 import { PrismaService } from 'src/db/prisma.service';
 
 import { MonoBankTransaction } from '../lib/monobank.types';
