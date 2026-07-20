@@ -118,8 +118,7 @@ export class TransactionAggregationService {
     let totalCashOut = 0;
     let totalCashIn = 0;
 
-    for (const transaction of transactions) {
-      const { accountId, amount } = transaction;
+    for (const { accountId, amount } of transactions) {
       const val = amountToNumber(amount);
 
       if (val < 0) {
@@ -138,8 +137,10 @@ export class TransactionAggregationService {
         total: 0,
         count: 0,
       };
+
       existing.total += val;
       existing.count += 1;
+
       totalsByCurrency.set(currency, existing);
     }
 
