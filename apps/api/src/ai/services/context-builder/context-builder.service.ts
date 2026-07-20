@@ -5,6 +5,7 @@ import { formatDateToIso, getDateRange } from 'src/_lib/utils/date.util';
 import type { DateRange } from 'src/_lib/utils/date-range.util';
 import { CurrencyService } from 'src/currency/currency.service';
 
+import { ConversationManagerService } from '../conversation-manager.service';
 import type { ContextLevel } from '../query-strategy.service';
 import { ContextCacheService } from './context-cache.service';
 import { KnowledgeBaseService } from './knowledge-base.service';
@@ -17,6 +18,8 @@ type ContextData = {
   userId: string;
   userMessage: string;
   contextLevel: ContextLevel;
+  dateRange?: DateRange | null;
+  conversationId?: string;
 };
 
 @Injectable()
@@ -31,6 +34,7 @@ export class ContextBuilderService {
     private readonly knowledgeBaseService: KnowledgeBaseService,
     private readonly contextCacheService: ContextCacheService,
     private readonly currencyService: CurrencyService,
+    private readonly conversationManagerService: ConversationManagerService,
   ) {}
 
   async buildContext({
@@ -38,9 +42,8 @@ export class ContextBuilderService {
     userMessage,
     contextLevel,
     dateRange = null,
-  }: ContextData & {
-    dateRange?: DateRange | null;
-  }): Promise<FinancialContextDto> {
+    conversationId,
+  }: ContextData): Promise<FinancialContextDto> {
     if (contextLevel === 'minimal') {
       const now = dayjs();
 
@@ -62,7 +65,8 @@ export class ContextBuilderService {
       };
     }
 
-    const effectiveRange = dateRange ?? this.getDefaultRange();
+    const effectiveRange =
+      dateRange ?? (await this.resolveFallbackRange(conversationId, userId));
     const cacheKey = this.contextCacheService.buildCacheKey(
       userId,
       effectiveRange,
@@ -185,6 +189,30 @@ export class ContextBuilderService {
 
   async clearCache(userId?: string): Promise<void> {
     return await this.contextCacheService.clear(userId);
+  }
+
+  private async resolveFallbackRange(
+    conversationId: string | undefined,
+    userId: string,
+  ): Promise<DateRange> {
+    if (conversationId) {
+      const previousRange =
+        await this.conversationManagerService.getLastDateRange(
+          conversationId,
+          userId,
+        );
+
+      if (previousRange) {
+        this.logger.log(
+          `No date range parsed from message; reusing previous range for conversation ${conversationId}:
+          (${formatDateToIso(previousRange.from)} to ${formatDateToIso(previousRange.to)})`,
+        );
+
+        return previousRange;
+      }
+    }
+
+    return this.getDefaultRange();
   }
 
   private getDefaultRange(): DateRange {

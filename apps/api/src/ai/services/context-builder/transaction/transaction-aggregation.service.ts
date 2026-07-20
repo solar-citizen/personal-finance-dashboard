@@ -115,13 +115,21 @@ export class TransactionAggregationService {
       { total: number; count: number }
     >();
 
-    for (const transaction of transactions) {
-      const { accountId, amount } = transaction;
+    let totalCashOut = 0;
+    let totalCashIn = 0;
+
+    for (const { accountId, amount } of transactions) {
+      const val = amountToNumber(amount);
+
+      if (val < 0) {
+        totalCashOut += Math.abs(val);
+      } else {
+        totalCashIn += val;
+      }
 
       const currency = currencyByAccountId.get(accountId);
 
       if (!currency) {
-        // account no longer in user's account list
         continue;
       }
 
@@ -129,8 +137,10 @@ export class TransactionAggregationService {
         total: 0,
         count: 0,
       };
-      existing.total += amountToNumber(amount);
+
+      existing.total += val;
       existing.count += 1;
+
       totalsByCurrency.set(currency, existing);
     }
 
@@ -152,7 +162,10 @@ export class TransactionAggregationService {
       dateRange.to,
     );
 
-    const totalsByCategory = new Map<string, number>();
+    const totalsByCategory = new Map<
+      string,
+      { incoming: number; outgoing: number }
+    >();
 
     for (const { accountId, amount, time, category } of transactions) {
       const currency = currencyByAccountId.get(accountId);
@@ -175,20 +188,35 @@ export class TransactionAggregationService {
       }
 
       const categoryName = getCategoryName(category);
+      const val = amountToNumber(amount) * rate;
 
-      totalsByCategory.set(
-        categoryName,
-        (totalsByCategory.get(categoryName) ?? 0) +
-          amountToNumber(amount) * rate,
-      );
+      const existing = totalsByCategory.get(categoryName) ?? {
+        incoming: 0,
+        outgoing: 0,
+      };
+
+      if (val < 0) {
+        existing.outgoing += Math.abs(val);
+      } else {
+        existing.incoming += val;
+      }
+
+      totalsByCategory.set(categoryName, existing);
     }
 
     const byCategory = Array.from(totalsByCategory.entries())
-      .map(([category, total]) => ({ category, total }))
-      .sort((a, b) => Math.abs(b.total) - Math.abs(a.total))
-      .slice(0, 5);
+      .map(([category, { incoming, outgoing }]) => ({
+        category,
+        incoming,
+        outgoing,
+      }))
+      .sort(
+        (a, b) =>
+          Math.abs(b.incoming + b.outgoing) - Math.abs(a.incoming + a.outgoing),
+      )
+      .slice(0, 20);
 
-    return { byCurrency, byCategory };
+    return { byCurrency, byCategory, totalCashOut, totalCashIn };
   }
 
   /**

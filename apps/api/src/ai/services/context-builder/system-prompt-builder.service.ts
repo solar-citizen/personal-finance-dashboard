@@ -9,6 +9,7 @@ import {
 import { formatValue } from 'src/_lib/utils/number.util';
 
 import {
+  contextAwarenessInstructions,
   identityInstructions,
   languageInstructions,
   nonFinancialInstructions,
@@ -67,7 +68,7 @@ export class SystemPromptBuilderService {
 
     const totalInUah = formatted.reduce((sum, { amount }) => sum + amount, 0);
 
-    const { byCurrency, byCategory } = aggregates;
+    const { byCurrency, byCategory, totalCashOut, totalCashIn } = aggregates;
 
     const txSummary = byCurrency
       .map(
@@ -78,7 +79,10 @@ export class SystemPromptBuilderService {
 
     const categoryList = categories.map(({ name }) => name).join(', ');
     const topSpending = byCategory
-      .map(({ category, total }) => `- ${category}: ${total.toFixed(2)}`)
+      .map(
+        ({ category, incoming, outgoing }) =>
+          `- ${category}: Incoming ${formatValue(incoming)}, Outgoing ${formatValue(outgoing)}`,
+      )
       .join('\n');
     const knowledgeSection = this.formatKnowledgeSection(knowledgeBase);
     const matchingSection =
@@ -105,15 +109,17 @@ export class SystemPromptBuilderService {
         Total: 45,327.80 + 329.88 = 45,657.68 UAH
 
       === FINANCIAL SUMMARY ===
+      Total Cash Out (Expenses & Outgoing): ${formatValue(totalCashOut)} UAH
+      Total Cash In (Income & Incoming): ${formatValue(totalCashIn)} UAH
       Total Balance: ${formatAmount(totalInUah, { decimals: 2, divisor: 1 })} UAH
       Accounts: ${accounts.length}
       Total Transactions (${dateRangeLabel}): ${totalTransactionCount}
       ${
         wasSampled
           ? `
-              Note: all totals and breakdowns below are calculated from all 
-              ${totalTransactionCount} transactions. Only ${transactions.length} representative 
-              examples are listed individually below (sampled for importance) - do not treat 
+              Note: all totals and breakdowns below are calculated from all
+              ${totalTransactionCount} transactions. Only ${transactions.length} representative
+              examples are listed individually below (sampled for importance) - do not treat
               ${transactions.length} as the real count. If asked for a specific/complete list of
               individual transactions that isn't covered by the "EXACT MATCHES" section below,
               say the full list isn't available in this context rather than presenting the
@@ -145,27 +151,38 @@ export class SystemPromptBuilderService {
         - Use natural language, avoid overly technical or formal tone.
         - Show empathy when discussing spending or finances.
 
-      2. **CURRENCY CONVERSIONS**: You HAVE exchange rates above. When user asks about amounts in UAH/EUR/USD:
+      2. **CONTEXT AWARENESS**:
+        - If the user asks a follow-up question (like "break this down by category") but the date 
+          range in the "FINANCIAL SUMMARY" clearly doesn't match the previous conversation context 
+          (e.g., it unexpectedly reset to a 1-month default instead of the previously discussed 5 years), 
+          explicitly state the period you are currently looking at.
+        - Example: ${contextAwarenessInstructions.uk} (Ukrainian), ${contextAwarenessInstructions.en} (English)
+
+      3. **CURRENCY CONVERSIONS**: You HAVE exchange rates above. When user asks about amounts in UAH/EUR/USD:
         - Use the rates provided
         - Don't ask for rates - YOU HAVE THEM.
         - Show calculations clearly
         - Example: "1,000 UAH ÷ ${formatAmount(eurToUah, { decimals: 2, divisor: 1 })} = X EUR"
 
-      3. **TRANSACTION DATA**: You have FULL transaction data with currency info. When asked about spending by currency:
+      4. **TRANSACTION DATA**: You have FULL transaction data with currency info. When asked about spending by currency:
         - Analyze transactions from "Transactions by Currency" section
         - Show amounts per currency
         - Don't say "I don't have this data" - YOU HAVE IT.
 
-      4. **LANGUAGE**: ${languageInstructions}
+      5. **LANGUAGE**: ${languageInstructions}
 
-      5. **ACCOUNTS DISPLAY**:
+      6. **ACCOUNTS DISPLAY**:
         - By default show only non-zero accounts
         - Show all accounts only if explicitly asked
         - Use translated names (Чорна, Біла, єПідтримка), not technical names
 
-      6. **NON-FINANCIAL QUESTIONS**: ${nonFinancialInstructions}
+      7. **NON-FINANCIAL QUESTIONS**: ${nonFinancialInstructions}
 
-      7. **FORMATTING**: Be concise, no unnecessary explanations, direct answers with data
+      8. **FORMATTING**: Be concise, no unnecessary explanations, direct answers with data
+
+      9. NEVER attempt to calculate total sums manually from the transaction list.
+      10. ALWAYS use the exact \`Total Cash Out\` and \`Total Cash In\` values provided in the FINANCIAL SUMMARY above.
+      11. The "Cash Out" metric already includes all actual spending and outgoing money transfers.
 
       === EXAMPLES ===
       ❌ BAD: "I don't have currency data for transactions"

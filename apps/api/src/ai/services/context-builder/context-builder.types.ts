@@ -13,7 +13,13 @@ export type KnowledgeBaseEntry = {
 
 export type SpendingAggregates = {
   byCurrency: { currency: Currency; total: number; count: number }[];
-  byCategory: { category: string; total: number }[];
+  byCategory: {
+    category: string;
+    incoming: number;
+    outgoing: number;
+  }[];
+  totalCashOut: number;
+  totalCashIn: number;
 };
 
 /**

@@ -1,5 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { createId } from '@paralleldrive/cuid2';
+import { isJsonRecord } from '@pfd/shared';
 import dayjs from 'dayjs';
 import { MessageRole } from 'src/_generated/prisma-client/client';
 import {
@@ -9,6 +10,7 @@ import {
   MessageDto,
 } from 'src/_generated/zod/pfd-dtos';
 import { formatDateToIso } from 'src/_lib/utils/date.util';
+import { isStoredDateRange } from 'src/_lib/utils/date-range.util';
 import { formatEmbeddingVector } from 'src/_lib/utils/vector.util';
 import { ConfigService } from 'src/config/config.service';
 
@@ -212,13 +214,49 @@ export class ConversationManagerService {
 
     return conversation.messages.some(
       ({ contextUsed }) =>
-        typeof contextUsed === 'object' &&
-        contextUsed !== null &&
-        !Array.isArray(contextUsed) &&
+        isJsonRecord(contextUsed) &&
         Object.entries(contextUsed).some(
           ([key, value]) => key === 'modelUsed' && value === 'gemini',
         ),
     );
+  }
+
+  async getLastDateRange(
+    conversationId: string,
+    userId: string,
+  ): Promise<{ from: Date; to: Date } | null> {
+    const conversation = await this.prismaService.conversation.findFirst({
+      where: { id: conversationId, userId },
+      include: {
+        messages: {
+          where: { role: MessageRole.assistant },
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          select: { contextUsed: true },
+        },
+      },
+    });
+
+    const contextUsed = conversation?.messages[0]?.contextUsed;
+
+    if (!isJsonRecord(contextUsed)) {
+      return null;
+    }
+
+    const { requestedRange } = contextUsed;
+
+    if (!isStoredDateRange(requestedRange)) {
+      return null;
+    }
+
+    const from = new Date(requestedRange.from);
+    const to = new Date(requestedRange.to);
+
+    if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) {
+      return null;
+    }
+
+    return { from, to };
   }
 
   async getConversation(

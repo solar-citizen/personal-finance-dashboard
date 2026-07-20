@@ -283,7 +283,7 @@ export class AiService {
 
     if (!dateRange) {
       this.logger.debug(
-        `No date range parsed, falling back to default window: "${dto.message.slice(0, 50)}"`,
+        `No date range parsed from message, will try to reuse the previous conversation range before defaulting: "${dto.message.slice(0, 50)}"`,
       );
     }
 
@@ -293,6 +293,7 @@ export class AiService {
         userMessage: dto.message,
         contextLevel,
         dateRange,
+        conversationId,
       }),
       this.conversationManager.getConversationHistory(conversationId, userId),
     ]);
