@@ -31,7 +31,6 @@ export default defineConfig(
     plugins: {
       '@typescript-eslint/eslint-plugin': tsEslint,
       'simple-import-sort': pluginSimpleImportSort,
-      // @ts-expect-error - plugin has ESM/CJS compatibility issue with flat config types
       promise: pluginPromise,
       import: pluginImport,
       prettier: pluginPrettier,
@@ -82,7 +81,7 @@ export default defineConfig(
     },
   },
   {
-    files: ['**/*.script.ts', '**/prisma/seed.ts'],
+    files: ['**/*.script.ts', '**/prisma/seed.ts', '**/prisma/backfill-exchange-rates.ts'],
     rules: {
       'no-console': 'off',
     },

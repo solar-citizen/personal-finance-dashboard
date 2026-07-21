@@ -6,7 +6,7 @@ import {
   SyncProgressResponseDto,
 } from 'src/_generated/zod/pfd-dtos';
 import { decrypt, formatDateToIso, getErrorMessage } from 'src/_lib/utils';
-import { ContextBuilderService } from 'src/ai/services/context-builder.service';
+import { ContextBuilderService } from 'src/ai/services/context-builder/context-builder.service';
 import { PrismaService } from 'src/db/prisma.service';
 
 import { MonoBankTransaction } from '../lib/monobank.types';
@@ -123,7 +123,8 @@ export class SyncJobManager {
         data: { lastSyncedAt: dayjs().toDate() },
       });
 
-      this.contextBuilder.clearCache(userId);
+      await this.contextBuilder.clearCache(userId);
+
       this.logger.log(
         `Cleared context cache for user ${userId} after background sync`,
       );

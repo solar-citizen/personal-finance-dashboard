@@ -64,7 +64,7 @@ async function main() {
     throw new Error('SEED_ADMIN_NAME env variable is missing.');
   }
 
-  const { email } = await prisma.user.upsert({
+  const { email: createdEmail } = await prisma.user.upsert({
     where: { email: adminEmail },
     update: {},
     create: {
@@ -74,7 +74,7 @@ async function main() {
     },
   });
 
-  console.log(`✅ Admin created: ${email} / password: ${adminPassword}`);
+  console.log(`✅ Admin created: ${createdEmail} / password: ${adminPassword}`);
   console.log('🎉 Seeding completed!');
 }
 

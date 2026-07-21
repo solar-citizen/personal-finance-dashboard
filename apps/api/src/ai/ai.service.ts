@@ -10,7 +10,7 @@ import {
   SendMessageDto,
 } from 'src/_generated/zod/pfd-dtos';
 
-import { ContextBuilderService } from './services/context-builder.service';
+import { ContextBuilderService } from './services/context-builder/context-builder.service';
 import { ConversationManagerService } from './services/conversation-manager.service';
 import {
   type GeminiChatMessage,
@@ -263,7 +263,7 @@ export class AiService {
         )
       : false;
 
-    const { contextLevel, provider, reason, type } =
+    const { contextLevel, provider, reason, type, dateRange } =
       this.queryStrategy.analyzeQuery(
         dto.message,
         this.geminiClient.isAvailable(),
@@ -281,23 +281,29 @@ export class AiService {
       content: dto.message,
     });
 
+    if (!dateRange) {
+      this.logger.debug(
+        `No date range parsed from message, will try to reuse the previous conversation range before defaulting: "${dto.message.slice(0, 50)}"`,
+      );
+    }
+
     const [context, history] = await Promise.all([
       this.contextBuilder.buildContext({
         userId,
         userMessage: dto.message,
         contextLevel,
+        dateRange,
+        conversationId,
       }),
       this.conversationManager.getConversationHistory(conversationId, userId),
     ]);
 
     const messages: OllamaChatMessage[] = [
       { role: 'system', content: context.systemPrompt },
-      ...history.map(
-        ({ role, content }): OllamaChatMessage => ({
-          role,
-          content,
-        }),
-      ),
+      ...history.map(({ role, content }): OllamaChatMessage => ({
+        role,
+        content,
+      })),
     ];
 
     return {

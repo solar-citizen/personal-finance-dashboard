@@ -200,3 +200,15 @@ model KnowledgeBase {
   
   @@index([embedding], name: "knowledge_base_embedding_idx")
 }
+
+model ExchangeRateHistory {
+  id        String   @id @default(cuid())
+  date      DateTime @db.Date
+  currency  Currency
+  rateToUah Decimal  @db.Decimal(12, 6)
+
+  createdAt DateTime @default(now())
+
+  @@unique([date, currency])
+  @@index([currency, date])
+}

@@ -34,3 +34,11 @@ _generated
 
 # Uploads
 uploads/
+
+# AI Memory (TMP)
+memory.md
+/memory
+
+# Utils
+diagnose_data.ts
+test_amount.ts

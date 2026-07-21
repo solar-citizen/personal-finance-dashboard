@@ -8,10 +8,9 @@ import type { Response } from 'express';
 import type { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import type { AuthResponseDto } from 'src/_generated/zod/pfd-dtos';
+import { weekMs } from 'src/_lib/utils/date.util';
 
 import { cookieConfig } from './cookie.config';
-
-const oneWeekInMs = 7 * 24 * 60 * 60 * 1000;
 
 @Injectable()
 export class AuthCookieInterceptor implements NestInterceptor {
@@ -26,7 +25,7 @@ export class AuthCookieInterceptor implements NestInterceptor {
         if (data.accessToken) {
           response.cookie('token', data.accessToken, {
             ...cookieConfig,
-            maxAge: oneWeekInMs,
+            maxAge: weekMs,
           });
         }
 

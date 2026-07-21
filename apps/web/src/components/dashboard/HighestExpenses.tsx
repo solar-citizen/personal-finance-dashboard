@@ -24,9 +24,7 @@ export default function HighestExpenses() {
   const [period, setPeriod] = useState<Period>('month');
   const { data, isLoading, error } = useGetHighestExpenses({ queryParams: { period } });
 
-  const handlePeriodChange = ({ target }: React.ChangeEvent<HTMLSelectElement>) => {
-    const { value } = target;
-
+  const handlePeriodChange = ({ target: { value } }: React.ChangeEvent<HTMLSelectElement>) => {
     if (isPeriod(value)) {
       setPeriod(value);
     }
@@ -61,24 +59,20 @@ export default function HighestExpenses() {
       >
         {expenses => (
           <ul className={'space-y-2'}>
-            {expenses.map(({ category, amount, currency }) => {
-              const { id, name, icon } = category;
-
-              return (
-                <li
-                  key={id}
-                  className={`flex justify-between items-center border-b last:border-b-0 ${rowClassName}`}
-                >
-                  <div className={'flex items-center gap-2'}>
-                    <span className={'text-lg'}>{icon}</span>
-                    <div className={'font-medium'}>{name}</div>
-                  </div>
-                  <div className={'font-mono font-medium'}>
-                    {amount.toFixed(2)} {currency.toUpperCase()}
-                  </div>
-                </li>
-              );
-            })}
+            {expenses.map(({ category, amount, currency }) => (
+              <li
+                key={category.id}
+                className={`flex justify-between items-center border-b last:border-b-0 ${rowClassName}`}
+              >
+                <div className={'flex items-center gap-2'}>
+                  <span className={'text-lg'}>{category.icon}</span>
+                  <div className={'font-medium'}>{category.name}</div>
+                </div>
+                <div className={'font-mono font-medium'}>
+                  {amount.toFixed(2)} {currency.toUpperCase()}
+                </div>
+              </li>
+            ))}
           </ul>
         )}
       </QueryState>

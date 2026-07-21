@@ -7,13 +7,12 @@ import {
   ExchangeRatesDto,
   MonoExchangeRateDto,
 } from 'src/_generated/zod/pfd-dtos';
+import { hourMs, weekMs } from 'src/_lib/utils/date.util';
 import { currencyToIso4217 } from 'src/monobank/lib/utils';
 import { MonoBankApiClient } from 'src/monobank/services';
 
 const ratesFreshKey = 'currency:rates:fresh';
 const ratesStaleKey = 'currency:rates:stale';
-const freshTtlMs = 3_600_000; // 1 hour
-const staleTtlMs = 604_800_000; // 7 days
 
 @Injectable()
 export class CurrencyService {
@@ -71,8 +70,8 @@ export class CurrencyService {
       };
 
       await Promise.all([
-        this.cacheManager.set(ratesFreshKey, rates, freshTtlMs),
-        this.cacheManager.set(ratesStaleKey, rates, staleTtlMs),
+        this.cacheManager.set(ratesFreshKey, rates, hourMs),
+        this.cacheManager.set(ratesStaleKey, rates, weekMs),
       ]);
 
       return rates;

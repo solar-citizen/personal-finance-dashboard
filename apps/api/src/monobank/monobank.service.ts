@@ -15,7 +15,7 @@ import {
 import { formatDateToIso } from 'src/_lib/utils/date.util';
 import { decrypt, encrypt } from 'src/_lib/utils/encryption.util';
 
-import { ContextBuilderService } from '../ai/services/context-builder.service';
+import { ContextBuilderService } from '../ai/services/context-builder/context-builder.service';
 import { PrismaService } from '../db/prisma.service';
 import {
   calculateSyncDateRange,
@@ -105,7 +105,7 @@ export class MonoBankService {
       `Connected ${savedAccounts.length} accounts for user: ${userId}`,
     );
 
-    this.contextBuilder.clearCache(userId);
+    await this.contextBuilder.clearCache(userId);
 
     return savedAccounts;
   }
@@ -192,7 +192,7 @@ export class MonoBankService {
       data: { lastSyncedAt: dayjs().toDate() },
     });
 
-    this.contextBuilder.clearCache(userId);
+    await this.contextBuilder.clearCache(userId);
     this.logger.log(`Cleared context cache for user ${userId} after sync`);
 
     this.logger.log(
