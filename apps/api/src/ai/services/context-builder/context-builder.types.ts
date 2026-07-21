@@ -11,13 +11,19 @@ export type KnowledgeBaseEntry = {
   similarity: number;
 };
 
+export type CategoryBreakdown = {
+  category: string;
+  incoming: number;
+  outgoing: number;
+}[];
+
 export type SpendingAggregates = {
   byCurrency: { currency: Currency; total: number; count: number }[];
-  byCategory: {
-    category: string;
-    incoming: number;
-    outgoing: number;
-  }[];
+  byCategory: CategoryBreakdown;
+  topCategories: CategoryBreakdown;
+  otherCategoriesCount: number;
+  otherCategoriesOutgoing: number;
+  otherCategoriesIncoming: number;
   totalCashOut: number;
   totalCashIn: number;
 };
@@ -44,17 +50,22 @@ export type SystemPromptData = {
   exchangeRates: ExchangeRatesDto;
   aggregates: SpendingAggregates;
   matchingTransactions: MatchingTransactionsResult | null;
+  isFullCategoryBreakdownRequested: boolean;
 };
 
-export type CachedPrompt = {
-  prompt: string;
-  metadata: {
-    accountCount: number;
-    transactionCount: number;
-    categories: string[];
-    dateRange: {
-      from: string;
-      to: string;
-    };
-  };
+/**
+ * What gets stored in Redis. Holds the expensive-to-compute,
+ * message-INDEPENDENT data only. The rendered system prompt and
+ * message-dependent flags (RAG hits, category detection, etc.) are
+ * intentionally excluded — they must be recomputed on every request.
+ */
+export type CachedBundle = {
+  accounts: AccountSummaryDto[];
+  categories: CategorySummaryDto[];
+  sampleTransactions: TransactionWithRelationsDto[];
+  wasSampled: boolean;
+  totalTransactionCount: number;
+  actualDateRange: { from: string; to: string };
+  aggregates: SpendingAggregates;
+  exchangeRates: ExchangeRatesDto;
 };

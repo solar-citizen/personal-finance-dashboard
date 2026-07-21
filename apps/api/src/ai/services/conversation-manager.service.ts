@@ -413,4 +413,29 @@ export class ConversationManagerService {
       updatedAt: formatDateToIso(updatedAt),
     };
   }
+
+  async getLastFullBreakdownOffer(
+    conversationId: string,
+    userId: string,
+  ): Promise<boolean> {
+    const conversation = await this.prismaService.conversation.findFirst({
+      where: { id: conversationId, userId },
+      include: {
+        messages: {
+          where: { role: MessageRole.assistant },
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          select: { contextUsed: true },
+        },
+      },
+    });
+
+    const contextUsed = conversation?.messages[0]?.contextUsed;
+
+    if (!isJsonRecord(contextUsed)) {
+      return false;
+    }
+
+    return contextUsed.offeredFullBreakdown === true;
+  }
 }
