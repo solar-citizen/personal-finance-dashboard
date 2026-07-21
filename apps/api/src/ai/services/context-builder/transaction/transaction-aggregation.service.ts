@@ -208,7 +208,7 @@ export class TransactionAggregationService {
       totalsByCategory.set(categoryName, existing);
     }
 
-    const byCategory: CategoryBreakdown = Array.from(totalsByCategory.entries())
+    const byCategory: CategoryBreakdown = [...totalsByCategory.entries()]
       .map(([category, { incoming, outgoing }]) => ({
         category,
         incoming,
