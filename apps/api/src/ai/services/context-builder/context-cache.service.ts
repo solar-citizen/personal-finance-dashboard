@@ -9,6 +9,7 @@ import { CachedBundle } from './context-builder.types';
 import { assertIsCachedBundle } from './utils';
 
 const cacheKeyPrefix = 'context';
+const indexKeyPrefix = 'context:index';
 const cacheTtlMs = 600_000;
 const isExceedsDay = (diff: number) => diff > dayMs;
 const isExceedsWeek = (diff: number) => diff > weekMs;
@@ -39,6 +40,7 @@ export class ContextCacheService {
     try {
       const safeValue = this.toJsonSafe(value);
       await this.cacheManager.set(cacheKey, safeValue, cacheTtlMs);
+      await this.trackKey(cacheKey);
     } catch (err: unknown) {
       this.logger.warn(
         `Failed to cache context bundle for key ${cacheKey}: ${getErrorMessage(err)}`,
@@ -48,12 +50,43 @@ export class ContextCacheService {
 
   async clear(userId?: string): Promise<void> {
     if (userId) {
-      await this.cacheManager.del(`${cacheKeyPrefix}:${userId}`);
-      this.logger.log(`Cleared cache for user ${userId}`);
+      const indexKey = this.buildIndexKey(userId);
+      const trackedKeys =
+        (await this.cacheManager.get<string[]>(indexKey)) ?? [];
+
+      if (trackedKeys.length > 0) {
+        await this.cacheManager.mdel([...trackedKeys, indexKey]);
+      } else {
+        await this.cacheManager.del(indexKey);
+      }
+
+      this.logger.log(
+        `Cleared ${trackedKeys.length} cache entries for user ${userId}`,
+      );
     } else {
       await this.cacheManager.clear();
       this.logger.log('Cleared all cached prompts');
     }
+  }
+
+  private async trackKey(cacheKey: string): Promise<void> {
+    const [, userId] = cacheKey.split(':');
+
+    if (!userId) {
+      return;
+    }
+
+    const indexKey = this.buildIndexKey(userId);
+    const trackedKeys = (await this.cacheManager.get<string[]>(indexKey)) ?? [];
+
+    if (!trackedKeys.includes(cacheKey)) {
+      trackedKeys.push(cacheKey);
+      await this.cacheManager.set(indexKey, trackedKeys, cacheTtlMs);
+    }
+  }
+
+  private buildIndexKey(userId: string): string {
+    return `${indexKeyPrefix}:${userId}`;
   }
 
   private getBucketSize(diff: number): number {
