@@ -28,9 +28,9 @@ export default function FormInput<T extends FieldValues = FieldValues>({
   });
 
   const handleChange = ({
-    target: { value: targetValue },
+    target: { value },
   }: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(targetValue === '' ? null : targetValue);
+    onChange(value === '' ? null : value);
   };
 
   return (
