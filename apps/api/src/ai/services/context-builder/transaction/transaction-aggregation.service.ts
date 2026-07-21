@@ -10,11 +10,15 @@ import type { DateRange } from 'src/_lib/utils/date-range.util';
 
 import { PrismaService } from '../../../../db/prisma.service';
 import { getCategoryName } from '../../_lib/utils';
-import { SpendingAggregates } from '../context-builder.types';
+import type {
+  CategoryBreakdown,
+  SpendingAggregates,
+} from '../context-builder.types';
 
 // The cap on how many individual transaction rows we ever inline as
 // "examples" in the system prompt - not a cap on what we count or sum.
 const transactionsLimit = 500;
+const categoryTopN = 15;
 
 @Injectable()
 export class TransactionAggregationService {
@@ -204,7 +208,7 @@ export class TransactionAggregationService {
       totalsByCategory.set(categoryName, existing);
     }
 
-    const byCategory = Array.from(totalsByCategory.entries())
+    const byCategory: CategoryBreakdown = Array.from(totalsByCategory.entries())
       .map(([category, { incoming, outgoing }]) => ({
         category,
         incoming,
@@ -213,10 +217,36 @@ export class TransactionAggregationService {
       .sort(
         (a, b) =>
           Math.abs(b.incoming + b.outgoing) - Math.abs(a.incoming + a.outgoing),
-      )
-      .slice(0, 20);
+      );
 
-    return { byCurrency, byCategory, totalCashOut, totalCashIn };
+    const topCategories = [...byCategory]
+      .sort((a, b) => b.outgoing - a.outgoing)
+      .slice(0, categoryTopN);
+
+    const topCategoryNames = new Set(
+      topCategories.map(({ category }) => category),
+    );
+
+    const rest = byCategory.filter(
+      ({ category }) => !topCategoryNames.has(category),
+    );
+
+    return {
+      byCurrency,
+      byCategory,
+      topCategories,
+      otherCategoriesCount: rest.length,
+      otherCategoriesOutgoing: rest.reduce(
+        (total, { outgoing }) => total + outgoing,
+        0,
+      ),
+      otherCategoriesIncoming: rest.reduce(
+        (total, { incoming }) => total + incoming,
+        0,
+      ),
+      totalCashOut,
+      totalCashIn,
+    };
   }
 
   /**

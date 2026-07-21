@@ -14,7 +14,8 @@ import {
   languageInstructions,
   nonFinancialInstructions,
 } from '../_lib/system-prompt-commons';
-import {
+import type {
+  CategoryBreakdown,
   KnowledgeBaseEntry,
   MatchingTransactionsResult,
   SystemPromptData,
@@ -33,6 +34,7 @@ export class SystemPromptBuilderService {
     dateRange,
     aggregates,
     matchingTransactions,
+    isFullCategoryBreakdownRequested,
   }: SystemPromptData): string {
     const { usdToUah, eurToUah } = exchangeRates;
     const { from, to } = dateRange;
@@ -68,7 +70,16 @@ export class SystemPromptBuilderService {
 
     const totalInUah = formatted.reduce((sum, { amount }) => sum + amount, 0);
 
-    const { byCurrency, byCategory, totalCashOut, totalCashIn } = aggregates;
+    const {
+      byCurrency,
+      byCategory,
+      topCategories,
+      otherCategoriesCount,
+      otherCategoriesOutgoing,
+      otherCategoriesIncoming,
+      totalCashOut,
+      totalCashIn,
+    } = aggregates;
 
     const txSummary = byCurrency
       .map(
@@ -78,15 +89,32 @@ export class SystemPromptBuilderService {
       .join('\n');
 
     const categoryList = categories.map(({ name }) => name).join(', ');
-    const topSpending = byCategory
+    const topSpending = topCategories
       .map(
         ({ category, incoming, outgoing }) =>
           `- ${category}: Incoming ${formatValue(incoming)}, Outgoing ${formatValue(outgoing)}`,
       )
       .join('\n');
+
+    const otherCategoriesNote =
+      otherCategoriesCount > 0
+        ? `\n- Other categories (${otherCategoriesCount}, aggregate only): Outgoing ${formatValue(otherCategoriesOutgoing)}, Incoming ${formatValue(otherCategoriesIncoming)}.
+          A full per-category breakdown of these ${otherCategoriesCount} categories CAN be fetched if the user asks for it (e.g. "show all categories" / "покажи всі категорії").`
+        : '';
+
     const knowledgeSection = this.formatKnowledgeSection(knowledgeBase);
     const matchingSection =
       this.formatMatchingTransactionsSection(matchingTransactions);
+
+    const fullCategoryBreakdownSection =
+      this.formatFullCategoryBreakdownSection(
+        byCategory,
+        isFullCategoryBreakdownRequested,
+      );
+
+    const topSpendingBlock = isFullCategoryBreakdownRequested
+      ? ''
+      : this.buildTopSpendingBlock(topSpending, otherCategoriesNote);
 
     return `
       === IDENTITY ===
@@ -128,6 +156,7 @@ export class SystemPromptBuilderService {
           : ''
       }
       ${matchingSection}
+      ${fullCategoryBreakdownSection}
 
       Transactions by Currency:
       ${txSummary || 'No transactions'}
@@ -139,7 +168,7 @@ export class SystemPromptBuilderService {
       ${allAccountsList}
 
       Top Spending (${dateRangeLabel}):
-      ${topSpending || 'No data'}
+      ${topSpendingBlock || (isFullCategoryBreakdownRequested ? 'See FULL CATEGORY BREAKDOWN above.' : 'No data')}
 
       Categories: ${categoryList}
       ${knowledgeSection}
@@ -183,6 +212,13 @@ export class SystemPromptBuilderService {
       9. NEVER attempt to calculate total sums manually from the transaction list.
       10. ALWAYS use the exact \`Total Cash Out\` and \`Total Cash In\` values provided in the FINANCIAL SUMMARY above.
       11. The "Cash Out" metric already includes all actual spending and outgoing money transfers.
+
+      12. "Other categories" detail: if a "FULL CATEGORY BREAKDOWN" section is present above, use it — it's the
+      complete, per-category list. If that section is absent, you only have an AGGREGATE figure
+      (otherCategoriesOutgoing / otherCategoriesIncoming) for everything beyond the shown Top-N. Never map names from
+      the "Categories:" list onto that sum as if they explain it, and never guess a per-category split — say so directly, 
+      and offer to fetch the full list, e.g.: "For the other N categories I only have a combined total of X UAH right 
+      now — want me to pull the individual breakdown for those too?"
 
       === EXAMPLES ===
       ❌ BAD: "I don't have currency data for transactions"
@@ -245,5 +281,36 @@ export class SystemPromptBuilderService {
       : `This is the COMPLETE list for "${categoryName}" in this period - all ${transactions.length} matching transactions, none omitted.`;
 
     return `\n\n=== EXACT MATCHES: ${categoryName} ===\n${completenessNote}\n${lines}\n`;
+  }
+
+  private buildTopSpendingBlock(
+    topSpending: string,
+    otherCategoriesNote: string,
+  ): string {
+    if (topSpending) {
+      return `${topSpending}${otherCategoriesNote}`;
+    }
+
+    return otherCategoriesNote
+      ? `No top-category data.${otherCategoriesNote}`
+      : 'No data';
+  }
+
+  private formatFullCategoryBreakdownSection(
+    byCategory: CategoryBreakdown,
+    requested: boolean,
+  ): string {
+    if (!requested) {
+      return '';
+    }
+
+    const lines = byCategory
+      .map(
+        ({ category, incoming, outgoing }) =>
+          `- ${category}: Incoming ${formatValue(incoming)}, Outgoing ${formatValue(outgoing)}`,
+      )
+      .join('\n');
+
+    return `\n\n=== FULL CATEGORY BREAKDOWN (all ${byCategory.length} categories) ===\nThis is the COMPLETE list, none omitted.\n${lines}\n`;
   }
 }
