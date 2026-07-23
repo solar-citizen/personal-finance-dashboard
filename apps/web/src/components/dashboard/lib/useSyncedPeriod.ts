@@ -6,10 +6,8 @@ export function useSyncedPeriod(globalPeriod: Period) {
   const [period, setPeriod] = useState<Period>(globalPeriod);
 
   if (globalPeriod !== syncedTo) {
-    startTransition(() => {
-      setSyncedTo(globalPeriod);
-      setPeriod(globalPeriod);
-    });
+    setSyncedTo(globalPeriod);
+    setPeriod(globalPeriod);
   }
 
   const setTransitionPeriod = (next: Period) => {

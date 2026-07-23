@@ -37,7 +37,6 @@ type Props = {
 
 export default function CashFlowNetWorthChart({ globalPeriod }: Props) {
   const { period, setPeriod, data, isLoading, error } = useCashFlowByPeriod(globalPeriod);
-
   return (
     <Card>
       <CardHeader>
