@@ -71,64 +71,86 @@ export class ContextBuilderService {
       userId,
       effectiveRange,
     );
-    const cached = await this.contextCacheService.get(cacheKey);
 
-    if (cached) {
-      this.logger.log(`Using cached context for user ${userId}`);
+    let cachedBundle = await this.contextCacheService.get(cacheKey);
 
-      return {
-        systemPrompt: cached.prompt,
-        metadata: {
-          ...cached.metadata,
-          knowledgeBaseHits: 0,
-          cached: true,
-          minimal: false,
-        },
+    if (!cachedBundle) {
+      const [accounts, categories, allTransactions, exchangeRates] =
+        await Promise.all([
+          this.transactionFetchService.getUserAccounts(userId),
+          this.transactionFetchService.getCategories(),
+          this.transactionFetchService.getAllTransactionsInRange(
+            userId,
+            effectiveRange,
+          ),
+          this.currencyService.getExchangeRates(),
+        ]);
+
+      const aggregates =
+        await this.transactionAggregationService.getSpendingAggregates(
+          allTransactions,
+          effectiveRange,
+          accounts,
+        );
+
+      const { transactions: sampleTransactions, wasSampled } =
+        this.transactionAggregationService.sampleTransactionsForDisplay(
+          allTransactions,
+        );
+
+      cachedBundle = {
+        accounts,
+        categories,
+        sampleTransactions,
+        wasSampled,
+        totalTransactionCount: allTransactions.length,
+        actualDateRange: getDateRange(allTransactions),
+        aggregates,
+        exchangeRates,
       };
+
+      await this.contextCacheService.set(cacheKey, cachedBundle);
+      this.logger.log(`Cached context bundle for user ${userId}`);
+    } else {
+      this.logger.log(`Using cached context bundle for user ${userId}`);
     }
 
-    const [
+    const {
       accounts,
+      actualDateRange,
+      aggregates,
       categories,
-      allTransactions,
-      relevantKnowledge,
       exchangeRates,
-    ] = await Promise.all([
-      this.transactionFetchService.getUserAccounts(userId),
-      this.transactionFetchService.getCategories(),
-      this.transactionFetchService.getAllTransactionsInRange(
-        userId,
-        effectiveRange,
-      ),
-      userMessage
-        ? this.knowledgeBaseService.findRelevantKnowledge(userMessage)
-        : Promise.resolve([]),
-      this.currencyService.getExchangeRates(),
-    ]);
+      sampleTransactions,
+      totalTransactionCount,
+      wasSampled,
+    } = cachedBundle;
 
-    // Aggregates (money totals) and the sample (display examples) both
-    // read from the SAME full array, so they can never drift apart.
-    const aggregates =
-      await this.transactionAggregationService.getSpendingAggregates(
-        allTransactions,
-        effectiveRange,
-        accounts,
-      );
+    // --- Everything below MUST run on every call, cache hit or miss ---
+    const relevantKnowledge = userMessage
+      ? await this.knowledgeBaseService.findRelevantKnowledge(userMessage)
+      : [];
 
-    const { transactions: sampleTransactions, wasSampled } =
-      this.transactionAggregationService.sampleTransactionsForDisplay(
-        allTransactions,
-      );
-
-    // If this looks like a narrow "list my X transactions" request, fetch
-    // the exact, complete set for that category instead of relying on the
-    // general sample - see TransactionSearchService for the reasoning.
     const requestedCategory = userMessage
       ? this.transactionSearchService.detectRequestedCategory(
           userMessage,
           categories,
         )
       : null;
+
+    const priorOfferedBreakdown = conversationId
+      ? await this.conversationManagerService.getLastFullBreakdownOffer(
+          conversationId,
+          userId,
+        )
+      : false;
+
+    const isFullCategoryBreakdownRequested = userMessage
+      ? this.transactionSearchService.detectFullCategoryBreakdownRequest(
+          userMessage,
+          priorOfferedBreakdown,
+        )
+      : false;
 
     const matchingTransactions = requestedCategory
       ? await this.transactionSearchService.findMatchingTransactions(
@@ -137,12 +159,6 @@ export class ContextBuilderService {
           requestedCategory,
         )
       : null;
-
-    const totalTransactionCount = allTransactions.length;
-    // The true span of transactions actually found - computed from the
-    // full array, so it can't be narrower than reality the way deriving
-    // it from the display sample used to be.
-    const actualDateRange = getDateRange(allTransactions);
 
     const systemPrompt = this.systemPromptBuilderService.createSystemPrompt({
       accounts,
@@ -155,7 +171,11 @@ export class ContextBuilderService {
       exchangeRates,
       aggregates,
       matchingTransactions,
+      isFullCategoryBreakdownRequested,
     });
+
+    const willOfferFullBreakdown =
+      !isFullCategoryBreakdownRequested && aggregates.otherCategoriesCount > 0;
 
     const metadata = {
       accountCount: accounts.length,
@@ -168,22 +188,12 @@ export class ContextBuilderService {
         from: formatDateToIso(effectiveRange.from),
         to: formatDateToIso(effectiveRange.to),
       },
+      offeredFullBreakdown: willOfferFullBreakdown,
     };
-
-    await this.contextCacheService.set(cacheKey, {
-      prompt: systemPrompt,
-      metadata,
-    });
-
-    this.logger.log(`Cached context for user ${userId}`);
 
     return {
       systemPrompt,
-      metadata: {
-        ...metadata,
-        knowledgeBaseHits: relevantKnowledge.length,
-        cached: false,
-      },
+      metadata: { ...metadata, cached: !!cachedBundle },
     };
   }
 

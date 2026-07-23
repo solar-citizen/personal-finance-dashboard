@@ -72,9 +72,21 @@ export const ExpenseCategoryResponseSchema = z.object({
 });
 
 export const GetTransactionsQuerySchema = z.object({
-  limit: z.coerce.number().int().positive().max(100).default(10),
+  limit: z.coerce.number().int().positive().max(10000).default(10000),
 });
 
 export const GetExpensesQuerySchema = z.object({
+  period: z.enum(periods).default('month'),
+});
+
+export const CashFlowPointResponseSchema = z.object({
+  date: z.string(),
+  label: z.string(),
+  income: z.number(),
+  expense: z.number(),
+  netBalance: z.number(),
+});
+
+export const GetCashFlowQuerySchema = z.object({
   period: z.enum(periods).default('month'),
 });

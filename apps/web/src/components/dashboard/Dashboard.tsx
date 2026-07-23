@@ -1,17 +1,53 @@
-import AccountsSummary from './AccountsSummary';
-import ExchangeRates from './ExchangeRates';
-import HighestExpenses from './HighestExpenses';
-import LatestTransactions from './LatestTransactions';
+'use client';
+
+import type { Period } from '@pfd/shared';
+import { useState } from 'react';
+
+import {
+  useGetAccounts,
+  useGetExchangeRates,
+  useGetLatestTransactions,
+} from '#src/_generated/api/pfd-components';
+import PeriodSwitcher from '#src/components/dashboard/PeriodSwitcher';
+
+import CashFlowNetWorthChart from './charts/CashFlowNetWorthChart';
+import ExpenseCategoryDonut from './charts/ExpenseCategoryDonut';
+import AccountsSummary from './summary/AccountsSummary';
+import ExchangeRates from './summary/ExchangeRates';
+import HighestExpenses from './summary/HighestExpenses';
+import LatestTransactions from './summary/LatestTransactions';
 
 export default function Dashboard() {
+  const [globalPeriod, setGlobalPeriod] = useState<Period>('month');
+
+  const { data: accounts, isLoading: accountsLoading, error: accountsError } = useGetAccounts({});
+  const { data: rates, isLoading: ratesLoading, error: ratesError } = useGetExchangeRates({});
+  const {
+    data: latestTransactions,
+    isLoading: txLoading,
+    error: txError,
+  } = useGetLatestTransactions({ queryParams: { limit: 10 } });
+
   return (
-    <div className={'p-6'}>
-      <ExchangeRates />
-      <h1 className={'text-2xl font-bold mb-6 mt-4'}>{'Dashboard'}</h1>
-      <div className={'grid grid-cols-1 md:grid-cols-2 gap-6'}>
-        <AccountsSummary />
-        <HighestExpenses />
-        <LatestTransactions />
+    <div className={'p-6 space-y-6'}>
+      <ExchangeRates data={rates} isLoading={ratesLoading} error={ratesError} />
+
+      <div className={'flex justify-between items-center'}>
+        <h1 className={'text-3xl font-bold tracking-tight'}>{'Dashboard'}</h1>
+        <PeriodSwitcher value={globalPeriod} onChange={setGlobalPeriod} />
+      </div>
+
+      {/* Charts */}
+      <div className={'grid grid-cols-1 lg:grid-cols-2 gap-6'}>
+        <CashFlowNetWorthChart globalPeriod={globalPeriod} />
+        <ExpenseCategoryDonut globalPeriod={globalPeriod} />
+      </div>
+
+      {/* Summary Cards & Lists */}
+      <div className={'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'}>
+        <AccountsSummary data={accounts} isLoading={accountsLoading} error={accountsError} />
+        <HighestExpenses globalPeriod={globalPeriod} />
+        <LatestTransactions data={latestTransactions} isLoading={txLoading} error={txError} />
       </div>
     </div>
   );

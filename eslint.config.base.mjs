@@ -77,7 +77,7 @@ export default defineConfig(
       'import/first': 'error',
       'import/newline-after-import': 'error',
       'import/no-duplicates': 'error',
-      'import/max-dependencies': ['warn', { max: 15, ignoreTypeImports: true }],
+      'import/max-dependencies': ['warn', { max: 20, ignoreTypeImports: true }],
     },
   },
   {

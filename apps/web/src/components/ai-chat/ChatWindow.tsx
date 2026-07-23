@@ -1,8 +1,9 @@
 import { isRecord, type MessageRole, type StreamResponse } from '@pfd/shared';
+import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 
-import { useGetConversation } from '#src/_generated/api/pfd-components';
+import { getConversationQuery, useGetConversation } from '#src/_generated/api/pfd-components';
 import QueryState from '#src/components/common/QueryState';
 import { cn } from '#src/lib/utils';
 
@@ -82,8 +83,10 @@ export default function ChatWindow({ isOpen, onHide }: ChatWindowProps) {
   const [isStreaming, setIsStreaming] = useState(false);
   const [conversationId, setConversationId] = useState<string | undefined>(undefined);
   const [showHistory, setShowHistory] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const [pendingConversationId, setPendingConversationId] = useState<string | undefined>(undefined);
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -92,6 +95,7 @@ export default function ChatWindow({ isOpen, onHide }: ChatWindowProps) {
   const {
     data: selectedConversation,
     isLoading: isConversationLoading,
+    isFetching: isConversationFetching,
     error: conversationError,
   } = useGetConversation(
     {
@@ -106,7 +110,7 @@ export default function ChatWindow({ isOpen, onHide }: ChatWindowProps) {
   );
 
   useEffect(() => {
-    if (!selectedConversation || !pendingConversationId) {
+    if (!selectedConversation || !pendingConversationId || isConversationFetching) {
       return;
     }
 
@@ -117,7 +121,7 @@ export default function ChatWindow({ isOpen, onHide }: ChatWindowProps) {
         .map(({ role, content }) => ({ id: crypto.randomUUID(), role, content })),
     );
     setPendingConversationId(undefined);
-  }, [selectedConversation, pendingConversationId]);
+  }, [selectedConversation, pendingConversationId, isConversationFetching]);
 
   const onSelectConversation = (id: string) => {
     setPendingConversationId(id);
@@ -220,6 +224,12 @@ export default function ChatWindow({ isOpen, onHide }: ChatWindowProps) {
       ]);
     } finally {
       setIsStreaming(false);
+
+      if (conversationId) {
+        void queryClient.invalidateQueries({
+          queryKey: getConversationQuery({ pathParams: { id: conversationId } }).queryKey,
+        });
+      }
     }
   }
 

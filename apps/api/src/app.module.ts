@@ -6,6 +6,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { ZodValidationPipe } from 'nestjs-zod';
 
 import { PfdThrottlerGuard } from './_lib/guards/throttler.guard';
+import { minuteMs } from './_lib/utils';
 import { AiModule } from './ai/ai.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
@@ -19,8 +20,8 @@ import { MonoBankModule } from './monobank/monobank.module';
   imports: [
     ThrottlerModule.forRoot([
       {
-        ttl: 60_000, // 1 minute in ms
-        limit: 100, // requests per window
+        ttl: minuteMs,
+        limit: 100, // per window
       },
     ]),
     CacheModule.registerAsync({

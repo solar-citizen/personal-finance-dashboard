@@ -8,7 +8,7 @@ import type { Response } from 'express';
 import type { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import type { AuthResponseDto } from 'src/_generated/zod/pfd-dtos';
-import { weekMs } from 'src/_lib/utils/date.util';
+import { weekMs } from 'src/_lib/utils';
 
 import { cookieConfig } from './cookie.config';
 

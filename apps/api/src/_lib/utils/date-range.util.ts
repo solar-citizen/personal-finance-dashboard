@@ -23,6 +23,7 @@ const unitRoots: UnitRoot[] = [
   { regex: /(\d+)\s*week/i, days: 7 },
   { regex: /(\d+)\s*month/i, days: 30 },
   { regex: /(\d+)\s*year/i, days: 365 },
+  { regex: /(\d+)\s*yrs?\b/i, days: 365 },
 ];
 
 const relativeSingleUnitPatterns: UnitRoot[] = [
@@ -38,6 +39,7 @@ const relativeSingleUnitPatterns: UnitRoot[] = [
   { regex: /\blast\s+month\b/i, days: 30 },
   { regex: /\blast\s+week\b/i, days: 7 },
   { regex: /\blast\s+day\b/i, days: 1 },
+  { regex: /\blast\s+yrs?\b/i, days: 365 },
 ];
 
 function tryChrono(message: string, referenceDate: Date): DateRange | null {

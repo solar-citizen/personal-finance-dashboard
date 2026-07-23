@@ -19,7 +19,7 @@ export default function FormInput<T extends FieldValues = FieldValues>({
 }: Props<T>) {
   const { control } = useFormContext<T>();
   const {
-    field: { ref, onBlur, onChange, value },
+    field: { ref, onBlur, onChange, value: fieldValue },
     fieldState,
   } = useController<T>({
     name,
@@ -27,9 +27,7 @@ export default function FormInput<T extends FieldValues = FieldValues>({
     rules: deps ? { deps } : undefined,
   });
 
-  const handleChange = ({
-    target: { value },
-  }: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = ({ target: { value } }: React.ChangeEvent<HTMLInputElement>) => {
     onChange(value === '' ? null : value);
   };
 
@@ -40,7 +38,7 @@ export default function FormInput<T extends FieldValues = FieldValues>({
       name={name}
       onBlur={onBlur}
       onChange={handleChange}
-      value={value ?? ''}
+      value={fieldValue ?? ''}
       tooltip={tooltip}
       error={fieldState.error?.message}
     />

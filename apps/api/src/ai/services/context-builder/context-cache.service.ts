@@ -1,12 +1,14 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { Cache } from 'cache-manager';
-import { dayMs, hourMs, weekMs } from 'src/_lib/utils/date.util';
+import { dayMs, getErrorMessage, hourMs, weekMs } from 'src/_lib/utils';
 import type { DateRange } from 'src/_lib/utils/date-range.util';
 
-import { CachedPrompt } from './context-builder.types';
+import { CachedBundle } from './context-builder.types';
+import { assertIsCachedBundle } from './utils';
 
 const cacheKeyPrefix = 'context';
+const indexKeyPrefix = 'context:index';
 const cacheTtlMs = 600_000;
 const isExceedsDay = (diff: number) => diff > dayMs;
 const isExceedsWeek = (diff: number) => diff > weekMs;
@@ -29,22 +31,61 @@ export class ContextCacheService {
     return `${cacheKeyPrefix}:${userId}:${bucketedFrom}:${bucketedTo}`;
   }
 
-  async get(cacheKey: string): Promise<CachedPrompt | undefined> {
-    return await this.cacheManager.get<CachedPrompt>(cacheKey);
+  async get(cacheKey: string): Promise<CachedBundle | undefined> {
+    return await this.cacheManager.get<CachedBundle>(cacheKey);
   }
 
-  async set(cacheKey: string, value: CachedPrompt): Promise<void> {
-    await this.cacheManager.set(cacheKey, value, cacheTtlMs);
+  async set(cacheKey: string, value: CachedBundle): Promise<void> {
+    try {
+      const safeValue = this.toJsonSafe(value);
+      await this.cacheManager.set(cacheKey, safeValue, cacheTtlMs);
+      await this.trackKey(cacheKey);
+    } catch (err: unknown) {
+      this.logger.warn(
+        `Failed to cache context bundle for key ${cacheKey}: ${getErrorMessage(err)}`,
+      );
+    }
   }
 
   async clear(userId?: string): Promise<void> {
     if (userId) {
-      await this.cacheManager.del(`${cacheKeyPrefix}:${userId}`);
-      this.logger.log(`Cleared cache for user ${userId}`);
+      const indexKey = this.buildIndexKey(userId);
+      const trackedKeys =
+        (await this.cacheManager.get<string[]>(indexKey)) ?? [];
+
+      if (trackedKeys.length > 0) {
+        await this.cacheManager.mdel([...trackedKeys, indexKey]);
+      } else {
+        await this.cacheManager.del(indexKey);
+      }
+
+      this.logger.log(
+        `Cleared ${trackedKeys.length} cache entries for user ${userId}`,
+      );
     } else {
       await this.cacheManager.clear();
       this.logger.log('Cleared all cached prompts');
     }
+  }
+
+  private async trackKey(cacheKey: string): Promise<void> {
+    const [, userId] = cacheKey.split(':');
+
+    if (!userId) {
+      return;
+    }
+
+    const indexKey = this.buildIndexKey(userId);
+    const trackedKeys = (await this.cacheManager.get<string[]>(indexKey)) ?? [];
+
+    if (!trackedKeys.includes(cacheKey)) {
+      trackedKeys.push(cacheKey);
+      await this.cacheManager.set(indexKey, trackedKeys, cacheTtlMs);
+    }
+  }
+
+  private buildIndexKey(userId: string): string {
+    return `${indexKeyPrefix}:${userId}`;
   }
 
   private getBucketSize(diff: number): number {
@@ -61,5 +102,16 @@ export class ContextCacheService {
 
   private bucketTimestamp(time: number, bucketSize: number): number {
     return Math.floor(time / bucketSize) * bucketSize;
+  }
+
+  private toJsonSafe(value: CachedBundle): CachedBundle {
+    const json = JSON.stringify(value, (_key, value: unknown) =>
+      typeof value === 'bigint' ? value.toString() : value,
+    );
+
+    const parsed: unknown = JSON.parse(json);
+    assertIsCachedBundle(parsed);
+
+    return parsed;
   }
 }

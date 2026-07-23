@@ -4,21 +4,19 @@ import type { DateRange } from 'src/_lib/utils/date-range.util';
 
 import { PrismaService } from '../../../../db/prisma.service';
 import { MatchingTransactionsResult } from '../context-builder.types';
+import {
+  breakdownConfirmationPattern,
+  fullCategoryBreakdownPattern,
+  listRequestPattern,
+} from './patterns';
 
-// Deliberately generous - this is a targeted, filtered query (usually one
-// category within the period), so it should rarely need truncating at
-// all. If it does, `truncated: true` is surfaced honestly in the prompt
-// rather than hidden, unlike the old sampling behavior.
+/**
+ * Deliberately generous - this is a targeted, filtered query (usually one
+ * category within the period), so it should rarely need truncating at
+ * all. If it does, `truncated: true` is surfaced honestly in the prompt
+ * rather than hidden.
+ */
 const maxMatchingTransactions = 300;
-
-// Keyword heuristic for "this looks like a request for a specific/full
-// list of transactions" as opposed to a broad summary question. This is
-// deliberately conservative and cheap - it doesn't need to be a full NLU
-// pass. False negatives just mean the user gets the existing
-// sampled-example behavior (no worse than before this feature existed).
-// False positives just cost one extra, cheap, filtered DB query.
-const listRequestPattern =
-  /\b(list|show (me )?(all|every)|which transactions|find (all|every)|усі транзакції|список транзакцій|покажи (всі|усі)|скільки .* транзакцій)\b/i;
 
 @Injectable()
 export class TransactionSearchService {
@@ -51,6 +49,20 @@ export class TransactionSearchService {
     );
 
     return matched?.name ?? null;
+  }
+
+  detectFullCategoryBreakdownRequest(
+    userMessage: string,
+    priorTurnOfferedBreakdown = false,
+  ): boolean {
+    if (fullCategoryBreakdownPattern.test(userMessage)) {
+      return true;
+    }
+
+    return (
+      priorTurnOfferedBreakdown &&
+      breakdownConfirmationPattern.test(userMessage.trim())
+    );
   }
 
   /**

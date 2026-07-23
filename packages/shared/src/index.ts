@@ -9,7 +9,7 @@ export const accountTypeNames: Record<string, string> = {
   madeInUkraine: 'Національний Кешбек',
 };
 
-export const periods = ['day', 'week', 'month', 'year'] as const;
+export const periods = ['day', 'week', 'month', 'year', '5years'] as const;
 export type Period = (typeof periods)[number];
 
 export const messageRoles = ['system', 'user', 'assistant'] as const;
