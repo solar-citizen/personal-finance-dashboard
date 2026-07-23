@@ -1,6 +1,6 @@
 {
   "name": "personal-finance-dashboard",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "author": "solar_citizen",
   "private": true,
   "workspaces": [
@@ -12,7 +12,7 @@
   "scripts": {
     "dev:web": "cd apps/web && bun dev",
     "dev:api": "cd apps/api && bun start:dev",
-    "dev": "bun run dev:web & bun run dev:api",
+    "dev": "bun run codegen & bun run dev:web & bun run dev:api",
     "build:web": "cd apps/web && bun run build",
     "build:api": "cd apps/api && bun run build",
     "build": "bun run build:web && bun run build:api",
@@ -31,7 +31,6 @@
   },
   "dependencies": {
     "axios": "^1.18.1",
-    "clsx": "^2.1.1",
     "dayjs": "^1.11.21",
     "lodash-es": "^4.18.1",
     "tailwind-merge": "^3.6.0",

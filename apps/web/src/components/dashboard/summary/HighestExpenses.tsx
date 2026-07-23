@@ -1,28 +1,24 @@
 'use client';
 
 import { type Period, periods } from '@pfd/shared';
-import { useState } from 'react';
 
-import { useGetHighestExpenses } from '#src/_generated/api/pfd-components';
 import QueryState from '#src/components/common/QueryState';
 import { SkeletonList } from '#src/components/common/Skeleton';
 
+import { useExpensesByPeriod } from '../lib/useExpensesByPeriod';
+import { periodLabels } from '../lib/utils';
 import { rowClassName } from './AccountsSummary';
 
-const periodLabels: Record<Period, string> = {
-  day: 'Day',
-  week: 'Week',
-  month: 'Month',
-  year: 'Year',
-};
-
 function isPeriod(value: string): value is Period {
-  return periods.some(p => p === value);
+  return periods.some(period => period === value);
 }
 
-export default function HighestExpenses() {
-  const [period, setPeriod] = useState<Period>('month');
-  const { data, isLoading, error } = useGetHighestExpenses({ queryParams: { period } });
+type HighestExpensesProps = {
+  globalPeriod: Period;
+};
+
+export default function HighestExpenses({ globalPeriod }: HighestExpensesProps) {
+  const { period, setPeriod, data, isLoading, error } = useExpensesByPeriod(globalPeriod);
 
   const handlePeriodChange = ({ target: { value } }: React.ChangeEvent<HTMLSelectElement>) => {
     if (isPeriod(value)) {

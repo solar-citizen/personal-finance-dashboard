@@ -148,7 +148,7 @@ export class TransactionAggregationService {
       totalsByCurrency.set(currency, existing);
     }
 
-    const byCurrency = Array.from(totalsByCurrency.entries()).map(
+    const byCurrency = [...totalsByCurrency.entries()].map(
       ([currency, { total, count }]) => ({ currency, total, count }),
     );
 

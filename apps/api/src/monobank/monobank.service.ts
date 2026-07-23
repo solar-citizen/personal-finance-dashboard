@@ -3,6 +3,7 @@ import { type Period } from '@pfd/shared';
 import dayjs from 'dayjs';
 import { Currency } from 'src/_generated/prisma-client/enums';
 import {
+  CashFlowPointResponseDto,
   ConnectMonoBankDto,
   ExpenseCategoryResponseDto,
   MonoBankAccountResponseDto,
@@ -249,7 +250,10 @@ export class MonoBankService {
     userId: string,
     period: Period,
   ): Promise<ExpenseCategoryResponseDto[]> {
-    const from = dayjs().subtract(1, period).toDate();
+    const from =
+      period === '5years'
+        ? dayjs().subtract(5, 'year').toDate()
+        : dayjs().subtract(1, period).toDate();
 
     const transactions = await this.prismaService.transaction.findMany({
       where: {
@@ -294,5 +298,151 @@ export class MonoBankService {
     return Object.values(expensesByCategory)
       .filter((val): val is ExpenseCategoryResponseDto => val !== undefined)
       .sort((a, b) => b.amount - a.amount);
+  }
+
+  async getCashFlowTrend(
+    userId: string,
+    period: Period,
+  ): Promise<CashFlowPointResponseDto[]> {
+    const transactions = await this.prismaService.transaction.findMany({
+      where: { account: { userId } },
+      orderBy: { time: 'asc' },
+    });
+
+    const currentYear = dayjs().year();
+    const timelineMap = new Map<
+      string,
+      {
+        date: string;
+        label: string;
+        income: number;
+        expense: number;
+        netBalance: number;
+      }
+    >();
+
+    if (period === 'year') {
+      for (let q = 1; q <= 4; q++) {
+        const key = `${currentYear}-Q${q}`;
+        timelineMap.set(key, {
+          date: key,
+          label: `${currentYear} Q${q}`,
+          income: 0,
+          expense: 0,
+          netBalance: 0,
+        });
+      }
+    } else if (period === '5years') {
+      for (let i = 4; i >= 0; i--) {
+        const y = currentYear - i;
+        const key = String(y);
+        timelineMap.set(key, {
+          date: key,
+          label: String(y),
+          income: 0,
+          expense: 0,
+          netBalance: 0,
+        });
+      }
+    }
+
+    let initialCarryNet = 0;
+    let runningNet = 0;
+
+    transactions.forEach((tx) => {
+      const time = dayjs(tx.time);
+      const amount = Number(tx.amount) / 100;
+      let key: string;
+      let label: string;
+
+      if (period === '5years') {
+        key = time.format('YYYY');
+        label = time.format('YYYY');
+      } else if (period === 'year') {
+        const quarter = Math.ceil((time.month() + 1) / 3);
+        key = `${time.format('YYYY')}-Q${quarter}`;
+        label = `${time.format('YYYY')} Q${quarter}`;
+      } else {
+        key = time.format('YYYY-MM-DD');
+        label = time.format('YYYY-MM-DD');
+      }
+
+      runningNet += amount;
+
+      if (period === 'year' || period === '5years') {
+        const existing = timelineMap.get(key);
+
+        if (existing) {
+          if (amount > 0) {
+            existing.income += amount;
+          } else {
+            existing.expense += Math.abs(amount);
+          }
+          existing.netBalance = runningNet;
+        } else {
+          initialCarryNet = runningNet;
+        }
+      } else {
+        let existing = timelineMap.get(key);
+
+        if (!existing) {
+          existing = {
+            date: key,
+            label,
+            income: 0,
+            expense: 0,
+            netBalance: 0,
+          };
+          timelineMap.set(key, existing);
+        }
+
+        if (amount > 0) {
+          existing.income += amount;
+        } else {
+          existing.expense += Math.abs(amount);
+        }
+        existing.netBalance = runningNet;
+      }
+    });
+
+    let carryNet = initialCarryNet;
+    const chartData = [...timelineMap.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([, item]) => {
+        if (item.netBalance === 0 && item.income === 0 && item.expense === 0) {
+          item.netBalance = carryNet;
+        } else {
+          carryNet = item.netBalance;
+        }
+
+        return item;
+      });
+
+    const now = dayjs();
+    let cutoff: dayjs.Dayjs;
+
+    switch (period) {
+      case 'day':
+        cutoff = now.subtract(1, 'day').startOf('day');
+        break;
+      case 'week':
+        cutoff = now.subtract(7, 'day').startOf('day');
+        break;
+      case 'month':
+        cutoff = now.subtract(30, 'day').startOf('day');
+        break;
+      case 'year':
+        cutoff = now.startOf('year');
+        break;
+      case '5years':
+        cutoff = now.subtract(5, 'year').startOf('day');
+        break;
+    }
+
+    return period === 'year' || period === '5years'
+      ? chartData
+      : chartData.filter(
+          ({ date }) => dayjs(date).valueOf() >= cutoff.valueOf(),
+        );
   }
 }

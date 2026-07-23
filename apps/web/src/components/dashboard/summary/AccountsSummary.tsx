@@ -2,7 +2,6 @@
 
 import { accountTypeNames } from '@pfd/shared';
 
-import { useGetAccounts } from '#src/_generated/api/pfd-components';
 import { MonoBankAccountResponseDto } from '#src/_generated/api/pfd-types';
 import QueryState from '#src/components/common/QueryState';
 import { SkeletonList } from '#src/components/common/Skeleton';
@@ -41,9 +40,13 @@ function AccountsList({ accounts }: AccountsListProps) {
   );
 }
 
-export default function AccountsSummary() {
-  const { data, isLoading, error } = useGetAccounts({});
+type Props = {
+  data?: MonoBankAccountResponseDto[];
+  isLoading: boolean;
+  error: unknown;
+};
 
+export default function AccountsSummary({ data, isLoading, error }: Props) {
   return (
     <section className={'p-4 border rounded-lg shadow-sm max-h-80 h-full overflow-auto'}>
       <h2 className={'text-xl font-bold mb-4'}>{'Accounts/Cards'}</h2>

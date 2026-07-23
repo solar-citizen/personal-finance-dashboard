@@ -7,7 +7,7 @@ import {
   ExchangeRatesDto,
   MonoExchangeRateDto,
 } from 'src/_generated/zod/pfd-dtos';
-import { hourMs, weekMs } from 'src/_lib/utils/date.util';
+import { hourMs, weekMs } from 'src/_lib/utils';
 import { currencyToIso4217 } from 'src/monobank/lib/utils';
 import { MonoBankApiClient } from 'src/monobank/services';
 

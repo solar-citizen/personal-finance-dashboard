@@ -1,6 +1,5 @@
 'use client';
 
-import { useGetExchangeRates } from '#src/_generated/api/pfd-components';
 import QueryState from '#src/components/common/QueryState';
 import { SkeletonList } from '#src/components/common/Skeleton';
 
@@ -9,9 +8,13 @@ const currencyPairLabels: Record<string, string> = {
   eurToUah: 'EUR/UAH',
 };
 
-export default function ExchangeRates() {
-  const { data, isLoading, error } = useGetExchangeRates({});
+type Props = {
+  data?: Record<string, number>;
+  isLoading: boolean;
+  error: unknown;
+};
 
+export default function ExchangeRates({ data, isLoading, error }: Props) {
   return (
     <section
       className={

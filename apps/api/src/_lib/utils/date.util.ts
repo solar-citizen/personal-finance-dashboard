@@ -10,6 +10,7 @@ type TimeEntry = {
   time: Date | string;
 };
 
+export const minuteMs = 60_000;
 export const hourMs = 3_600_000;
 export const dayMs = 86_400_000;
 export const weekMs = 604_800_000;
