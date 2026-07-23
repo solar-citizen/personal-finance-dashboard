@@ -5,8 +5,8 @@ import { type Period, periods } from '@pfd/shared';
 import QueryState from '#src/components/common/QueryState';
 import { SkeletonList } from '#src/components/common/Skeleton';
 
-import { useExpensesByPeriod } from '../_lib/useExpensesByPeriod';
-import { periodLabels } from '../_lib/utils';
+import { useExpensesByPeriod } from '../lib/useExpensesByPeriod';
+import { periodLabels } from '../lib/utils';
 import { rowClassName } from './AccountsSummary';
 
 function isPeriod(value: string): value is Period {

@@ -2,9 +2,11 @@ import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import {
+  CashFlowPointResponseDto,
   ConnectMonoBankDto,
   ExchangeRatesDto,
   ExpenseCategoryResponseDto,
+  GetCashFlowQueryDto,
   GetExpensesQueryDto,
   GetTransactionsQueryDto,
   MonoBankAccountResponseDto,
@@ -58,6 +60,14 @@ export class MonoBankController {
     @Query() { period }: GetExpensesQueryDto,
   ): Promise<ExpenseCategoryResponseDto[]> {
     return await this.monoBankService.getHighestExpenses(userId, period);
+  }
+
+  @Get('cash-flow')
+  async getCashFlowTrend(
+    @CurrentUser('id') userId: string,
+    @Query() { period }: GetCashFlowQueryDto,
+  ): Promise<CashFlowPointResponseDto[]> {
+    return await this.monoBankService.getCashFlowTrend(userId, period);
   }
 
   @Post('sync/:accountId')

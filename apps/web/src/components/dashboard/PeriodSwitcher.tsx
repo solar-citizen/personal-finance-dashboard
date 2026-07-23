@@ -2,7 +2,7 @@
 
 import { type Period, periods } from '@pfd/shared';
 
-import { periodLabels } from './_lib/utils';
+import { periodLabels } from './lib/utils';
 
 type PeriodSwitcherProps = {
   value: Period;

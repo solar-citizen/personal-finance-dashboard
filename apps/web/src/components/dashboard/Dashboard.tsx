@@ -23,12 +23,10 @@ export default function Dashboard() {
   const { data: accounts, isLoading: accountsLoading, error: accountsError } = useGetAccounts({});
   const { data: rates, isLoading: ratesLoading, error: ratesError } = useGetExchangeRates({});
   const {
-    data: transactions,
+    data: latestTransactions,
     isLoading: txLoading,
     error: txError,
-  } = useGetLatestTransactions({ queryParams: { limit: 10000 } });
-
-  const slicedTransactions = transactions?.slice(0, 10);
+  } = useGetLatestTransactions({ queryParams: { limit: 10 } });
 
   return (
     <div className={'p-6 space-y-6'}>
@@ -41,12 +39,7 @@ export default function Dashboard() {
 
       {/* Charts */}
       <div className={'grid grid-cols-1 lg:grid-cols-2 gap-6'}>
-        <CashFlowNetWorthChart
-          globalPeriod={globalPeriod}
-          data={transactions}
-          isLoading={txLoading}
-          error={txError}
-        />
+        <CashFlowNetWorthChart globalPeriod={globalPeriod} />
 
         <ExpenseCategoryDonut globalPeriod={globalPeriod} />
       </div>
@@ -55,7 +48,7 @@ export default function Dashboard() {
       <div className={'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'}>
         <AccountsSummary data={accounts} isLoading={accountsLoading} error={accountsError} />
         <HighestExpenses globalPeriod={globalPeriod} />
-        <LatestTransactions data={slicedTransactions} isLoading={txLoading} error={txError} />
+        <LatestTransactions data={latestTransactions} isLoading={txLoading} error={txError} />
       </div>
     </div>
   );

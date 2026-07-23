@@ -14,8 +14,8 @@ import {
 } from '#src/components/ui/chart';
 import { ChartColors } from '#src/lib/chart-util';
 
-import { useExpensesByPeriod } from '../_lib/useExpensesByPeriod';
-import { periodLabels } from '../_lib/utils';
+import { useExpensesByPeriod } from '../lib/useExpensesByPeriod';
+import { periodLabels } from '../lib/utils';
 
 const colors = Object.values(ChartColors);
 

@@ -78,3 +78,15 @@ export const GetTransactionsQuerySchema = z.object({
 export const GetExpensesQuerySchema = z.object({
   period: z.enum(periods).default('month'),
 });
+
+export const CashFlowPointResponseSchema = z.object({
+  date: z.string(),
+  label: z.string(),
+  income: z.number(),
+  expense: z.number(),
+  netBalance: z.number(),
+});
+
+export const GetCashFlowQuerySchema = z.object({
+  period: z.enum(periods).default('month'),
+});
