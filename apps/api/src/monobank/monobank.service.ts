@@ -249,7 +249,10 @@ export class MonoBankService {
     userId: string,
     period: Period,
   ): Promise<ExpenseCategoryResponseDto[]> {
-    const from = dayjs().subtract(1, period).toDate();
+    const from =
+      period === '5years'
+        ? dayjs().subtract(5, 'year').toDate()
+        : dayjs().subtract(1, period).toDate();
 
     const transactions = await this.prismaService.transaction.findMany({
       where: {

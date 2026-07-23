@@ -14,13 +14,14 @@ import {
   SyncTransactionsDto,
   TransactionResponseDto,
 } from 'src/_generated/zod/pfd-dtos';
+import { minuteMs } from 'src/_lib/utils';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { CurrencyService } from 'src/currency/currency.service';
 
 import { MonoBankService } from './monobank.service';
 
 @ApiTags('Mono')
-@Throttle({ default: { limit: 10, ttl: 60_000 } })
+@Throttle({ default: { limit: 50, ttl: minuteMs } })
 @Controller('api/mono')
 export class MonoBankController {
   constructor(

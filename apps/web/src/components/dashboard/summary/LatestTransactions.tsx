@@ -1,12 +1,16 @@
 'use client';
 
-import { useGetLatestTransactions } from '#src/_generated/api/pfd-components';
+import { TransactionResponseDto } from '#src/_generated/api/pfd-types';
 import QueryState from '#src/components/common/QueryState';
 import { SkeletonList } from '#src/components/common/Skeleton';
 
-export default function LatestTransactions() {
-  const { data, isLoading, error } = useGetLatestTransactions({});
+type Props = {
+  data?: TransactionResponseDto[];
+  isLoading: boolean;
+  error: unknown;
+};
 
+export default function LatestTransactions({ data, isLoading, error }: Props) {
   return (
     <section className={'p-4 border rounded-lg shadow-sm max-h-80 h-full overflow-auto'}>
       <h2 className={'text-xl font-bold mb-4'}>{'Latest Transactions'}</h2>
