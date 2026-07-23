@@ -40,7 +40,6 @@ export default function Dashboard() {
       {/* Charts */}
       <div className={'grid grid-cols-1 lg:grid-cols-2 gap-6'}>
         <CashFlowNetWorthChart globalPeriod={globalPeriod} />
-
         <ExpenseCategoryDonut globalPeriod={globalPeriod} />
       </div>
 
