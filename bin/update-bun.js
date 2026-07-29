@@ -1,15 +1,15 @@
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 
 const packageJsonPath = './package.json';
 
-console.log('🔄 Upgrading Bun to latest stable version...');
+process.stdout.write('🔄 Upgrading Bun to latest stable version...\n');
 await Bun.$`bun upgrade`;
 
 const newVersion = (await Bun.$`bun --version`.text()).trim();
-console.log(`✅ Bun upgraded to version ${newVersion}`);
+process.stdout.write(`✅ Bun upgraded to version ${newVersion}\n`);
 
 const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
 packageJson.packageManager = `bun@${newVersion}`;
 
-writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n');
-console.log(`📦 package.json updated with bun@${newVersion}`);
+writeFileSync(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`);
+process.stdout.write(`📦 package.json updated with bun@${newVersion}\n`);
