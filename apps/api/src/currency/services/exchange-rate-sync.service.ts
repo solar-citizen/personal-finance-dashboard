@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
+import axios from 'axios';
 import dayjs from 'dayjs';
 import { Currency } from 'src/_generated/prisma-client/enums';
 import { PrismaService } from 'src/db/prisma.service';
@@ -10,6 +11,16 @@ type NbuRateRow = {
   units: number;
   rate_per_unit: number;
 };
+
+type CurrencyConfig = {
+  currency: Currency;
+  code: string;
+};
+
+const currencyConfigs: CurrencyConfig[] = [
+  { currency: Currency.usd, code: 'usd' },
+  { currency: Currency.eur, code: 'eur' },
+];
 
 function isUnknownArray(value: unknown): value is unknown[] {
   return Array.isArray(value);
@@ -38,6 +49,14 @@ function parseNbuDate(exchangeDate: string): Date {
   return new Date(Date.UTC(year, month - 1, day));
 }
 
+function mapRowToPrismaData(row: NbuRateRow, currency: Currency) {
+  return {
+    date: parseNbuDate(row.exchangedate),
+    currency,
+    rateToUah: row.rate_per_unit.toString(),
+  };
+}
+
 @Injectable()
 export class ExchangeRateSyncService {
   private readonly logger = new Logger(ExchangeRateSyncService.name);
@@ -55,56 +74,47 @@ export class ExchangeRateSyncService {
     }
   }
 
-  async syncRatesForDate(date: Date): Promise<void> {
-    const currencyConfigs = [
-      { currency: Currency.usd, code: 'usd' },
-      { currency: Currency.eur, code: 'eur' },
-    ];
+  private async fetchNbuRates(
+    startDate: string,
+    endDate: string,
+    code: string,
+  ): Promise<NbuRateRow[]> {
+    const url = `https://bank.gov.ua/NBU_Exchange/exchange_site?start=${startDate}&end=${endDate}&valcode=${code}&sort=exchangedate&order=asc&json`;
+    const response = await axios.get(url);
+    const data: unknown = response.data;
 
+    if (!isUnknownArray(data) || !data.every(isNbuRateRow)) {
+      throw new Error('Invalid NBU response format');
+    }
+
+    return data;
+  }
+
+  async syncRatesForDate(date: Date): Promise<void> {
     const dateStr = toYyyymmdd(date);
 
     for (const { currency, code } of currencyConfigs) {
       try {
-        const res = await fetch(
-          `https://bank.gov.ua/NBU_Exchange/exchange_site?start=${dateStr}&end=${dateStr}&valcode=${code}&sort=exchangedate&order=asc&json`,
-        );
+        const rows = await this.fetchNbuRates(dateStr, dateStr, code);
 
-        if (!res.ok) {
-          throw new Error(
-            `NBU request failed: ${res.status} ${res.statusText}`,
-          );
-        }
-
-        const data: unknown = await res.json();
-
-        if (!isUnknownArray(data) || !data.every(isNbuRateRow)) {
-          throw new Error('Invalid NBU response format');
-        }
-
-        if (data.length > 0) {
-          const row = data[0];
-          const rateDate = parseNbuDate(row.exchangedate);
-          const rateToUah = row.rate_per_unit.toString();
+        if (rows.length > 0) {
+          const prismaData = mapRowToPrismaData(rows[0], currency);
 
           await this.prismaService.exchangeRateHistory.upsert({
             where: {
               date_currency: {
-                date: rateDate,
-                currency,
+                date: prismaData.date,
+                currency: prismaData.currency,
               },
             },
             update: {
-              rateToUah,
+              rateToUah: prismaData.rateToUah,
             },
-            create: {
-              date: rateDate,
-              currency,
-              rateToUah,
-            },
+            create: prismaData,
           });
 
           this.logger.log(
-            `Synced exchange rate for ${currency.toUpperCase()} on ${row.exchangedate}: ${rateToUah} UAH`,
+            `Synced exchange rate for ${currency.toUpperCase()} on ${rows[0].exchangedate}: ${prismaData.rateToUah} UAH`,
           );
         }
       } catch (err: unknown) {
@@ -155,12 +165,7 @@ export class ExchangeRateSyncService {
       `Syncing missing/historical rates from ${startDayjs.format('YYYY-MM-DD')} to ${endDayjs.format('YYYY-MM-DD')}...`,
     );
 
-    const currenciesToSync = [
-      { currency: Currency.usd, code: 'usd' },
-      { currency: Currency.eur, code: 'eur' },
-    ];
-
-    for (const { currency, code } of currenciesToSync) {
+    for (const { currency, code } of currencyConfigs) {
       let chunkStart = dayjs(startDate);
       const finalEndDate = dayjs(endDate);
 
@@ -172,35 +177,30 @@ export class ExchangeRateSyncService {
           chunkStart.year() === finalEndDate.year()
             ? finalEndDate
             : dayjs(`${chunkStart.year()}-12-31`);
+
         const chunkEnd = potentialChunkEnd.isAfter(finalEndDate)
           ? finalEndDate
           : potentialChunkEnd;
 
-        const res = await fetch(
-          `https://bank.gov.ua/NBU_Exchange/exchange_site?start=${chunkStart.format('YYYYMMDD')}&end=${chunkEnd.format('YYYYMMDD')}&valcode=${code}&sort=exchangedate&order=asc&json`,
-        );
-
-        if (!res.ok) {
-          throw new Error(
-            `NBU request failed: ${res.status} ${res.statusText}`,
+        try {
+          const rows = await this.fetchNbuRates(
+            chunkStart.format('YYYYMMDD'),
+            chunkEnd.format('YYYYMMDD'),
+            code,
           );
-        }
 
-        const data: unknown = await res.json();
-
-        if (!isUnknownArray(data) || !data.every(isNbuRateRow)) {
-          throw new Error('Invalid NBU response format');
-        }
-
-        if (data.length > 0) {
-          await this.prismaService.exchangeRateHistory.createMany({
-            data: data.map((row) => ({
-              date: parseNbuDate(row.exchangedate),
-              currency,
-              rateToUah: row.rate_per_unit.toString(),
-            })),
-            skipDuplicates: true,
-          });
+          if (rows.length > 0) {
+            await this.prismaService.exchangeRateHistory.createMany({
+              data: rows.map((row) => mapRowToPrismaData(row, currency)),
+              skipDuplicates: true,
+            });
+          }
+        } catch (err: unknown) {
+          this.logger.error(
+            `Failed historical sync chunk for ${code} from ${chunkStart.format('YYYYMMDD')} to ${chunkEnd.format('YYYYMMDD')}`,
+            err,
+          );
+          throw err;
         }
 
         chunkStart = chunkEnd.add(1, 'day');

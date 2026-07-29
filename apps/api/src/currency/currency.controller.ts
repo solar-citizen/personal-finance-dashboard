@@ -4,7 +4,10 @@ import dayjs from 'dayjs';
 
 import { ExchangeRateSyncService } from './services/exchange-rate-sync.service';
 
-type SyncRatesResponse = { success: boolean; message: string };
+type SyncRatesResponse = {
+  success: boolean;
+  message: string;
+};
 
 const syncRatesSuccessMessage = 'Exchange rates synchronized successfully';
 
