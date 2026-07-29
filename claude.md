@@ -98,3 +98,82 @@ async getAccounts(...): Promise<GetMonoBankAccountResponseDto>
 4. `bun run codegen`
 
 Never work around `TData = undefined` on the frontend.
+
+## Memory Protocol
+
+This project keeps a local decision/work log in `/memory`. It is the source of
+truth for past specs, decisions, and progress — not chat history, not "the
+model probably remembers."
+
+### Reading: route, don't vacuum
+
+Before starting any non-trivial task:
+
+1. Open `/memory/MEMORY.md` — the **index only**.
+2. Scan entries for anything related to the current task (by title/description).
+3. Open **only** the specific file(s) linked from the matching entries.
+   Do not open every file in a matching folder, and do not open unrelated
+   folders "just in case."
+4. Nothing relevant found → proceed without opening anything else.
+
+Never read `/memory` folder-by-folder or file-by-file speculatively.
+`MEMORY.md` is the router; everything else is fetched on demand.
+
+### Folder & file convention
+
+- One folder per feature/fix:
+  `memory/<ddmmyyHHMM>-<kebab-case-name>/`
+  e.g. `memory/2708261400-add-dashboard-page/`
+- Files inside are numbered in creation order and are **append-only** —
+  never edit or delete a past numbered file:
+  `1_<type>.md`, `2_<type>.md`, `3_<type>.md`, ...
+  Typical `<type>` values: `audit`, `spec`, `implementation_prompt`,
+  `additional_changes`, `architecture_decisions`, `bugfix`
+- `todo.md` (unnumbered) inside a folder = open follow-ups for that feature.
+
+### Writing: after finishing a unit of work
+
+When you finish a task, a fix, or a meaningful chunk of a larger task —
+**not after every message** — write ONE new numbered file into the relevant
+folder (create the folder if this is the first entry for this feature).
+Keep it short: bullets, not prose.
+
+```md
+# <Title>
+
+## What changed
+
+- ...
+
+## Why / decisions
+
+- only include this section if a real tradeoff was made — omit otherwise
+
+## Files touched
+
+- path/to/file.ts
+
+## Follow-ups
+
+- ... (or "None")
+```
+
+Then append one line to `/memory/MEMORY.md`:
+
+```
+- [<Title>: <Status>](<folder>/<file>) — <one-sentence description>
+```
+
+`<Status>` is one of `Done`, `In Progress`, `To Be Done`. If this continues an
+existing feature, add a new line for the new file — never rewrite an old
+line to change history.
+
+### Hard rules
+
+- Never open every file under `/memory` speculatively — route through
+  `MEMORY.md` first.
+- Never rewrite a past numbered file to "correct" it — write a new one.
+  The trail is the point.
+- Skip the write for trivial Q&A that changed nothing in the repo.
+- If asked to `/wrap-up`, treat that as an explicit instruction to write the
+  entry now, following the format above.
