@@ -1,6 +1,8 @@
 ---
 name: wrap-up
-description: Write a memory entry for the work just completed and update MEMORY.md
+description: >-
+  ONLY invoke when explicitly requested by the user (e.g. via /wrap-up) or at
+  the very end of a multi-step session. Writes a memory entry for completed work and updates MEMORY.md.
 license: MIT
 metadata:
   author: solar._.citizen
