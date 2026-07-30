@@ -2,7 +2,16 @@ import { isJsonRecord } from '@pfd/shared';
 import { en, uk } from 'chrono-node';
 import dayjs from 'dayjs';
 
-import { tenYearsMs } from './date.util';
+import { formatDateToIso, tenYearsMs } from './date.util';
+
+type IsoDateRange = {
+  from: string;
+  to: string;
+};
+
+type TimeEntry = {
+  time: Date | string;
+};
 
 export type DateRange = {
   from: Date;
@@ -140,4 +149,21 @@ export function isStoredDateRange(
     typeof value.from === 'string' &&
     typeof value.to === 'string'
   );
+}
+
+export function getDateRange(items: TimeEntry[]): IsoDateRange {
+  if (items.length === 0) {
+    const now = dayjs();
+    return {
+      from: formatDateToIso(now.toDate()),
+      to: formatDateToIso(now.toDate()),
+    };
+  }
+
+  const dates = items.map(({ time }) => dayjs(time).valueOf());
+
+  return {
+    from: formatDateToIso(dayjs(Math.min(...dates)).toDate()),
+    to: formatDateToIso(dayjs(Math.max(...dates)).toDate()),
+  };
 }
