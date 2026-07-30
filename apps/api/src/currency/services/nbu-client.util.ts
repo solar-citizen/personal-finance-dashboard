@@ -1,7 +1,7 @@
 import { Currency } from 'src/_generated/prisma-client/enums';
 import { isUnknownArray } from 'src/_lib/utils';
 
-export type NbuRateRow = {
+type NbuRateRow = {
   exchangedate: string;
   rate: number;
   units: number;
@@ -18,7 +18,7 @@ export const currencyConfigs: CurrencyConfig[] = [
   { currency: Currency.eur, valcode: 'eur' },
 ];
 
-export function isNbuRateRow(value: unknown): value is NbuRateRow {
+function isNbuRateRow(value: unknown): value is NbuRateRow {
   return (
     typeof value === 'object' &&
     value !== null &&
@@ -32,7 +32,7 @@ export function isNbuRateRow(value: unknown): value is NbuRateRow {
   );
 }
 
-export function parseNbuDate(exchangeDate: string): Date {
+function parseNbuDate(exchangeDate: string): Date {
   const [day, month, year] = exchangeDate.split('.').map(Number);
   return new Date(Date.UTC(year, month - 1, day));
 }
