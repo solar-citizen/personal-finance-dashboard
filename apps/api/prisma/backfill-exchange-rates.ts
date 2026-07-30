@@ -1,66 +1,12 @@
+import { toYyyymmdd } from 'src/_lib/utils';
+import {
+  currencyConfigs,
+  fetchNbuRates,
+  mapNbuRateToHistoryEntry,
+} from 'src/currency/services/nbu-client.util';
+
 import { Currency } from '../src/_generated/prisma-client/client';
 import { prisma } from './client';
-
-const currenciesToBackfill: { currency: Currency; valcode: string }[] = [
-  { currency: Currency.usd, valcode: 'usd' },
-  { currency: Currency.eur, valcode: 'eur' },
-];
-
-type NbuRateRow = {
-  exchangedate: string;
-  rate: number;
-  units: number;
-  rate_per_unit: number;
-};
-
-function isUnknownArray(value: unknown): value is unknown[] {
-  return Array.isArray(value);
-}
-
-function isNbuRateRow(value: unknown): value is NbuRateRow {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'exchangedate' in value &&
-    typeof value.exchangedate === 'string' &&
-    'units' in value &&
-    typeof value.units === 'number' &&
-    value.units !== 0 &&
-    'rate' in value &&
-    typeof value.rate === 'number'
-  );
-}
-
-function toYyyymmdd(date: Date): string {
-  return date.toISOString().slice(0, 10).replace(/-/g, '');
-}
-
-function parseNbuDate(exchangedate: string): Date {
-  const [day, month, year] = exchangedate.split('.').map(Number);
-  return new Date(Date.UTC(year, month - 1, day));
-}
-
-async function fetchRange(
-  valcode: string,
-  start: Date,
-  end: Date,
-): Promise<NbuRateRow[]> {
-  const res = await fetch(
-    `https://bank.gov.ua/NBU_Exchange/exchange_site?start=${toYyyymmdd(start)}&end=${toYyyymmdd(end)}&valcode=${valcode}&sort=exchangedate&order=asc&json`,
-  );
-
-  if (!res.ok) {
-    throw new Error(`NBU request failed: ${res.status} ${res.statusText}`);
-  }
-
-  const data: unknown = await res.json();
-
-  if (!isUnknownArray(data) || !data.every(isNbuRateRow)) {
-    throw new Error('Invalid NBU response format');
-  }
-
-  return data;
-}
 
 function* yearChunks(start: Date, end: Date): Generator<[Date, Date]> {
   let chunkStart = start;
@@ -89,27 +35,20 @@ async function backfillCurrency(
       `  ${valcode.toUpperCase()}: fetching ${chunkStart.toISOString().slice(0, 10)} → ${chunkEnd.toISOString().slice(0, 10)}`,
     );
 
-    const rows = await fetchRange(valcode, chunkStart, chunkEnd);
+    const rates = await fetchNbuRates(
+      toYyyymmdd(chunkStart),
+      toYyyymmdd(chunkEnd),
+      valcode,
+    );
 
-    if (rows.length > 0) {
-      normalizedCount += rows.filter((row) => row.units !== 1).length;
+    if (rates.length > 0) {
+      normalizedCount += rates.filter(({ units }) => units !== 1).length;
 
       await prisma.exchangeRateHistory.createMany({
-        data: rows.map((row) => ({
-          date: parseNbuDate(row.exchangedate),
-          currency,
-
-          /**
-           * Archive data before the Dec 2019 classifier change quotes `rate`
-           * per `units` currency units (e.g. per 100), not per 1. rate_per_unit
-           * is NBU's own already-normalized value, so we store that directly
-           * instead of doing our own date-based guessing.
-           */
-          rateToUah: row.rate_per_unit.toString(),
-        })),
+        data: rates.map((rate) => mapNbuRateToHistoryEntry(rate, currency)),
         skipDuplicates: true,
       });
-      total += rows.length;
+      total += rates.length;
     }
 
     // be polite to the NBU API
@@ -146,7 +85,7 @@ async function main(): Promise<void> {
     `🌱 Backfilling exchange rates from ${start.toISOString().slice(0, 10)} to ${end.toISOString().slice(0, 10)}...`,
   );
 
-  for (const { currency, valcode } of currenciesToBackfill) {
+  for (const { currency, valcode } of currencyConfigs) {
     await backfillCurrency(currency, valcode, start, end);
   }
 

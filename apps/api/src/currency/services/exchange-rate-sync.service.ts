@@ -1,61 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import axios from 'axios';
 import dayjs from 'dayjs';
-import { Currency } from 'src/_generated/prisma-client/enums';
+import { toYyyymmdd } from 'src/_lib/utils';
 import { PrismaService } from 'src/db/prisma.service';
 
-type NbuRateRow = {
-  exchangedate: string;
-  rate: number;
-  units: number;
-  rate_per_unit: number;
-};
-
-type CurrencyConfig = {
-  currency: Currency;
-  code: string;
-};
-
-const currencyConfigs: CurrencyConfig[] = [
-  { currency: Currency.usd, code: 'usd' },
-  { currency: Currency.eur, code: 'eur' },
-];
-
-function isUnknownArray(value: unknown): value is unknown[] {
-  return Array.isArray(value);
-}
-
-function isNbuRateRow(value: unknown): value is NbuRateRow {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'exchangedate' in value &&
-    typeof value.exchangedate === 'string' &&
-    'units' in value &&
-    typeof value.units === 'number' &&
-    value.units !== 0 &&
-    'rate' in value &&
-    typeof value.rate === 'number'
-  );
-}
-
-function toYyyymmdd(date: Date): string {
-  return dayjs(date).format('YYYYMMDD');
-}
-
-function parseNbuDate(exchangeDate: string): Date {
-  const [day, month, year] = exchangeDate.split('.').map(Number);
-  return new Date(Date.UTC(year, month - 1, day));
-}
-
-function mapRowToPrismaData(row: NbuRateRow, currency: Currency) {
-  return {
-    date: parseNbuDate(row.exchangedate),
-    currency,
-    rateToUah: row.rate_per_unit.toString(),
-  };
-}
+import {
+  currencyConfigs,
+  fetchNbuRates,
+  mapNbuRateToHistoryEntry,
+} from './nbu-client.util';
 
 @Injectable()
 export class ExchangeRateSyncService {
@@ -74,31 +27,15 @@ export class ExchangeRateSyncService {
     }
   }
 
-  private async fetchNbuRates(
-    startDate: string,
-    endDate: string,
-    code: string,
-  ): Promise<NbuRateRow[]> {
-    const url = `https://bank.gov.ua/NBU_Exchange/exchange_site?start=${startDate}&end=${endDate}&valcode=${code}&sort=exchangedate&order=asc&json`;
-    const response = await axios.get(url);
-    const data: unknown = response.data;
-
-    if (!isUnknownArray(data) || !data.every(isNbuRateRow)) {
-      throw new Error('Invalid NBU response format');
-    }
-
-    return data;
-  }
-
   async syncRatesForDate(date: Date): Promise<void> {
     const dateStr = toYyyymmdd(date);
 
-    for (const { currency, code } of currencyConfigs) {
+    for (const { currency, valcode } of currencyConfigs) {
       try {
-        const rows = await this.fetchNbuRates(dateStr, dateStr, code);
+        const rates = await fetchNbuRates(dateStr, dateStr, valcode);
 
-        if (rows.length > 0) {
-          const prismaData = mapRowToPrismaData(rows[0], currency);
+        if (rates.length > 0) {
+          const prismaData = mapNbuRateToHistoryEntry(rates[0], currency);
 
           await this.prismaService.exchangeRateHistory.upsert({
             where: {
@@ -114,12 +51,12 @@ export class ExchangeRateSyncService {
           });
 
           this.logger.log(
-            `Synced exchange rate for ${currency.toUpperCase()} on ${rows[0].exchangedate}: ${prismaData.rateToUah} UAH`,
+            `Synced exchange rate for ${currency.toUpperCase()} on ${rates[0].exchangedate}: ${prismaData.rateToUah} UAH`,
           );
         }
       } catch (err: unknown) {
         this.logger.error(
-          `Failed to fetch NBU rate for ${code} on ${dateStr}`,
+          `Failed to fetch NBU rate for ${valcode} on ${dateStr}`,
           err,
         );
         throw err;
@@ -165,7 +102,7 @@ export class ExchangeRateSyncService {
       `Syncing missing/historical rates from ${startDayjs.format('YYYY-MM-DD')} to ${endDayjs.format('YYYY-MM-DD')}...`,
     );
 
-    for (const { currency, code } of currencyConfigs) {
+    for (const { currency, valcode } of currencyConfigs) {
       let chunkStart = dayjs(startDate);
       const finalEndDate = dayjs(endDate);
 
@@ -183,21 +120,23 @@ export class ExchangeRateSyncService {
           : potentialChunkEnd;
 
         try {
-          const rows = await this.fetchNbuRates(
+          const rates = await fetchNbuRates(
             chunkStart.format('YYYYMMDD'),
             chunkEnd.format('YYYYMMDD'),
-            code,
+            valcode,
           );
 
-          if (rows.length > 0) {
+          if (rates.length > 0) {
             await this.prismaService.exchangeRateHistory.createMany({
-              data: rows.map((row) => mapRowToPrismaData(row, currency)),
+              data: rates.map((rate) =>
+                mapNbuRateToHistoryEntry(rate, currency),
+              ),
               skipDuplicates: true,
             });
           }
         } catch (err: unknown) {
           this.logger.error(
-            `Failed historical sync chunk for ${code} from ${chunkStart.format('YYYYMMDD')} to ${chunkEnd.format('YYYYMMDD')}`,
+            `Failed historical sync chunk for ${valcode} from ${chunkStart.format('YYYYMMDD')} to ${chunkEnd.format('YYYYMMDD')}`,
             err,
           );
           throw err;
