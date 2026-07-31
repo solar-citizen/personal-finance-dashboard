@@ -7,6 +7,7 @@ import {
 } from 'src/_generated/zod/pfd-dtos';
 import { amountToNumber } from 'src/_lib/utils/currency.util';
 import type { DateRange } from 'src/_lib/utils/date-range.util';
+import { currencyToIso4217, iso4217ToCurrency } from 'src/monobank/lib/utils';
 
 import { PrismaService } from '../../../../db/prisma.service';
 import { getCategoryName } from '../../_lib/utils';
@@ -14,18 +15,6 @@ import type {
   CategoryBreakdown,
   SpendingAggregates,
 } from '../context-builder.types';
-
-const CURRENCY_CODE_MAP: Record<number, string> = {
-  980: 'UAH',
-  840: 'USD',
-  978: 'EUR',
-};
-
-const CURRENCY_TO_ISO_CODE: Record<string, number> = {
-  uah: 980,
-  usd: 840,
-  eur: 978,
-};
 
 // The cap on how many individual transaction rows we ever inline as
 // "examples" in the system prompt - not a cap on what we count or sum.
@@ -247,15 +236,14 @@ export class TransactionAggregationService {
       totalsByCategory.set(categoryName, existingCategory);
 
       // --- byOperationCurrency (cross-currency operational analytics) ---
-      const accountIsoCode = CURRENCY_TO_ISO_CODE[currency];
       const txCurrencyCode = transaction.currencyCode;
 
-      if (txCurrencyCode !== accountIsoCode) {
+      if (txCurrencyCode !== currencyToIso4217[currency]) {
         const opVal = amountToNumber(transaction.operationAmount);
         const existing = totalsByOperationCurrency.get(txCurrencyCode) ?? {
           currencyCode: txCurrencyCode,
           currencyName:
-            CURRENCY_CODE_MAP[txCurrencyCode] ?? `ISO-${txCurrencyCode}`,
+            iso4217ToCurrency[txCurrencyCode] ?? `ISO-${txCurrencyCode}`,
           incoming: 0,
           outgoing: 0,
           count: 0,
@@ -334,7 +322,7 @@ export class TransactionAggregationService {
       totalCashOut,
       totalCashIn,
       byOperationCurrency: [...totalsByOperationCurrency.values()].filter(
-        ({ currencyName }) => currencyName !== 'UAH',
+        ({ currencyName }) => currencyName !== Currency.uah,
       ),
     };
   }

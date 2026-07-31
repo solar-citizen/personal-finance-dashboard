@@ -225,7 +225,7 @@ export class SystemPromptBuilderService {
           ? byOperationCurrency
               .map(
                 ({ currencyName, incoming, outgoing, count }) =>
-                  `- ${currencyName}: ${count} operations | ` +
+                  `- ${currencyName.toUpperCase()}: ${count} operations | ` +
                   `Incoming: ${formatCurrency(incoming.toString(), currencyName.toLowerCase(), { divisor: 1 })} | ` +
                   `Outgoing: ${formatCurrency(outgoing.toString(), currencyName.toLowerCase(), { divisor: 1 })}`,
               )
@@ -291,7 +291,7 @@ export class SystemPromptBuilderService {
           AND "OPERATIONAL CURRENCY ANALYTICS" (cross-currency ops on UAH account).
         - If EUR appears in operational analytics but not in the account ledger, explain:
           "У вас не було прямих списань з єврових карток, але ви здійснили операції
-           на суму {X} EUR, які були списані з гривневої картки (на суму {Y} UAH)."
+          на суму {X} EUR, які були списані з гривневої картки (на суму {Y} UAH)."
         - NEVER say "no EUR transactions" if EUR appears in the operational analytics section.
 
       === EXAMPLES ===
