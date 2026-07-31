@@ -159,6 +159,8 @@ export class TransactionAggregationService {
         currencyName: string;
         incoming: number;
         outgoing: number;
+        incomingInAccountCurrency: number;
+        outgoingInAccountCurrency: number;
         count: number;
       }
     >();
@@ -240,19 +242,24 @@ export class TransactionAggregationService {
 
       if (txCurrencyCode !== currencyToIso4217[currency]) {
         const opVal = amountToNumber(transaction.operationAmount);
+        const accVal = amountToNumber(transaction.amount);
         const existing = totalsByOperationCurrency.get(txCurrencyCode) ?? {
           currencyCode: txCurrencyCode,
           currencyName:
             iso4217ToCurrency[txCurrencyCode] ?? `ISO-${txCurrencyCode}`,
           incoming: 0,
           outgoing: 0,
+          incomingInAccountCurrency: 0,
+          outgoingInAccountCurrency: 0,
           count: 0,
         };
 
         if (opVal >= 0) {
           existing.incoming += opVal;
+          existing.incomingInAccountCurrency += accVal;
         } else {
           existing.outgoing += Math.abs(opVal);
+          existing.outgoingInAccountCurrency += Math.abs(accVal);
         }
         existing.count += 1;
         totalsByOperationCurrency.set(txCurrencyCode, existing);

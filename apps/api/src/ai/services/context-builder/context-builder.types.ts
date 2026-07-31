@@ -40,6 +40,8 @@ export type SpendingAggregates = {
     currencyName: string;
     incoming: number;
     outgoing: number;
+    incomingInAccountCurrency?: number;
+    outgoingInAccountCurrency?: number;
     count: number;
   }[];
 };

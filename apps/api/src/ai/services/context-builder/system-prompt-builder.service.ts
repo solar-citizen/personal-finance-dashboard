@@ -224,10 +224,17 @@ export class SystemPromptBuilderService {
         byOperationCurrency.length > 0
           ? byOperationCurrency
               .map(
-                ({ currencyName, incoming, outgoing, count }) =>
+                ({
+                  currencyName,
+                  incoming,
+                  outgoing,
+                  incomingInAccountCurrency,
+                  outgoingInAccountCurrency,
+                  count,
+                }) =>
                   `- ${currencyName.toUpperCase()}: ${count} operations | ` +
-                  `Incoming: ${formatCurrency(incoming.toString(), currencyName.toLowerCase(), { divisor: 1 })} | ` +
-                  `Outgoing: ${formatCurrency(outgoing.toString(), currencyName.toLowerCase(), { divisor: 1 })}`,
+                  `Incoming: ${formatCurrency(incoming.toString(), currencyName.toLowerCase(), { divisor: 1 })} (≈ ${formatValue(incomingInAccountCurrency ?? 0)} UAH billed) | ` +
+                  `Outgoing: ${formatCurrency(outgoing.toString(), currencyName.toLowerCase(), { divisor: 1 })} (≈ ${formatValue(outgoingInAccountCurrency ?? 0)} UAH billed)`,
               )
               .join('\n')
           : 'No cross-currency operations in this period.'
