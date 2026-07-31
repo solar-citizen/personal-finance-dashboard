@@ -51,6 +51,43 @@ const relativeSingleUnitPatterns: UnitRoot[] = [
   { regex: /\blast\s+yrs?\b/i, days: 365 },
 ];
 
+function tryYearRange(message: string): DateRange | null {
+  // Matches "з 2022 по 2025", "2022-2025", "2022 по 2025 рік", etc.
+  const rangeMatch =
+    /(?:з\s*)?(20\d{2})\s*(?:по|до|-|–|—)\s*(?:включно\s*)?(20\d{2})/i.exec(
+      message,
+    );
+
+  if (rangeMatch) {
+    const startYear = Number(rangeMatch[1]);
+    const endYear = Number(rangeMatch[2]);
+
+    if (startYear <= endYear && startYear >= 2000 && endYear <= 2100) {
+      return {
+        from: dayjs(`${startYear}-01-01`).startOf('day').toDate(),
+        to: dayjs(`${endYear}-12-31`).endOf('day').toDate(),
+      };
+    }
+  }
+
+  // Matches single year like "у 2024 році", "за 2023", "2024"
+  const singleYearMatch =
+    /(?:за|у|в|\b|^)(20\d{2})(?:\s*рік|року|роках)?\b/i.exec(message);
+
+  if (singleYearMatch) {
+    const year = Number(singleYearMatch[1]);
+
+    if (year >= 2000 && year <= 2100) {
+      return {
+        from: dayjs(`${year}-01-01`).startOf('day').toDate(),
+        to: dayjs(`${year}-12-31`).endOf('day').toDate(),
+      };
+    }
+  }
+
+  return null;
+}
+
 function tryChrono(message: string, referenceDate: Date): DateRange | null {
   const ukResults = uk.parse(message, referenceDate, {
     forwardDate: false,
@@ -135,6 +172,7 @@ export function extractDateRangeFromMessage(
   referenceDate: Date = new Date(),
 ): DateRange | null {
   return (
+    tryYearRange(message) ??
     tryChrono(message, referenceDate) ??
     tryUnitRootFallback(message, referenceDate) ??
     tryRelativeSingleUnitFallback(message, referenceDate)

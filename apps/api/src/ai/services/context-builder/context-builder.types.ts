@@ -18,7 +18,16 @@ export type CategoryBreakdown = {
 }[];
 
 export type SpendingAggregates = {
-  byCurrency: { currency: Currency; total: number; count: number }[];
+  byCurrency: {
+    currency: Currency;
+    total: number;
+    incoming: number;
+    outgoing: number;
+    totalInUah: number;
+    incomingInUah: number;
+    outgoingInUah: number;
+    count: number;
+  }[];
   byCategory: CategoryBreakdown;
   topCategories: CategoryBreakdown;
   otherCategoriesCount: number;

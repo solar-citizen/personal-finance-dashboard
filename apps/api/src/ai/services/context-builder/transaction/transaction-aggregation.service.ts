@@ -114,51 +114,15 @@ export class TransactionAggregationService {
       accounts.map(({ id, currency }) => [id, currency]),
     );
 
-    const totalsByCurrency = new Map<
-      Currency,
-      { total: number; count: number }
-    >();
+    const currenciesInUse = new Set<Currency>();
 
-    let totalCashOut = 0;
-    let totalCashIn = 0;
-
-    for (const { accountId, amount } of transactions) {
-      const val = amountToNumber(amount);
-
-      if (val < 0) {
-        totalCashOut += Math.abs(val);
-      } else {
-        totalCashIn += val;
-      }
-
+    for (const { accountId } of transactions) {
       const currency = currencyByAccountId.get(accountId);
 
-      if (!currency) {
-        continue;
+      if (currency && currency !== Currency.uah) {
+        currenciesInUse.add(currency);
       }
-
-      const existing = totalsByCurrency.get(currency) ?? {
-        total: 0,
-        count: 0,
-      };
-
-      existing.total += val;
-      existing.count += 1;
-
-      totalsByCurrency.set(currency, existing);
     }
-
-    const byCurrency = [...totalsByCurrency.entries()].map(
-      ([currency, { total, count }]) => ({ currency, total, count }),
-    );
-
-    const currenciesInUse = Array.from(
-      new Set(
-        transactions
-          .map(({ accountId }) => currencyByAccountId.get(accountId))
-          .filter((c): c is Currency => !!c && c !== Currency.uah),
-      ),
-    );
 
     const rateMaps = await this.getDailyRateMaps(
       currenciesInUse,
@@ -166,10 +130,26 @@ export class TransactionAggregationService {
       dateRange.to,
     );
 
+    const totalsByCurrency = new Map<
+      Currency,
+      {
+        total: number;
+        incoming: number;
+        outgoing: number;
+        totalInUah: number;
+        incomingInUah: number;
+        outgoingInUah: number;
+        count: number;
+      }
+    >();
+
     const totalsByCategory = new Map<
       string,
       { incoming: number; outgoing: number }
     >();
+
+    let totalCashOut = 0;
+    let totalCashIn = 0;
 
     for (const { accountId, amount, time, category } of transactions) {
       const currency = currencyByAccountId.get(accountId);
@@ -178,6 +158,7 @@ export class TransactionAggregationService {
         continue;
       }
 
+      const rawVal = amountToNumber(amount);
       const dateKey = dayjs(time).format('YYYY-MM-DD');
       const rate =
         currency === Currency.uah
@@ -186,27 +167,85 @@ export class TransactionAggregationService {
 
       if (rate === null) {
         this.logger.warn(
-          `No exchange rate for ${currency} on ${dateKey}; excluding transaction from Top Spending`,
+          `No exchange rate for ${currency} on ${dateKey}; excluding transaction from aggregates`,
         );
         continue;
       }
 
-      const categoryName = getCategoryName(category);
-      const val = amountToNumber(amount) * rate;
+      const valInUah = rawVal * rate;
 
-      const existing = totalsByCategory.get(categoryName) ?? {
+      // --- byCurrency (raw + UAH equivalent) ---
+      const existing = totalsByCurrency.get(currency) ?? {
+        total: 0,
+        incoming: 0,
+        outgoing: 0,
+        totalInUah: 0,
+        incomingInUah: 0,
+        outgoingInUah: 0,
+        count: 0,
+      };
+
+      existing.total += rawVal;
+      existing.totalInUah += valInUah;
+
+      if (rawVal >= 0) {
+        existing.incoming += rawVal;
+        existing.incomingInUah += valInUah;
+      } else {
+        existing.outgoing += Math.abs(rawVal);
+        existing.outgoingInUah += Math.abs(valInUah);
+      }
+      existing.count += 1;
+
+      totalsByCurrency.set(currency, existing);
+
+      // --- totalCashOut / totalCashIn (in UAH) ---
+      if (valInUah < 0) {
+        totalCashOut += Math.abs(valInUah);
+      } else {
+        totalCashIn += valInUah;
+      }
+
+      // --- byCategory (in UAH) ---
+      const categoryName = getCategoryName(category);
+
+      const existingCategory = totalsByCategory.get(categoryName) ?? {
         incoming: 0,
         outgoing: 0,
       };
 
-      if (val < 0) {
-        existing.outgoing += Math.abs(val);
+      if (valInUah < 0) {
+        existingCategory.outgoing += Math.abs(valInUah);
       } else {
-        existing.incoming += val;
+        existingCategory.incoming += valInUah;
       }
 
-      totalsByCategory.set(categoryName, existing);
+      totalsByCategory.set(categoryName, existingCategory);
     }
+
+    const byCurrency = [...totalsByCurrency.entries()].map(
+      ([
+        currency,
+        {
+          total,
+          incoming,
+          outgoing,
+          totalInUah,
+          incomingInUah,
+          outgoingInUah,
+          count,
+        },
+      ]) => ({
+        currency,
+        total,
+        incoming,
+        outgoing,
+        totalInUah,
+        incomingInUah,
+        outgoingInUah,
+        count,
+      }),
+    );
 
     const byCategory: CategoryBreakdown = [...totalsByCategory.entries()]
       .map(([category, { incoming, outgoing }]) => ({
@@ -256,13 +295,14 @@ export class TransactionAggregationService {
    * work.
    */
   private async getDailyRateMaps(
-    currencies: Currency[],
+    currenciesInput: Iterable<Currency>,
     from: Date,
     to: Date,
   ): Promise<Map<Currency, Map<string, number>>> {
     const result = new Map<Currency, Map<string, number>>();
+    const currencies = [...currenciesInput];
 
-    if (currencies.length === 0) {
+    if (currencies.length === 0 || from > to) {
       return result;
     }
 
@@ -278,9 +318,14 @@ export class TransactionAggregationService {
     const ratesByCurrency = new Map<Currency, { date: Date; rate: number }[]>();
 
     for (const { date, currency, rateToUah } of rows) {
-      const list = ratesByCurrency.get(currency) ?? [];
+      let list = ratesByCurrency.get(currency);
+
+      if (!list) {
+        list = [];
+        ratesByCurrency.set(currency, list);
+      }
+
       list.push({ date, rate: Number(rateToUah) });
-      ratesByCurrency.set(currency, list);
     }
 
     for (const currency of currencies) {
