@@ -36,10 +36,10 @@ export type SpendingAggregates = {
   totalCashOut: number;
   totalCashIn: number;
   byOperationCurrency: {
-    currencyCode: number; // ISO 4217 numeric (e.g. 978)
-    currencyName: string; // Human-readable (e.g. 'EUR')
-    incoming: number; // Sum of positive operationAmount / 100, this currency only
-    outgoing: number; // Sum of abs(negative operationAmount) / 100, this currency only
+    currencyCode: number;
+    currencyName: string;
+    incoming: number;
+    outgoing: number;
     count: number;
   }[];
 };
