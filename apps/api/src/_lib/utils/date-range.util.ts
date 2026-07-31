@@ -72,7 +72,9 @@ function tryYearRange(message: string): DateRange | null {
 
   // Matches single year like "у 2024 році", "за 2023", "2024"
   const singleYearMatch =
-    /(?:за|у|в|\b|^)(20\d{2})(?:\s*рік|року|роках)?\b/i.exec(message);
+    /(?<!\d[.-/])(?:за\s+|у\s+|в\s+|\b|^)(20\d{2})(?:\s*(?:рік|року|році|роках))?\b(?!\.\d)/i.exec(
+      message,
+    );
 
   if (singleYearMatch) {
     const year = Number(singleYearMatch[1]);
@@ -105,10 +107,36 @@ function tryChrono(message: string, referenceDate: Date): DateRange | null {
   }
 
   const [result] = results;
-  const { start, end } = result;
+  const { start, end, index } = result;
 
-  const from = start.date();
-  const to = end ? end.date() : referenceDate;
+  let from = start.date();
+  let to: Date;
+
+  if (end) {
+    to = end.date();
+  } else {
+    const prefix = message.substring(0, index).toLowerCase();
+    const isSince = /(?:з|від|починаючи\s+з|since|from)\s*$/i.test(prefix);
+
+    if (isSince) {
+      to = referenceDate;
+      from = dayjs(from).startOf('day').toDate();
+    } else {
+      if (start.isCertain('day')) {
+        from = dayjs(from).startOf('day').toDate();
+        to = dayjs(from).endOf('day').toDate();
+      } else if (start.isCertain('month')) {
+        from = dayjs(from).startOf('month').toDate();
+        to = dayjs(from).endOf('month').toDate();
+      } else if (start.isCertain('year')) {
+        from = dayjs(from).startOf('year').toDate();
+        to = dayjs(from).endOf('year').toDate();
+      } else {
+        from = dayjs(from).startOf('day').toDate();
+        to = dayjs(from).endOf('day').toDate();
+      }
+    }
+  }
 
   if (from > referenceDate || to < from) {
     return null;
@@ -172,8 +200,8 @@ export function extractDateRangeFromMessage(
   referenceDate: Date = new Date(),
 ): DateRange | null {
   return (
-    tryYearRange(message) ??
     tryChrono(message, referenceDate) ??
+    tryYearRange(message) ??
     tryUnitRootFallback(message, referenceDate) ??
     tryRelativeSingleUnitFallback(message, referenceDate)
   );
