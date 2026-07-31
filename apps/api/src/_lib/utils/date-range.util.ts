@@ -2,7 +2,16 @@ import { isJsonRecord } from '@pfd/shared';
 import { en, uk } from 'chrono-node';
 import dayjs from 'dayjs';
 
-import { tenYearsMs } from './date.util';
+import { formatDateToIso, tenYearsMs } from './date.util';
+
+type IsoDateRange = {
+  from: string;
+  to: string;
+};
+
+type TimeEntry = {
+  time: Date | string;
+};
 
 export type DateRange = {
   from: Date;
@@ -42,6 +51,45 @@ const relativeSingleUnitPatterns: UnitRoot[] = [
   { regex: /\blast\s+yrs?\b/i, days: 365 },
 ];
 
+function tryYearRange(message: string): DateRange | null {
+  // Matches "з 2022 по 2025", "2022-2025", "2022 по 2025 рік", etc.
+  const rangeMatch =
+    /(?:з\s*)?(20\d{2})\s*(?:по|до|-|–|—)\s*(?:включно\s*)?(20\d{2})/i.exec(
+      message,
+    );
+
+  if (rangeMatch) {
+    const startYear = Number(rangeMatch[1]);
+    const endYear = Number(rangeMatch[2]);
+
+    if (startYear <= endYear && startYear >= 2000 && endYear <= 2100) {
+      return {
+        from: dayjs(`${startYear}-01-01`).startOf('day').toDate(),
+        to: dayjs(`${endYear}-12-31`).endOf('day').toDate(),
+      };
+    }
+  }
+
+  // Matches single year like "у 2024 році", "за 2023", "2024"
+  const singleYearMatch =
+    /(?<!\d[.-/])(?:за\s+|у\s+|в\s+|\b|^)(20\d{2})(?:\s*(?:рік|року|році|роках))?\b(?!\.\d)/i.exec(
+      message,
+    );
+
+  if (singleYearMatch) {
+    const year = Number(singleYearMatch[1]);
+
+    if (year >= 2000 && year <= 2100) {
+      return {
+        from: dayjs(`${year}-01-01`).startOf('day').toDate(),
+        to: dayjs(`${year}-12-31`).endOf('day').toDate(),
+      };
+    }
+  }
+
+  return null;
+}
+
 function tryChrono(message: string, referenceDate: Date): DateRange | null {
   const ukResults = uk.parse(message, referenceDate, {
     forwardDate: false,
@@ -59,10 +107,36 @@ function tryChrono(message: string, referenceDate: Date): DateRange | null {
   }
 
   const [result] = results;
-  const { start, end } = result;
+  const { start, end, index } = result;
 
-  const from = start.date();
-  const to = end ? end.date() : referenceDate;
+  let from = start.date();
+  let to: Date;
+
+  if (end) {
+    to = end.date();
+  } else {
+    const prefix = message.substring(0, index).toLowerCase();
+    const isSince = /(?:з|від|починаючи\s+з|since|from)\s*$/i.test(prefix);
+
+    if (isSince) {
+      to = referenceDate;
+      from = dayjs(from).startOf('day').toDate();
+    } else {
+      if (start.isCertain('day')) {
+        from = dayjs(from).startOf('day').toDate();
+        to = dayjs(from).endOf('day').toDate();
+      } else if (start.isCertain('month')) {
+        from = dayjs(from).startOf('month').toDate();
+        to = dayjs(from).endOf('month').toDate();
+      } else if (start.isCertain('year')) {
+        from = dayjs(from).startOf('year').toDate();
+        to = dayjs(from).endOf('year').toDate();
+      } else {
+        from = dayjs(from).startOf('day').toDate();
+        to = dayjs(from).endOf('day').toDate();
+      }
+    }
+  }
 
   if (from > referenceDate || to < from) {
     return null;
@@ -127,6 +201,7 @@ export function extractDateRangeFromMessage(
 ): DateRange | null {
   return (
     tryChrono(message, referenceDate) ??
+    tryYearRange(message) ??
     tryUnitRootFallback(message, referenceDate) ??
     tryRelativeSingleUnitFallback(message, referenceDate)
   );
@@ -140,4 +215,21 @@ export function isStoredDateRange(
     typeof value.from === 'string' &&
     typeof value.to === 'string'
   );
+}
+
+export function getDateRange(items: TimeEntry[]): IsoDateRange {
+  if (items.length === 0) {
+    const now = dayjs();
+    return {
+      from: formatDateToIso(now.toDate()),
+      to: formatDateToIso(now.toDate()),
+    };
+  }
+
+  const dates = items.map(({ time }) => dayjs(time).valueOf());
+
+  return {
+    from: formatDateToIso(dayjs(Math.min(...dates)).toDate()),
+    to: formatDateToIso(dayjs(Math.max(...dates)).toDate()),
+  };
 }
