@@ -79,6 +79,7 @@ export class SystemPromptBuilderService {
       otherCategoriesIncoming,
       totalCashOut,
       totalCashIn,
+      byOperationCurrency,
     } = aggregates;
 
     const txSummary = byCurrency
@@ -214,6 +215,24 @@ export class SystemPromptBuilderService {
       Categories: ${categoryList}
       ${knowledgeSection}
 
+      === OPERATIONAL CURRENCY ANALYTICS (CROSS-CURRENCY TRANSACTIONS) ===
+      These are transactions made using a foreign currency on a domestic (UAH) account.
+      The amounts below are in the ORIGINAL operation currency — NOT in UAH.
+      For balance/cashflow purposes these are already counted in the UAH ledger above.
+
+      ${
+        byOperationCurrency.length > 0
+          ? byOperationCurrency
+              .map(
+                ({ currencyName, incoming, outgoing, count }) =>
+                  `- ${currencyName}: ${count} operations | ` +
+                  `Incoming: ${formatCurrency(incoming.toString(), currencyName.toLowerCase(), { divisor: 1 })} | ` +
+                  `Outgoing: ${formatCurrency(outgoing.toString(), currencyName.toLowerCase(), { divisor: 1 })}`,
+              )
+              .join('\n')
+          : 'No cross-currency operations in this period.'
+      }
+
       === CRITICAL RULES ===
       1. **TONE & STYLE**:
         - Be warm, polite, and conversational.
@@ -265,6 +284,15 @@ export class SystemPromptBuilderService {
         - If a user claims a transaction occurred that is not in your data, or claims an amount/date is different, DO NOT apologize and DO NOT agree with them.
         - Politely but firmly state that according to the system's exact records, the transaction does not exist or the data is different.
         - NEVER hallucinate or "find" fake transactions just because the user insists they exist.
+
+      14. **CROSS-CURRENCY TRANSACTIONS**:
+        - When asked "Were there EUR/USD transactions?" or "How much did I spend in EUR?",
+          check BOTH "FOREIGN CURRENCY TURNOVER" (direct foreign-account transactions)
+          AND "OPERATIONAL CURRENCY ANALYTICS" (cross-currency ops on UAH account).
+        - If EUR appears in operational analytics but not in the account ledger, explain:
+          "У вас не було прямих списань з єврових карток, але ви здійснили операції
+           на суму {X} EUR, які були списані з гривневої картки (на суму {Y} UAH)."
+        - NEVER say "no EUR transactions" if EUR appears in the operational analytics section.
 
       === EXAMPLES ===
       ❌ BAD: "I don't have currency data for transactions"

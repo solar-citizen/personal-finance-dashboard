@@ -15,6 +15,18 @@ import type {
   SpendingAggregates,
 } from '../context-builder.types';
 
+const CURRENCY_CODE_MAP: Record<number, string> = {
+  980: 'UAH',
+  840: 'USD',
+  978: 'EUR',
+};
+
+const CURRENCY_TO_ISO_CODE: Record<string, number> = {
+  uah: 980,
+  usd: 840,
+  eur: 978,
+};
+
 // The cap on how many individual transaction rows we ever inline as
 // "examples" in the system prompt - not a cap on what we count or sum.
 const transactionsLimit = 500;
@@ -151,7 +163,19 @@ export class TransactionAggregationService {
     let totalCashOut = 0;
     let totalCashIn = 0;
 
-    for (const { accountId, amount, time, category } of transactions) {
+    const totalsByOperationCurrency = new Map<
+      number,
+      {
+        currencyCode: number;
+        currencyName: string;
+        incoming: number;
+        outgoing: number;
+        count: number;
+      }
+    >();
+
+    for (const transaction of transactions) {
+      const { accountId, amount, time, category } = transaction;
       const currency = currencyByAccountId.get(accountId);
 
       if (!currency) {
@@ -221,6 +245,30 @@ export class TransactionAggregationService {
       }
 
       totalsByCategory.set(categoryName, existingCategory);
+
+      // --- byOperationCurrency (cross-currency operational analytics) ---
+      const accountIsoCode = CURRENCY_TO_ISO_CODE[currency];
+      const txCurrencyCode = transaction.currencyCode;
+
+      if (txCurrencyCode !== accountIsoCode) {
+        const opVal = amountToNumber(transaction.operationAmount);
+        const existing = totalsByOperationCurrency.get(txCurrencyCode) ?? {
+          currencyCode: txCurrencyCode,
+          currencyName:
+            CURRENCY_CODE_MAP[txCurrencyCode] ?? `ISO-${txCurrencyCode}`,
+          incoming: 0,
+          outgoing: 0,
+          count: 0,
+        };
+
+        if (opVal >= 0) {
+          existing.incoming += opVal;
+        } else {
+          existing.outgoing += Math.abs(opVal);
+        }
+        existing.count += 1;
+        totalsByOperationCurrency.set(txCurrencyCode, existing);
+      }
     }
 
     const byCurrency = [...totalsByCurrency.entries()].map(
@@ -285,6 +333,9 @@ export class TransactionAggregationService {
       ),
       totalCashOut,
       totalCashIn,
+      byOperationCurrency: [...totalsByOperationCurrency.values()].filter(
+        ({ currencyName }) => currencyName !== 'UAH',
+      ),
     };
   }
 
