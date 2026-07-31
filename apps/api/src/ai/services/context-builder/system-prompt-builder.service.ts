@@ -95,17 +95,17 @@ export class SystemPromptBuilderService {
         }) => {
           const isUah = currency === Currency.uah;
           const totalLine =
-            `- ${currency.toUpperCase()}: ${count} transactions, total ${formatCurrency(total.toString(), currency)}` +
+            `- ${currency.toUpperCase()}: ${count} transactions, total ${formatCurrency(total.toString(), currency, { divisor: 1 })}` +
             (isUah || totalInUah === total
               ? ''
               : ` (≈ ${formatValue(totalInUah)} UAH using historical daily NBU rates)`);
 
           const incomingLine =
-            `  Incoming: ${formatCurrency(incoming.toString(), currency)}` +
+            `  Incoming: ${formatCurrency(incoming.toString(), currency, { divisor: 1 })}` +
             (isUah ? '' : ` (≈ ${formatValue(incomingInUah)} UAH)`);
 
           const outgoingLine =
-            `  Outgoing: ${formatCurrency(outgoing.toString(), currency)}` +
+            `  Outgoing: ${formatCurrency(outgoing.toString(), currency, { divisor: 1 })}` +
             (isUah ? '' : ` (≈ ${formatValue(outgoingInUah)} UAH)`);
 
           return [totalLine, incomingLine, outgoingLine].join('\n');
