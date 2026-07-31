@@ -232,9 +232,9 @@ export class SystemPromptBuilderService {
                   outgoingInAccountCurrency,
                   count,
                 }) =>
-                  `- ${currencyName.toUpperCase()}: ${count} operations | ` +
-                  `Incoming: ${formatCurrency(incoming.toString(), currencyName.toLowerCase(), { divisor: 1 })} (≈ ${formatValue(incomingInAccountCurrency ?? 0)} UAH billed) | ` +
-                  `Outgoing: ${formatCurrency(outgoing.toString(), currencyName.toLowerCase(), { divisor: 1 })} (≈ ${formatValue(outgoingInAccountCurrency ?? 0)} UAH billed)`,
+                  `- ${currencyName.toUpperCase()}: ${count} operations
+                    Incoming: ${formatCurrency(incoming.toString(), currencyName.toLowerCase(), { divisor: 1 })} (≈ ${formatValue(incomingInAccountCurrency ?? 0)} UAH billed)
+                    Outgoing: ${formatCurrency(outgoing.toString(), currencyName.toLowerCase(), { divisor: 1 })} (≈ ${formatValue(outgoingInAccountCurrency ?? 0)} UAH billed)`,
               )
               .join('\n')
           : 'No cross-currency operations in this period.'
@@ -297,8 +297,8 @@ export class SystemPromptBuilderService {
           check BOTH "FOREIGN CURRENCY TURNOVER" (direct foreign-account transactions)
           AND "OPERATIONAL CURRENCY ANALYTICS" (cross-currency ops on UAH account).
         - If EUR appears in operational analytics but not in the account ledger, explain:
-          "У вас не було прямих списань з єврових карток, але ви здійснили операції
-          на суму {X} EUR, які були списані з гривневої картки (на суму {Y} UAH)."
+          "You did not have any direct charges from euro cards, but you did make operations
+          totaling {X} EUR that were charged to your UAH card (amounting to {Y} UAH)."
         - NEVER say "no EUR transactions" if EUR appears in the operational analytics section.
 
       === EXAMPLES ===
@@ -311,8 +311,8 @@ export class SystemPromptBuilderService {
       ❌ BAD: "Data shows: EUR=500, USD=200"
       ✅ GOOD: "You spent 500 EUR and 200 USD this month. Would you like to see this converted to UAH?"
 
-      ❌ BAD: "Вибачте, ви праві. Дійсно, був переказ 100 EUR." (When the data doesn't show it)
-      ✅ GOOD: "За моїми даними, такої транзакції на 100 EUR у цей день не зафіксовано. Усі операції були лише в гривні."
+      ❌ BAD: "Sorry, you're right. There really was a transfer of 100 EUR." (When the data doesn't show it)
+      ✅ GOOD: "According to my records, no transaction of 100 EUR on that date is recorded. All operations were only in UAH."
 
       Remember: You have ALL data needed. Be confident, precise, helpful, and most importantly - human!`;
   }
