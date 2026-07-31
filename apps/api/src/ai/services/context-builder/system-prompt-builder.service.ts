@@ -79,6 +79,7 @@ export class SystemPromptBuilderService {
       otherCategoriesIncoming,
       totalCashOut,
       totalCashIn,
+      byOperationCurrency,
     } = aggregates;
 
     const txSummary = byCurrency
@@ -214,6 +215,31 @@ export class SystemPromptBuilderService {
       Categories: ${categoryList}
       ${knowledgeSection}
 
+      === OPERATIONAL CURRENCY ANALYTICS (CROSS-CURRENCY TRANSACTIONS) ===
+      These are transactions made using a foreign currency on a domestic (UAH) account.
+      The amounts below are in the ORIGINAL operation currency — NOT in UAH.
+      For balance/cashflow purposes these are already counted in the UAH ledger above.
+
+      ${
+        byOperationCurrency.length > 0
+          ? byOperationCurrency
+              .map(
+                ({
+                  currencyName,
+                  incoming,
+                  outgoing,
+                  incomingInAccountCurrency,
+                  outgoingInAccountCurrency,
+                  count,
+                }) =>
+                  `- ${currencyName.toUpperCase()}: ${count} operations
+                    Incoming: ${formatCurrency(incoming.toString(), currencyName.toLowerCase(), { divisor: 1 })} (≈ ${formatValue(incomingInAccountCurrency ?? 0)} UAH billed)
+                    Outgoing: ${formatCurrency(outgoing.toString(), currencyName.toLowerCase(), { divisor: 1 })} (≈ ${formatValue(outgoingInAccountCurrency ?? 0)} UAH billed)`,
+              )
+              .join('\n')
+          : 'No cross-currency operations in this period.'
+      }
+
       === CRITICAL RULES ===
       1. **TONE & STYLE**:
         - Be warm, polite, and conversational.
@@ -266,6 +292,15 @@ export class SystemPromptBuilderService {
         - Politely but firmly state that according to the system's exact records, the transaction does not exist or the data is different.
         - NEVER hallucinate or "find" fake transactions just because the user insists they exist.
 
+      14. **CROSS-CURRENCY TRANSACTIONS**:
+        - When asked "Were there EUR/USD transactions?" or "How much did I spend in EUR?",
+          check BOTH "FOREIGN CURRENCY TURNOVER" (direct foreign-account transactions)
+          AND "OPERATIONAL CURRENCY ANALYTICS" (cross-currency ops on UAH account).
+        - If EUR appears in operational analytics but not in the account ledger, explain:
+          "You did not have any direct charges from euro cards, but you did make operations
+          totaling {X} EUR that were charged to your UAH card (amounting to {Y} UAH)."
+        - NEVER say "no EUR transactions" if EUR appears in the operational analytics section.
+
       === EXAMPLES ===
       ❌ BAD: "I don't have currency data for transactions"
       ✅ GOOD: "EUR spending: 150.50 EUR (see Transactions by Currency section)"
@@ -276,8 +311,8 @@ export class SystemPromptBuilderService {
       ❌ BAD: "Data shows: EUR=500, USD=200"
       ✅ GOOD: "You spent 500 EUR and 200 USD this month. Would you like to see this converted to UAH?"
 
-      ❌ BAD: "Вибачте, ви праві. Дійсно, був переказ 100 EUR." (When the data doesn't show it)
-      ✅ GOOD: "За моїми даними, такої транзакції на 100 EUR у цей день не зафіксовано. Усі операції були лише в гривні."
+      ❌ BAD: "Sorry, you're right. There really was a transfer of 100 EUR." (When the data doesn't show it)
+      ✅ GOOD: "According to my records, no transaction of 100 EUR on that date is recorded. All operations were only in UAH."
 
       Remember: You have ALL data needed. Be confident, precise, helpful, and most importantly - human!`;
   }

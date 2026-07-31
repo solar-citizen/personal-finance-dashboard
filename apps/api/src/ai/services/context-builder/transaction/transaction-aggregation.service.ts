@@ -7,6 +7,7 @@ import {
 } from 'src/_generated/zod/pfd-dtos';
 import { amountToNumber } from 'src/_lib/utils/currency.util';
 import type { DateRange } from 'src/_lib/utils/date-range.util';
+import { currencyToIso4217, iso4217ToCurrency } from 'src/monobank/lib/utils';
 
 import { PrismaService } from '../../../../db/prisma.service';
 import { getCategoryName } from '../../_lib/utils';
@@ -151,7 +152,21 @@ export class TransactionAggregationService {
     let totalCashOut = 0;
     let totalCashIn = 0;
 
-    for (const { accountId, amount, time, category } of transactions) {
+    const totalsByOperationCurrency = new Map<
+      number,
+      {
+        currencyCode: number;
+        currencyName: string;
+        incoming: number;
+        outgoing: number;
+        incomingInAccountCurrency: number;
+        outgoingInAccountCurrency: number;
+        count: number;
+      }
+    >();
+
+    for (const transaction of transactions) {
+      const { accountId, amount, time, category } = transaction;
       const currency = currencyByAccountId.get(accountId);
 
       if (!currency) {
@@ -221,6 +236,34 @@ export class TransactionAggregationService {
       }
 
       totalsByCategory.set(categoryName, existingCategory);
+
+      // --- byOperationCurrency (cross-currency operational analytics) ---
+      const txCurrencyCode = transaction.currencyCode;
+
+      if (txCurrencyCode !== currencyToIso4217[currency]) {
+        const opVal = amountToNumber(transaction.operationAmount);
+        const accVal = amountToNumber(transaction.amount);
+        const existing = totalsByOperationCurrency.get(txCurrencyCode) ?? {
+          currencyCode: txCurrencyCode,
+          currencyName:
+            iso4217ToCurrency[txCurrencyCode] ?? `ISO-${txCurrencyCode}`,
+          incoming: 0,
+          outgoing: 0,
+          incomingInAccountCurrency: 0,
+          outgoingInAccountCurrency: 0,
+          count: 0,
+        };
+
+        if (opVal >= 0) {
+          existing.incoming += opVal;
+          existing.incomingInAccountCurrency += accVal;
+        } else {
+          existing.outgoing += Math.abs(opVal);
+          existing.outgoingInAccountCurrency += Math.abs(accVal);
+        }
+        existing.count += 1;
+        totalsByOperationCurrency.set(txCurrencyCode, existing);
+      }
     }
 
     const byCurrency = [...totalsByCurrency.entries()].map(
@@ -285,6 +328,9 @@ export class TransactionAggregationService {
       ),
       totalCashOut,
       totalCashIn,
+      byOperationCurrency: [...totalsByOperationCurrency.values()].filter(
+        ({ currencyName }) => currencyName !== Currency.uah,
+      ),
     };
   }
 

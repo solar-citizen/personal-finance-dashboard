@@ -35,6 +35,15 @@ export type SpendingAggregates = {
   otherCategoriesIncoming: number;
   totalCashOut: number;
   totalCashIn: number;
+  byOperationCurrency: {
+    currencyCode: number;
+    currencyName: string;
+    incoming: number;
+    outgoing: number;
+    incomingInAccountCurrency?: number;
+    outgoingInAccountCurrency?: number;
+    count: number;
+  }[];
 };
 
 /**
