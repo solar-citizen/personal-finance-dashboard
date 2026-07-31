@@ -83,8 +83,33 @@ export class SystemPromptBuilderService {
 
     const txSummary = byCurrency
       .map(
-        ({ currency, count, total }) =>
-          `- ${currency.toUpperCase()}: ${count} transactions, ${formatCurrency(total.toString(), currency)}`,
+        ({
+          currency,
+          count,
+          total,
+          incoming,
+          outgoing,
+          totalInUah,
+          incomingInUah,
+          outgoingInUah,
+        }) => {
+          const isUah = currency === Currency.uah;
+          const totalLine =
+            `- ${currency.toUpperCase()}: ${count} transactions, total ${formatCurrency(total.toString(), currency, { divisor: 1 })}` +
+            (isUah || totalInUah === total
+              ? ''
+              : ` (≈ ${formatValue(totalInUah)} UAH using historical daily NBU rates)`);
+
+          const incomingLine =
+            `  Incoming: ${formatCurrency(incoming.toString(), currency, { divisor: 1 })}` +
+            (isUah ? '' : ` (≈ ${formatValue(incomingInUah)} UAH)`);
+
+          const outgoingLine =
+            `  Outgoing: ${formatCurrency(outgoing.toString(), currency, { divisor: 1 })}` +
+            (isUah ? '' : ` (≈ ${formatValue(outgoingInUah)} UAH)`);
+
+          return [totalLine, incomingLine, outgoingLine].join('\n');
+        },
       )
       .join('\n');
 
@@ -120,16 +145,24 @@ export class SystemPromptBuilderService {
       === IDENTITY ===
       ${identityInstructions}
 
-      === EXCHANGE RATES (CURRENT) ===
+      === EXCHANGE RATES (CURRENT & HISTORICAL) ===
+      Current rates (for reference or current account balances):
       1 USD = ${formatValue(conversionRates.usd)} UAH
       1 EUR = ${formatValue(conversionRates.eur)} UAH
       1 UAH = 1 UAH
 
+      **CRITICAL HISTORICAL CONVERSION RULE**:
+      For historical transactions (past spending/income in foreign currencies like USD or EUR), 
+      ALWAYS use the exact historical NBU exchange rate on each transaction's specific date from 
+      the Exchange Rate History (already factored into the Financial Summary and category totals above), 
+      NOT the current exchange rate. When discussing historical foreign currency transactions, state 
+      the historical rate applied on that date.
+
       === CALCULATION RULES ===
       When calculating totals:
-        1. Convert each account to UAH using rates above
-        2. Sum all converted amounts
-        3. Show your calculation steps
+        1. For current account balances, convert to UAH using current rates above.
+        2. For historical transactions and periods, use the pre-calculated UAH conversions based on exact historical transaction dates.
+        3. Show your calculation steps.
 
       Example:
         - 929.22 EUR × 48.78 UAH/EUR = 45,327.80 UAH
@@ -158,7 +191,15 @@ export class SystemPromptBuilderService {
       ${matchingSection}
       ${fullCategoryBreakdownSection}
 
-      Transactions by Currency:
+      === FOREIGN CURRENCY TURNOVER & TRANSACTIONS BY CURRENCY ===
+      CRITICAL: When a user asks about monetary turnover, volume, spending, or income in a specific foreign currency (EUR, USD):
+      - NEVER claim the data is missing or unavailable WHEN IT'S AVAILABLE — the exact breakdown IS below.
+      - Quote the exact "Incoming" and "Outgoing" numbers from the entry for that currency.
+      - Provide both the raw foreign-currency amount and the historical UAH equivalent.
+      - Do NOT refer the user to the UAH-only "Total Cash Out/In" for currency-specific questions.
+      - Do NOT ask for clarification — report the numbers directly.
+
+      Transactions by Currency (incoming/outgoing in original currency + historical UAH equivalent):
       ${txSummary || 'No transactions'}
 
       Active Accounts:
@@ -213,12 +254,17 @@ export class SystemPromptBuilderService {
       10. ALWAYS use the exact \`Total Cash Out\` and \`Total Cash In\` values provided in the FINANCIAL SUMMARY above.
       11. The "Cash Out" metric already includes all actual spending and outgoing money transfers.
 
-      12. "Other categories" detail: if a "FULL CATEGORY BREAKDOWN" section is present above, use it — it's the
-      complete, per-category list. If that section is absent, you only have an AGGREGATE figure
-      (otherCategoriesOutgoing / otherCategoriesIncoming) for everything beyond the shown Top-N. Never map names from
-      the "Categories:" list onto that sum as if they explain it, and never guess a per-category split — say so directly, 
-      and offer to fetch the full list, e.g.: "For the other N categories I only have a combined total of X UAH right 
-      now — want me to pull the individual breakdown for those too?"
+      12. **HISTORICAL EXCHANGE RATES FOR TRANSACTIONS**:
+        - For past spending/income in foreign currencies (USD, EUR), ALWAYS use the exact historical NBU exchange rate on 
+          each transaction's date from the Exchange Rate History (already applied in the financial summaries above).
+        - NEVER use the current exchange rate for past transactions.
+        - Example: "On 15.03.2025, you spent 100 EUR. Using the historical rate of 43.50 UAH/EUR for that date, it equals 4,350.00 UAH."
+
+      13. **DATA TRUTH & USER CONTRADICTIONS**:
+        - The transaction data, totals, and aggregates provided to you in this prompt are the absolute ground truth.
+        - If a user claims a transaction occurred that is not in your data, or claims an amount/date is different, DO NOT apologize and DO NOT agree with them.
+        - Politely but firmly state that according to the system's exact records, the transaction does not exist or the data is different.
+        - NEVER hallucinate or "find" fake transactions just because the user insists they exist.
 
       === EXAMPLES ===
       ❌ BAD: "I don't have currency data for transactions"
@@ -229,6 +275,9 @@ export class SystemPromptBuilderService {
 
       ❌ BAD: "Data shows: EUR=500, USD=200"
       ✅ GOOD: "You spent 500 EUR and 200 USD this month. Would you like to see this converted to UAH?"
+
+      ❌ BAD: "Вибачте, ви праві. Дійсно, був переказ 100 EUR." (When the data doesn't show it)
+      ✅ GOOD: "За моїми даними, такої транзакції на 100 EUR у цей день не зафіксовано. Усі операції були лише в гривні."
 
       Remember: You have ALL data needed. Be confident, precise, helpful, and most importantly - human!`;
   }

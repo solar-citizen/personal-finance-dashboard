@@ -32,7 +32,22 @@ export class ContextCacheService {
   }
 
   async get(cacheKey: string): Promise<CachedBundle | undefined> {
-    return await this.cacheManager.get<CachedBundle>(cacheKey);
+    const value = await this.cacheManager.get<unknown>(cacheKey);
+
+    if (value === undefined || value === null) {
+      return undefined;
+    }
+
+    try {
+      assertIsCachedBundle(value);
+      return value;
+    } catch (err: unknown) {
+      this.logger.warn(
+        `Discarding stale cache entry for key ${cacheKey}: ${getErrorMessage(err)}`,
+      );
+
+      return undefined;
+    }
   }
 
   async set(cacheKey: string, value: CachedBundle): Promise<void> {
