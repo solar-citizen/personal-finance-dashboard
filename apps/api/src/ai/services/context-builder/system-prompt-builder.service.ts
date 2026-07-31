@@ -99,9 +99,11 @@ export class SystemPromptBuilderService {
             (isUah || totalInUah === total
               ? ''
               : ` (≈ ${formatValue(totalInUah)} UAH using historical daily NBU rates)`);
+
           const incomingLine =
             `  Incoming: ${formatCurrency(incoming.toString(), currency)}` +
             (isUah ? '' : ` (≈ ${formatValue(incomingInUah)} UAH)`);
+
           const outgoingLine =
             `  Outgoing: ${formatCurrency(outgoing.toString(), currency)}` +
             (isUah ? '' : ` (≈ ${formatValue(outgoingInUah)} UAH)`);
@@ -252,7 +254,7 @@ export class SystemPromptBuilderService {
       10. ALWAYS use the exact \`Total Cash Out\` and \`Total Cash In\` values provided in the FINANCIAL SUMMARY above.
       11. The "Cash Out" metric already includes all actual spending and outgoing money transfers.
 
-      13. **HISTORICAL EXCHANGE RATES FOR TRANSACTIONS**:
+      12. **HISTORICAL EXCHANGE RATES FOR TRANSACTIONS**:
         - For past spending/income in foreign currencies (USD, EUR), ALWAYS use the exact historical NBU exchange rate on 
           each transaction's date from the Exchange Rate History (already applied in the financial summaries above).
         - NEVER use the current exchange rate for past transactions.
