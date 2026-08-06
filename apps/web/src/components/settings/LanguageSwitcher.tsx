@@ -14,7 +14,6 @@ export default function LanguageSwitcher() {
   const handleLanguageChange = (lng: AppLanguage) => {
     void i18n.changeLanguage(lng);
     document.cookie = `NEXT_LOCALE=${lng}; path=/; max-age=31536000; SameSite=Lax`;
-    localStorage.setItem('i18nextLng', lng);
     router.refresh();
   };
 
