@@ -1,4 +1,7 @@
+'use client';
+
 import { skipToken, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 
 import {
   getConversationsListQuery,
@@ -13,6 +16,7 @@ type ChatHistoryProps = {
 };
 
 export default function ChatHistory({ onSelectConversation }: ChatHistoryProps) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useGetConversationsList({});
   const { mutate: deleteConversation } = useDeleteConversation({
@@ -26,14 +30,14 @@ export default function ChatHistory({ onSelectConversation }: ChatHistoryProps) 
   return (
     <div className={'flex flex-col overflow-y-auto'}>
       <h3 className={'p-4 font-semibold text-foreground border-b border-border'}>
-        {'Recent Conversations'}
+        {t('aiChat.recentConversations')}
       </h3>
       <QueryState
         isLoading={isLoading}
         error={error}
         data={data}
-        errorMessage={'Failed to load conversations'}
-        loadingFallback={<div className={'p-4 text-muted-foreground'}>{'Loading...'}</div>}
+        errorMessage={t('aiChat.failedConversations')}
+        loadingFallback={<div className={'p-4 text-muted-foreground'}>{t('common.loading')}</div>}
       >
         {conversations =>
           conversations.map(({ id, title }) => (
@@ -56,10 +60,10 @@ export default function ChatHistory({ onSelectConversation }: ChatHistoryProps) 
                   deleteConversation({ pathParams: { id } });
                 }}
                 className={'p-4 text-muted-foreground hover:text-destructive'}
-                title={'Delete conversation'}
-                aria-label={'Delete conversation'}
+                title={t('aiChat.deleteConversation')}
+                aria-label={t('aiChat.deleteConversation')}
               >
-                {'Remove'}
+                {t('common.remove')}
               </button>
             </div>
           ))

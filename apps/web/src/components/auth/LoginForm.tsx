@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 
 import { LoginSchema } from '#pfd-schemas';
 import { useLogin } from '#src/_generated/api/pfd-components';
@@ -12,6 +13,7 @@ import AuthCard from './AuthCard';
 
 export default function LoginForm() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   const { mutate, isPending } = useLogin({
     onMutate: () => {
@@ -37,11 +39,11 @@ export default function LoginForm() {
 
   return (
     <AuthCard
-      title={'Welcome Back'}
-      description={'Enter your credentials to access your finance dashboard.'}
-      footerText={"Don't have an account?"}
+      title={t('auth.welcomeBack')}
+      description={t('auth.loginSubtitle')}
+      footerText={t('auth.noAccount')}
       footerLink={'/register'}
-      footerLinkText={'Create one'}
+      footerLinkText={t('auth.createOne')}
     >
       <Form
         defaultValues={{
@@ -55,7 +57,7 @@ export default function LoginForm() {
         <FormInput
           name={'email'}
           type={'email'}
-          label={'Email'}
+          label={t('auth.email')}
           placeholder={'admin@finance.ua'}
           disabled={isPending}
           className={'space-y-2'}
@@ -64,7 +66,7 @@ export default function LoginForm() {
         <FormInput
           name={'password'}
           type={'password'}
-          label={'Password'}
+          label={t('auth.password')}
           disabled={isPending}
           className={'space-y-2'}
         />
@@ -77,7 +79,7 @@ export default function LoginForm() {
             'cursor-pointer inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full mt-4'
           }
         >
-          {'Sign In'}
+          {t('auth.signIn')}
         </button>
       </Form>
     </AuthCard>

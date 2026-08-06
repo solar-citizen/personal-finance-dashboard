@@ -27,28 +27,36 @@ export default function MainNav() {
   return (
     <nav
       className={
-        'h-14 bg-background fixed top-0 right-0 left-0 z-10 flex w-full items-center gap-4 px-5 py-2.5 shadow-md'
+        'h-14 bg-background fixed top-0 right-0 left-0 z-10 flex w-full items-center justify-between px-5 py-2.5 shadow-md'
       }
     >
-      {links.map(({ name, href }) => {
-        const isActive = pathname === href;
-        return (
-          <Link
-            key={href}
-            href={href}
-            className={
-              isActive
-                ? 'text-foreground font-semibold'
-                : 'text-muted-foreground hover:text-foreground'
-            }
-          >
-            {name}
-          </Link>
-        );
-      })}
+      <div className={'flex items-center gap-4'}>
+        {links.map(({ name, href }) => {
+          const isActive = pathname === href;
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={
+                isActive
+                  ? 'text-foreground font-semibold'
+                  : 'text-muted-foreground hover:text-foreground'
+              }
+            >
+              {name}
+            </Link>
+          );
+        })}
+      </div>
 
-      {/* FIXME: Temporary unstyled button */}
-      <button onClick={handleLogout}>{'Logout'}</button>
+      <button
+        onClick={handleLogout}
+        className={
+          'text-sm font-medium text-muted-foreground hover:text-destructive transition-colors cursor-pointer'
+        }
+      >
+        {t('common.logout')}
+      </button>
     </nav>
   );
 }

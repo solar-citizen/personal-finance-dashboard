@@ -8,7 +8,8 @@
     "new": "New",
     "send": "Send",
     "delete": "Delete",
-    "remove": "Remove"
+    "remove": "Remove",
+    "logout": "Logout"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -62,6 +63,7 @@
   },
   "aiChat": {
     "title": "AI Assistant",
+    "askAi": "Ask AI",
     "history": "History",
     "hideChat": "Hide chat window",
     "recentConversations": "Recent Conversations",
