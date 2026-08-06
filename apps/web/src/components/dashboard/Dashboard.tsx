@@ -2,6 +2,7 @@
 
 import type { Period } from '@pfd/shared';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import {
   useGetAccounts,
@@ -19,6 +20,7 @@ import LatestTransactions from './summary/LatestTransactions';
 
 export default function Dashboard() {
   const [globalPeriod, setGlobalPeriod] = useState<Period>('month');
+  const { t } = useTranslation();
 
   const { data: accounts, isLoading: accountsLoading, error: accountsError } = useGetAccounts({});
   const { data: rates, isLoading: ratesLoading, error: ratesError } = useGetExchangeRates({});
@@ -33,7 +35,7 @@ export default function Dashboard() {
       <ExchangeRates data={rates} isLoading={ratesLoading} error={ratesError} />
 
       <div className={'flex justify-between items-center'}>
-        <h1 className={'text-3xl font-bold tracking-tight'}>{'Dashboard'}</h1>
+        <h1 className={'text-3xl font-bold tracking-tight'}>{t('dashboard.title')}</h1>
         <PeriodSwitcher value={globalPeriod} onChange={setGlobalPeriod} />
       </div>
 

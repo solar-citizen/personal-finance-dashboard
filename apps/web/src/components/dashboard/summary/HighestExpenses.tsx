@@ -1,17 +1,25 @@
 'use client';
 
 import { type Period, periods } from '@pfd/shared';
+import { useTranslation } from 'react-i18next';
 
 import QueryState from '#src/components/common/QueryState';
 import { SkeletonList } from '#src/components/common/Skeleton';
 
 import { useExpensesByPeriod } from '../lib/useExpensesByPeriod';
-import { periodLabels } from '../lib/utils';
 import { rowClassName } from './AccountsSummary';
 
 function isPeriod(value: string): value is Period {
   return periods.some(period => period === value);
 }
+
+const periodKeys: Record<Period, string> = {
+  day: 'periods.day',
+  week: 'periods.week',
+  month: 'periods.month',
+  year: 'periods.year',
+  '5years': 'periods.fiveYears',
+};
 
 type HighestExpensesProps = {
   globalPeriod: Period;
@@ -19,6 +27,7 @@ type HighestExpensesProps = {
 
 export default function HighestExpenses({ globalPeriod }: HighestExpensesProps) {
   const { period, setPeriod, data, isLoading, error } = useExpensesByPeriod(globalPeriod);
+  const { t } = useTranslation();
 
   const handlePeriodChange = ({ target: { value } }: React.ChangeEvent<HTMLSelectElement>) => {
     if (isPeriod(value)) {
@@ -29,7 +38,7 @@ export default function HighestExpenses({ globalPeriod }: HighestExpensesProps) 
   return (
     <section className={'p-4 border rounded-lg shadow-sm max-h-80 h-full overflow-auto'}>
       <div className={'flex justify-between items-center mb-4'}>
-        <h2 className={'text-xl font-bold'}>{'Highest Expenses'}</h2>
+        <h2 className={'text-xl font-bold'}>{t('dashboard.highestExpenses')}</h2>
         <select
           value={period}
           onChange={handlePeriodChange}
@@ -37,7 +46,7 @@ export default function HighestExpenses({ globalPeriod }: HighestExpensesProps) 
         >
           {periods.map(value => (
             <option key={value} value={value}>
-              {periodLabels[value]}
+              {t(periodKeys[value])}
             </option>
           ))}
         </select>
@@ -46,7 +55,7 @@ export default function HighestExpenses({ globalPeriod }: HighestExpensesProps) 
         isLoading={isLoading}
         error={error}
         data={data}
-        errorMessage={'Failed to load expenses.'}
+        errorMessage={t('dashboard.failedExpenses')}
         loadingFallback={
           <div className={'space-y-2'}>
             <SkeletonList length={6} className={`${rowClassName} w-full`} />

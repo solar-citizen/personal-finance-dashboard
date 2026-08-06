@@ -1,6 +1,9 @@
+'use client';
+
 import { isRecord, type MessageRole, type StreamResponse } from '@pfd/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
 
 import { getConversationQuery, useGetConversation } from '#src/_generated/api/pfd-components';
@@ -78,6 +81,7 @@ type ChatWindowProps = {
 };
 
 export default function ChatWindow({ isOpen, onHide }: ChatWindowProps) {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
@@ -220,7 +224,7 @@ export default function ChatWindow({ isOpen, onHide }: ChatWindowProps) {
       console.error('Streaming error:', error);
       setMessages(prev => [
         ...prev.slice(0, -1),
-        { id: crypto.randomUUID(), role: 'assistant', content: 'Sorry, I encountered an error.' },
+        { id: crypto.randomUUID(), role: 'assistant', content: t('aiChat.errorMessage') },
       ]);
     } finally {
       setIsStreaming(false);
@@ -250,7 +254,7 @@ export default function ChatWindow({ isOpen, onHide }: ChatWindowProps) {
             onClick={() => setShowHistory(!showHistory)}
             className={'text-muted-foreground hover:text-foreground cursor-pointer'}
           >
-            {showHistory ? 'Back' : 'History'}
+            {showHistory ? t('common.back') : t('aiChat.history')}
           </button>
 
           <button
@@ -260,18 +264,18 @@ export default function ChatWindow({ isOpen, onHide }: ChatWindowProps) {
               'text-muted-foreground hover:text-foreground disabled:opacity-50 cursor-pointer'
             }
           >
-            {'New'}
+            {t('common.new')}
           </button>
         </div>
 
         <h2 className={'absolute left-1/2 -translate-x-1/2 font-semibold text-foreground'}>
-          {'AI Assistant'}
+          {t('aiChat.title')}
         </h2>
 
         <button
           onClick={onHide}
-          title={'Hide chat window'}
-          aria-label={'Hide chat window'}
+          title={t('aiChat.hideChat')}
+          aria-label={t('aiChat.hideChat')}
           className={'text-muted-foreground hover:text-foreground cursor-pointer'}
         >
           {'✕'}
@@ -288,10 +292,10 @@ export default function ChatWindow({ isOpen, onHide }: ChatWindowProps) {
                 isLoading={isConversationLoading}
                 error={conversationError}
                 data={selectedConversation}
-                errorMessage={'Failed to load conversation'}
+                errorMessage={t('aiChat.failedConversation')}
                 loadingFallback={
                   <div className={'p-4 text-center text-muted-foreground'}>
-                    {'Loading conversation...'}
+                    {t('aiChat.loadingConversation')}
                   </div>
                 }
               >
@@ -317,7 +321,7 @@ export default function ChatWindow({ isOpen, onHide }: ChatWindowProps) {
                   void sendMessage();
                 }
               }}
-              placeholder={'Ask me anything...'}
+              placeholder={t('aiChat.placeholder')}
               className={'flex-1 rounded-md border border-input p-2 text-foreground'}
               disabled={isStreaming}
             />
@@ -330,7 +334,7 @@ export default function ChatWindow({ isOpen, onHide }: ChatWindowProps) {
                 'rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50 cursor-pointer'
               }
             >
-              {'Send'}
+              {t('common.send')}
             </button>
           </div>
         </>

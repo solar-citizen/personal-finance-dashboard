@@ -2,6 +2,7 @@
 
 import type { Period } from '@pfd/shared';
 import dayjs from 'dayjs';
+import { useTranslation } from 'react-i18next';
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
 import QueryState from '#src/components/common/QueryState';
@@ -16,34 +17,36 @@ import {
 
 import { useCashFlowByPeriod } from '../lib/useCashFlowByPeriod';
 
-const chartConfig = {
-  income: {
-    label: 'Income',
-    color: 'var(--color-primary, #244A3F)',
-  },
-  expense: {
-    label: 'Expenses',
-    color: 'var(--color-accent, #D97757)',
-  },
-  netBalance: {
-    label: 'Net Balance',
-    color: 'var(--color-ring, #3B82F6)',
-  },
-} satisfies ChartConfig;
-
 type Props = {
   globalPeriod: Period;
 };
 
 export default function CashFlowNetWorthChart({ globalPeriod }: Props) {
   const { period, setPeriod, data, isLoading, error } = useCashFlowByPeriod(globalPeriod);
+  const { t } = useTranslation();
+
+  const chartConfig = {
+    income: {
+      label: t('dashboard.income'),
+      color: 'var(--color-primary, #244A3F)',
+    },
+    expense: {
+      label: t('dashboard.expense'),
+      color: 'var(--color-accent, #D97757)',
+    },
+    netBalance: {
+      label: t('dashboard.netBalance'),
+      color: 'var(--color-ring, #3B82F6)',
+    },
+  } satisfies ChartConfig;
+
   return (
     <Card>
       <CardHeader>
         <div className={'flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'}>
           <div>
-            <CardTitle>{'Cash Flow & Net Worth Trend'}</CardTitle>
-            <CardDescription>{'Track income, expenses, and net balance over time'}</CardDescription>
+            <CardTitle>{t('dashboard.cashFlowTitle')}</CardTitle>
+            <CardDescription>{t('dashboard.cashFlowDesc')}</CardDescription>
           </div>
           <PeriodSwitcher value={period} onChange={setPeriod} />
         </div>
@@ -53,7 +56,7 @@ export default function CashFlowNetWorthChart({ globalPeriod }: Props) {
           isLoading={isLoading}
           error={error}
           data={data}
-          errorMessage={'Failed to load cash flow trends.'}
+          errorMessage={t('dashboard.failedCashFlow')}
           loadingFallback={<div className={'h-[300px] w-full animate-pulse bg-muted rounded-lg'} />}
         >
           {() => (
