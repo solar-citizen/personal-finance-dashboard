@@ -1,15 +1,24 @@
 'use client';
 
 import { type Period, periods } from '@pfd/shared';
-
-import { periodLabels } from './lib/utils';
+import { useTranslation } from 'react-i18next';
 
 type PeriodSwitcherProps = {
   value: Period;
   onChange: (period: Period) => void;
 };
 
+const periodKeys: Record<Period, string> = {
+  day: 'periods.day',
+  week: 'periods.week',
+  month: 'periods.month',
+  year: 'periods.year',
+  '5years': 'periods.fiveYears',
+};
+
 export default function PeriodSwitcher({ value, onChange }: PeriodSwitcherProps) {
+  const { t } = useTranslation();
+
   return (
     <div className={'flex gap-1 bg-secondary p-1 rounded-lg text-xs'}>
       {periods.map(p => (
@@ -22,7 +31,7 @@ export default function PeriodSwitcher({ value, onChange }: PeriodSwitcherProps)
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          {periodLabels[p]}
+          {t(periodKeys[p])}
         </button>
       ))}
     </div>

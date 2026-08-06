@@ -1,6 +1,7 @@
 'use client';
 
 import type { Period } from '@pfd/shared';
+import { useTranslation } from 'react-i18next';
 import { Label, Pie, PieChart } from 'recharts';
 
 import QueryState from '#src/components/common/QueryState';
@@ -15,9 +16,16 @@ import {
 import { ChartColors } from '#src/lib/chart-util';
 
 import { useExpensesByPeriod } from '../lib/useExpensesByPeriod';
-import { periodLabels } from '../lib/utils';
 
 const colors = Object.values(ChartColors);
+
+const periodKeys: Record<Period, string> = {
+  day: 'periods.day',
+  week: 'periods.week',
+  month: 'periods.month',
+  year: 'periods.year',
+  '5years': 'periods.fiveYears',
+};
 
 type ExpenseCategoryDonutProps = {
   globalPeriod: Period;
@@ -25,6 +33,7 @@ type ExpenseCategoryDonutProps = {
 
 export default function ExpenseCategoryDonut({ globalPeriod }: ExpenseCategoryDonutProps) {
   const { period, setPeriod, data, isLoading, error } = useExpensesByPeriod(globalPeriod);
+  const { t } = useTranslation();
 
   const chartData = (data ?? []).map(({ category: { name }, amount, currency }, index) => ({
     name,
@@ -44,13 +53,17 @@ export default function ExpenseCategoryDonut({ globalPeriod }: ExpenseCategoryDo
     return acc;
   }, {});
 
+  const periodName = t(periodKeys[period]).toLowerCase();
+
   return (
     <Card className={'flex flex-col'}>
       <CardHeader className={'items-center pb-0'}>
         <div className={'flex w-full justify-between items-center'}>
           <div>
-            <CardTitle>{'Expense Breakdown'}</CardTitle>
-            <CardDescription>{`Expenses by category for the selected ${periodLabels[period].toLowerCase()}`}</CardDescription>
+            <CardTitle>{t('dashboard.expenseBreakdown')}</CardTitle>
+            <CardDescription>
+              {t('dashboard.expenseBreakdownDesc', { period: periodName })}
+            </CardDescription>
           </div>
           <PeriodSwitcher value={period} onChange={setPeriod} />
         </div>
@@ -61,7 +74,7 @@ export default function ExpenseCategoryDonut({ globalPeriod }: ExpenseCategoryDo
           isLoading={isLoading}
           error={error}
           data={data}
-          errorMessage={'Failed to load expense breakdown.'}
+          errorMessage={t('dashboard.failedExpenseBreakdown')}
           loadingFallback={<div className={'h-[250px] w-full animate-pulse bg-muted rounded-lg'} />}
         >
           {() => (
@@ -118,7 +131,7 @@ export default function ExpenseCategoryDonut({ globalPeriod }: ExpenseCategoryDo
                               y={(cy || 0) + 12}
                               className={'text-xs fill-muted-foreground'}
                             >
-                              {currencySymbol} {'Total'}
+                              {currencySymbol} {t('dashboard.total')}
                             </tspan>
                           </text>
                         );

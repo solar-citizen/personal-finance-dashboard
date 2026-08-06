@@ -4,7 +4,8 @@
 
 **Goal:** Add full English (`en`) and Ukrainian (`uk`) localization to the Next.js frontend using `i18next`, with SSR cookie-based locale resolution and a language switcher exclusively on the settings page (`/settings`).
 
-**Architecture:** 
+**Architecture:**
+
 1. Define translations in JSON dictionaries (`en.json`, `uk.json`) and validate them via Zod (`schema.ts`).
 2. Server component (`app/layout.tsx`) reads the `NEXT_LOCALE` cookie (falling back to `Accept-Language` or `en`), setting `<html lang={locale}>`.
 3. Client initialization (`lib/i18n.ts` & `providers.tsx`) initializes `i18next` with the server-resolved locale.
@@ -24,12 +25,14 @@
 ## Task 1: Install i18next & Create Translation Dictionaries and Zod Schema
 
 **Files:**
+
 - Modify: `apps/web/package.json`
 - Create: `apps/web/src/locales/en.json`
 - Create: `apps/web/src/locales/uk.json`
 - Create: `apps/web/src/locales/schema.ts`
 
 **Interfaces:**
+
 - Produces: `TranslationSchema`, `en.json`, `uk.json`
 
 - [ ] **Step 1: Install i18next and react-i18next**
@@ -118,12 +121,12 @@ export type TranslationSchemaType = z.infer<typeof TranslationSchema>;
     "cancel": "Скасувати"
   },
   "nav": {
-    "dashboard": "Панель приладів",
+    "dashboard": "Огляд",
     "transactions": "Транзакції",
     "settings": "Налаштування"
   },
   "dashboard": {
-    "title": "Панель приладів",
+    "title": "Огляд",
     "welcome": "З поверненням"
   },
   "transactions": {
@@ -157,11 +160,13 @@ git commit -m "feat(i18n): add locales and validation schema"
 ## Task 2: Implement Client i18n Initialization & SSR Locale Resolution
 
 **Files:**
+
 - Create: `apps/web/src/lib/i18n.ts`
 - Modify: `apps/web/src/app/layout.tsx`
 - Modify: `apps/web/src/app/providers.tsx`
 
 **Interfaces:**
+
 - Consumes: `en.json`, `uk.json`
 - Produces: `initI18n` function, server locale detection in layout
 
@@ -202,9 +207,7 @@ import { cookies, headers } from 'next/headers';
 import Providers from '#src/app/providers';
 import './globals.css';
 
-export default async function RootLayout({
-  children,
-}: React.PropsWithChildren) {
+export default async function RootLayout({ children }: React.PropsWithChildren) {
   const cookieStore = await cookies();
   const cookieLocale = cookieStore.get('NEXT_LOCALE')?.value;
 
@@ -222,9 +225,7 @@ export default async function RootLayout({
   return (
     <html lang={resolvedLocale}>
       <body>
-        <Providers initialLocale={resolvedLocale}>
-          {children}
-        </Providers>
+        <Providers initialLocale={resolvedLocale}>{children}</Providers>
       </body>
     </html>
   );
@@ -291,11 +292,13 @@ git commit -m "feat(i18n): implement SSR locale resolution and client i18n initi
 ## Task 3: Implement Language Switcher on Settings Page
 
 **Files:**
+
 - Modify/Create: `apps/web/src/app/(main)/settings/page.tsx`
 - Create: `apps/web/src/components/settings/Settings.tsx`
 - Create: `apps/web/src/components/settings/LanguageSwitcher.tsx`
 
 **Interfaces:**
+
 - Produces: Language switcher component wired to `NEXT_LOCALE` cookie and `router.refresh()`
 
 - [ ] **Step 1: Create `apps/web/src/components/settings/LanguageSwitcher.tsx`**
@@ -320,16 +323,12 @@ export default function LanguageSwitcher() {
   };
 
   return (
-    <div className="flex flex-col gap-2">
-      <label className="text-sm font-medium text-foreground">
-        {t('settings.language')}
-      </label>
-      <p className="text-xs text-muted-foreground">
-        {t('settings.languageSelect')}
-      </p>
-      <div className="flex gap-2 mt-1">
+    <div className='flex flex-col gap-2'>
+      <label className='text-sm font-medium text-foreground'>{t('settings.language')}</label>
+      <p className='text-xs text-muted-foreground'>{t('settings.languageSelect')}</p>
+      <div className='flex gap-2 mt-1'>
         <button
-          type="button"
+          type='button'
           onClick={() => handleLanguageChange('en')}
           className={`px-4 py-2 text-sm font-medium rounded-md border transition-colors ${
             currentLanguage === 'en'
@@ -340,7 +339,7 @@ export default function LanguageSwitcher() {
           {t('settings.english')}
         </button>
         <button
-          type="button"
+          type='button'
           onClick={() => handleLanguageChange('uk')}
           className={`px-4 py-2 text-sm font-medium rounded-md border transition-colors ${
             currentLanguage === 'uk'
@@ -371,13 +370,11 @@ export default function Settings() {
   const { t } = useTranslation();
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          {t('settings.title')}
-        </h1>
+        <h1 className='text-2xl font-bold tracking-tight text-foreground'>{t('settings.title')}</h1>
       </div>
-      <div className="p-6 bg-card border border-border rounded-lg shadow-sm">
+      <div className='p-6 bg-card border border-border rounded-lg shadow-sm'>
         <LanguageSwitcher />
       </div>
     </div>
@@ -414,11 +411,13 @@ git commit -m "feat(i18n): add language switcher and settings component"
 ## Task 4: Localize Navigation (`MainNav`) and Dashboard/Transactions Headers
 
 **Files:**
+
 - Modify: `apps/web/src/components/MainNav.tsx`
 - Modify: `apps/web/src/components/dashboard/Dashboard.tsx`
 - Modify: `apps/web/src/components/transactions/Transactions.tsx`
 
 **Interfaces:**
+
 - Consumes: `nav.*`, `dashboard.*`, `transactions.*`
 
 - [ ] **Step 1: Update `apps/web/src/components/MainNav.tsx` to use `useTranslation()`**
@@ -441,8 +440,8 @@ export default function MainNav() {
   ];
 
   return (
-    <nav className="flex gap-4">
-      {links.map((link) => {
+    <nav className='flex gap-4'>
+      {links.map(link => {
         const isActive = pathname === link.href;
         return (
           <Link

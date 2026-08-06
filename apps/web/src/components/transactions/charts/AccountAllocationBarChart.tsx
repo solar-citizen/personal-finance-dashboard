@@ -2,6 +2,7 @@
 
 import { accountTypeNames } from '@pfd/shared';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
 import { MonoBankAccountResponseDto } from '#src/_generated/api/pfd-types';
@@ -33,13 +34,6 @@ function isAccountBarPayload(value: unknown): value is AccountBarPayload {
 type CurrencyType = 'UAH' | 'USD' | 'EUR';
 const currencyOptions: CurrencyType[] = ['UAH', 'USD', 'EUR'];
 
-const chartConfig = {
-  normalizedBalance: {
-    label: 'Balance (Normalized)',
-    color: 'var(--color-primary, #244A3F)',
-  },
-} satisfies ChartConfig;
-
 type Props = {
   accounts?: MonoBankAccountResponseDto[];
   accountsLoading: boolean;
@@ -58,6 +52,14 @@ export default function AccountAllocationBarChart({
   ratesError,
 }: Props) {
   const [baseCurrency, setBaseCurrency] = useState<CurrencyType>('UAH');
+  const { t } = useTranslation();
+
+  const chartConfig = {
+    normalizedBalance: {
+      label: t('transactions.normalized'),
+      color: 'var(--color-primary, #244A3F)',
+    },
+  } satisfies ChartConfig;
 
   const isLoading = accountsLoading || ratesLoading;
   const error = accountsError ?? ratesError;
@@ -104,8 +106,8 @@ export default function AccountAllocationBarChart({
       <CardHeader>
         <div className={'flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'}>
           <div>
-            <CardTitle>{'Account Balances & Allocation'}</CardTitle>
-            <CardDescription>{'Normalized balances across all connected accounts'}</CardDescription>
+            <CardTitle>{t('transactions.accountAllocationTitle')}</CardTitle>
+            <CardDescription>{t('transactions.accountAllocationDesc')}</CardDescription>
           </div>
           <div className={'flex gap-1 bg-secondary p-1 rounded-lg text-xs self-start'}>
             {currencyOptions.map(currency => (
@@ -129,7 +131,7 @@ export default function AccountAllocationBarChart({
           isLoading={isLoading}
           error={error}
           data={accounts}
-          errorMessage={'Failed to load account allocation.'}
+          errorMessage={t('transactions.failedAllocation')}
           loadingFallback={<div className={'h-[280px] w-full animate-pulse bg-muted rounded-lg'} />}
         >
           {() => (
@@ -170,11 +172,13 @@ export default function AccountAllocationBarChart({
                           <div className={'flex flex-col gap-1 font-medium'}>
                             <span>{name}</span>
                             <span className={'font-mono text-primary'}>
-                              {'Normalized: '}
+                              {t('transactions.normalized')}
+                              {': '}
                               {Number(value).toLocaleString()} {baseCurrency}
                             </span>
                             <span className={'text-muted-foreground text-xs'}>
-                              {'Original: '}
+                              {t('transactions.original')}
+                              {': '}
                               {rawBalance.toLocaleString()} {rawCurrency}
                             </span>
                           </div>
