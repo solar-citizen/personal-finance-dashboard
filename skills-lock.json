@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "skills": {
+    "planetscale-autonomous-execution-mode": {
+      "source": "planetscale/skills",
+      "sourceType": "github",
+      "skillPath": "13-autonomous-execution-mode/SKILL.md",
+      "computedHash": "e6fc45f8b836cc6199d562fa73ce484b16bc7bbf52860e169d1bb58de09f9814"
+    },
+    "planetscale-best-practices-matrix": {
+      "source": "planetscale/skills",
+      "sourceType": "github",
+      "skillPath": "12-best-practices-matrix/SKILL.md",
+      "computedHash": "9c1b40b319458e6e91cd5ee46c4b1ead29a0aefe0832b9421a17b7e16dc434d6"
+    },
+    "planetscale-change-gates-and-approval-contract": {
+      "source": "planetscale/skills",
+      "sourceType": "github",
+      "skillPath": "11-change-gates-and-approval-contract/SKILL.md",
+      "computedHash": "bf51e32c50b9d870d815b9a1ca5ea1ef5d3d48f6e8a412323257136f82babb9f"
+    },
+    "planetscale-codebase-sqlcommenter-instrumentation": {
+      "source": "planetscale/skills",
+      "sourceType": "github",
+      "skillPath": "08-codebase-sqlcommenter-instrumentation/SKILL.md",
+      "computedHash": "753a6935b7f9c811cdd4abb250c035c9b7efa592c0855286015d8d599f16c89a"
+    },
+    "planetscale-customer-report-template": {
+      "source": "planetscale/skills",
+      "sourceType": "github",
+      "skillPath": "10-customer-report-template/SKILL.md",
+      "computedHash": "d157c66ae0ae319119389059b6135adf358cfebaa8d3a7c4ce10ddcf632c49ef"
+    },
+    "planetscale-mcp-agent-operating-model": {
+      "source": "planetscale/skills",
+      "sourceType": "github",
+      "skillPath": "09-mcp-agent-operating-model/SKILL.md",
+      "computedHash": "762a505bbd4517870459aad2aad30b9aca55664943f50cc614359327b0d27a56"
+    },
+    "planetscale-postgres-safety-review": {
+      "source": "planetscale/skills",
+      "sourceType": "github",
+      "skillPath": "03-postgres-safety-review/SKILL.md",
+      "computedHash": "c362081f6ff9d43a303b0673db9268ce58edaa0979661120fce9d0cc4b2e9d81"
+    },
+    "planetscale-pscale-cli-automation": {
+      "source": "planetscale/skills",
+      "sourceType": "github",
+      "skillPath": "14-pscale-cli-automation/SKILL.md",
+      "computedHash": "53583b0c63586e17b68d43c1bcc965b5a3fa767417755bab18d8abfeee6632df"
+    },
+    "planetscale-query-insights-and-tags": {
+      "source": "planetscale/skills",
+      "sourceType": "github",
+      "skillPath": "04-query-insights-and-tags/SKILL.md",
+      "computedHash": "946f7a9cccea108f3ce3089f79056d709d91688c4c2e4d9232c8222b15ecf445"
+    },
+    "planetscale-readonly-inventory": {
+      "source": "planetscale/skills",
+      "sourceType": "github",
+      "skillPath": "01-readonly-inventory/SKILL.md",
+      "computedHash": "441457c2c954439ebf7a892665f3796152c315bc645e5bc174ec98b351b5d54e"
+    },
+    "planetscale-safe-orchestrator": {
+      "source": "planetscale/skills",
+      "sourceType": "github",
+      "skillPath": "00-safe-orchestrator/SKILL.md",
+      "computedHash": "4ad283ceb65378f5251731c86e31adfa3482aea4fba4ffea7d1eb5353925498b"
+    },
+    "planetscale-schema-recommendations-agent-loop": {
+      "source": "planetscale/skills",
+      "sourceType": "github",
+      "skillPath": "07-schema-recommendations-agent-loop/SKILL.md",
+      "computedHash": "4cd4ea40b191829035a97ec16e360f24f12658ba636c67916703343621ed7eeb"
+    },
+    "planetscale-traffic-control-recommendations": {
+      "source": "planetscale/skills",
+      "sourceType": "github",
+      "skillPath": "05-traffic-control-recommendations/SKILL.md",
+      "computedHash": "fff12793d07b4631f2a4e8ade0886326e91b9b19cd7f27bbf49348d2b2801ad1"
+    },
+    "planetscale-vitess-safety-review": {
+      "source": "planetscale/skills",
+      "sourceType": "github",
+      "skillPath": "02-vitess-safety-review/SKILL.md",
+      "computedHash": "c6ba6a9c6256c11950bbf91abcdd7186ebc34a19caacb430aa598d2a767de3a2"
+    },
+    "planetscale-webhook-automation-recommendations": {
+      "source": "planetscale/skills",
+      "sourceType": "github",
+      "skillPath": "06-webhook-automation-recommendations/SKILL.md",
+      "computedHash": "cc3f236badc36d6ae29c97b5aa2b0f334bd736a3f434de652ffa5968446dcbeb"
+    },
+    "vercel-react-best-practices": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-best-practices/SKILL.md",
+      "computedHash": "ca7b0c0c6e5f2750043f7f0cd72d16ac4e2abc48f9b5500d047a4b77a2506212"
+    },
+    "vercel-react-view-transitions": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-view-transitions/SKILL.md",
+      "computedHash": "c8952fc9127fa0564d0cb71dccb4215a5608ac933b5831104f09173a97a46f85"
+    },
+    "web-design-guidelines": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/web-design-guidelines/SKILL.md",
+      "computedHash": "f3bc47f890f42a44db1007ab390709ec368e4b8c089baee6b0007182236ac474"
+    }
+  }
+}

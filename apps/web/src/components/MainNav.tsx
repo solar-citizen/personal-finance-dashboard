@@ -1,23 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 
 import { useLogout } from '#src/_generated/api/pfd-components';
 
-type NavLink = {
-  name: `${Uppercase<string>}${string}`;
-  href: `/${string}`;
-};
-
-const links: NavLink[] = [
-  { name: 'Dashboard', href: '/dashboard' },
-  { name: 'Transactions', href: '/transactions' },
-  { name: 'Settings', href: '/settings' },
-];
-
 export default function MainNav() {
   const router = useRouter();
+  const pathname = usePathname();
+  const { t } = useTranslation();
 
   const { mutate } = useLogout();
 
@@ -26,20 +18,45 @@ export default function MainNav() {
     router.replace('/login');
   };
 
+  const links = [
+    { name: t('nav.dashboard'), href: '/dashboard' },
+    { name: t('nav.transactions'), href: '/transactions' },
+    { name: t('nav.settings'), href: '/settings' },
+  ];
+
   return (
     <nav
       className={
-        'h-14 bg-background fixed top-0 right-0 left-0 z-10 flex w-full items-center gap-4 px-5 py-2.5 shadow-md'
+        'h-14 bg-background fixed top-0 right-0 left-0 z-10 flex w-full items-center justify-between px-5 py-2.5 shadow-md'
       }
     >
-      {links.map(({ name, href }) => (
-        <Link key={name} href={href}>
-          {name}
-        </Link>
-      ))}
+      <div className={'flex items-center gap-4'}>
+        {links.map(({ name, href }) => {
+          const isActive = pathname === href;
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={
+                isActive
+                  ? 'text-foreground font-semibold'
+                  : 'text-muted-foreground hover:text-foreground'
+              }
+            >
+              {name}
+            </Link>
+          );
+        })}
+      </div>
 
-      {/* FIXME: Temporary unstyled button */}
-      <button onClick={handleLogout}>{'Logout'}</button>
+      <button
+        onClick={handleLogout}
+        className={
+          'text-sm font-medium text-muted-foreground hover:text-destructive transition-colors cursor-pointer'
+        }
+      >
+        {t('common.logout')}
+      </button>
     </nav>
   );
 }

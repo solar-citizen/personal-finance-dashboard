@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 
 import { RegisterSchema } from '#pfd-schemas';
 import { useRegister } from '#src/_generated/api/pfd-components';
@@ -12,6 +13,7 @@ import AuthCard from './AuthCard';
 
 export default function RegisterForm() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   const { mutate, isPending } = useRegister({
     onMutate: () => {
@@ -39,11 +41,11 @@ export default function RegisterForm() {
 
   return (
     <AuthCard
-      title={'Create Account'}
-      description={'Enter your details to create an account.'}
-      footerText={'Already have an account?'}
+      title={t('auth.createAccount')}
+      description={t('auth.registerSubtitle')}
+      footerText={t('auth.hasAccount')}
       footerLink={'/login'}
-      footerLinkText={'Sign in'}
+      footerLinkText={t('auth.signIn')}
     >
       <Form
         defaultValues={{
@@ -59,7 +61,7 @@ export default function RegisterForm() {
         <FormInput
           name={'name'}
           type={'text'}
-          label={'Full Name'}
+          label={t('auth.fullName')}
           placeholder={'John Doe'}
           disabled={isPending}
         />
@@ -67,7 +69,7 @@ export default function RegisterForm() {
         <FormInput
           name={'email'}
           type={'email'}
-          label={'Email'}
+          label={t('auth.email')}
           placeholder={'admin@finance.ua'}
           disabled={isPending}
         />
@@ -75,7 +77,7 @@ export default function RegisterForm() {
         <FormInput
           name={'password'}
           type={'password'}
-          label={'Password'}
+          label={t('auth.password')}
           placeholder={'At least 8 characters'}
           disabled={isPending}
           deps={['repeatPassword']}
@@ -84,7 +86,7 @@ export default function RegisterForm() {
         <FormInput
           name={'repeatPassword'}
           type={'password'}
-          label={'Confirm Password'}
+          label={t('auth.confirmPassword')}
           placeholder={'Re-enter your password'}
           disabled={isPending}
         />
@@ -97,7 +99,7 @@ export default function RegisterForm() {
             'cursor-pointer inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full mt-4'
           }
         >
-          {'Create Account'}
+          {t('auth.createAccount')}
         </button>
       </Form>
     </AuthCard>
