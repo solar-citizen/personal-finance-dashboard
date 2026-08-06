@@ -5,7 +5,7 @@ import { Inter } from 'next/font/google';
 import { cookies, headers } from 'next/headers';
 
 import { cn } from '#src/lib/utils';
-import { AppLanguage, DEFAULT_LANGUAGE } from '#src/locales/types';
+import { AppLanguage, defaultLanguage } from '#src/locales/types';
 
 import { Providers } from './providers';
 
@@ -27,7 +27,7 @@ export default async function RootLayout({ children }: Readonly<React.PropsWithC
       ? rawCookieLocale
       : undefined;
 
-  let resolvedLocale: AppLanguage = cookieLocale ?? DEFAULT_LANGUAGE;
+  let resolvedLocale: AppLanguage = cookieLocale ?? defaultLanguage;
 
   if (!cookieLocale) {
     const headerList = await headers();

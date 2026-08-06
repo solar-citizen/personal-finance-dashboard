@@ -3,4 +3,4 @@ export enum AppLanguage {
   UK = 'uk',
 }
 
-export const DEFAULT_LANGUAGE = AppLanguage.EN;
+export const defaultLanguage = AppLanguage.EN;
