@@ -27,18 +27,9 @@ export default async function RootLayout({ children }: Readonly<React.PropsWithC
       ? rawCookieLocale
       : undefined;
 
-  let resolvedLocale: AppLanguage = cookieLocale ?? defaultLanguage;
-
-  if (!cookieLocale) {
-    const headerList = await headers();
-    const acceptLanguage = headerList.get('accept-language');
-
-    if (acceptLanguage?.includes('uk')) {
-      resolvedLocale = AppLanguage.UK;
-    } else {
-      resolvedLocale = AppLanguage.EN;
-    }
-  }
+  const acceptLanguage = (await headers()).get('accept-language');
+  const resolvedLocale: AppLanguage =
+    cookieLocale ?? (acceptLanguage?.includes('uk') ? AppLanguage.UK : defaultLanguage);
 
   return (
     <html lang={resolvedLocale} suppressHydrationWarning>
