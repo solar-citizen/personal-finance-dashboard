@@ -11,7 +11,7 @@ const resources = {
 
 export function initI18n(lng = 'en') {
   if (!i18n.isInitialized) {
-    i18n.use(initReactI18next).init({
+    void i18n.use(initReactI18next).init({
       resources,
       lng,
       fallbackLng: 'en',
@@ -20,7 +20,7 @@ export function initI18n(lng = 'en') {
       },
     });
   } else if (i18n.language !== lng) {
-    i18n.changeLanguage(lng);
+    void i18n.changeLanguage(lng);
   }
 
   return i18n;
