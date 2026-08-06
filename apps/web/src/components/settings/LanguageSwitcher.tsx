@@ -3,12 +3,15 @@
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 
+import { AppLanguage } from '#src/locales/types';
+
 export default function LanguageSwitcher() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
-  const currentLanguage = i18n.language || 'en';
+  const currentLanguage: AppLanguage =
+    i18n.language === ('uk' as const) ? AppLanguage.UK : AppLanguage.EN;
 
-  const handleLanguageChange = (lng: string) => {
+  const handleLanguageChange = (lng: AppLanguage) => {
     void i18n.changeLanguage(lng);
     document.cookie = `NEXT_LOCALE=${lng}; path=/; max-age=31536000; SameSite=Lax`;
     localStorage.setItem('i18nextLng', lng);
@@ -22,9 +25,9 @@ export default function LanguageSwitcher() {
       <div className={'flex gap-2 mt-1'}>
         <button
           type={'button'}
-          onClick={() => handleLanguageChange('en')}
+          onClick={() => handleLanguageChange(AppLanguage.EN)}
           className={`px-4 py-2 text-sm font-medium rounded-md border transition-colors ${
-            currentLanguage === 'en'
+            currentLanguage === AppLanguage.EN
               ? 'bg-primary text-primary-foreground border-primary'
               : 'bg-background text-foreground border-border hover:bg-muted'
           }`}
@@ -33,9 +36,9 @@ export default function LanguageSwitcher() {
         </button>
         <button
           type={'button'}
-          onClick={() => handleLanguageChange('uk')}
+          onClick={() => handleLanguageChange(AppLanguage.UK)}
           className={`px-4 py-2 text-sm font-medium rounded-md border transition-colors ${
-            currentLanguage === 'uk'
+            currentLanguage === AppLanguage.UK
               ? 'bg-primary text-primary-foreground border-primary'
               : 'bg-background text-foreground border-border hover:bg-muted'
           }`}

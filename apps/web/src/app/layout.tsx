@@ -5,6 +5,7 @@ import { Inter } from 'next/font/google';
 import { cookies, headers } from 'next/headers';
 
 import { cn } from '#src/lib/utils';
+import { AppLanguage, DEFAULT_LANGUAGE } from '#src/locales/types';
 
 import { Providers } from './providers';
 
@@ -20,18 +21,22 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: Readonly<React.PropsWithChildren>) {
   const cookieStore = await cookies();
-  const cookieLocale = cookieStore.get('NEXT_LOCALE')?.value;
+  const rawCookieLocale = cookieStore.get('NEXT_LOCALE')?.value;
+  const cookieLocale =
+    rawCookieLocale === AppLanguage.UK || rawCookieLocale === AppLanguage.EN
+      ? rawCookieLocale
+      : undefined;
 
-  let resolvedLocale = cookieLocale;
+  let resolvedLocale: AppLanguage = cookieLocale ?? DEFAULT_LANGUAGE;
 
-  if (!resolvedLocale) {
+  if (!cookieLocale) {
     const headerList = await headers();
     const acceptLanguage = headerList.get('accept-language');
 
     if (acceptLanguage?.includes('uk')) {
-      resolvedLocale = 'uk';
+      resolvedLocale = AppLanguage.UK;
     } else {
-      resolvedLocale = 'en';
+      resolvedLocale = AppLanguage.EN;
     }
   }
 
