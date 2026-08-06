@@ -1,0 +1,28 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "transactions": "Transactions",
+    "settings": "Settings"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome back"
+  },
+  "transactions": {
+    "title": "Transactions",
+    "addTransaction": "Add Transaction"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "languageSelect": "Select Language",
+    "english": "English",
+    "ukrainian": "Ukrainian"
+  }
+}

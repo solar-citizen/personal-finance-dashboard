@@ -3,9 +3,15 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { ThemeProvider } from 'next-themes';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
-export function Providers({ children }: { children: React.ReactNode }) {
+import { initI18n } from '#src/lib/i18n';
+
+type ProvidersProps = React.PropsWithChildren<{
+  initialLocale: string;
+}>;
+
+export function Providers({ children, initialLocale }: ProvidersProps) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -17,6 +23,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
         },
       }),
   );
+
+  useEffect(() => {
+    initI18n(initialLocale);
+  }, [initialLocale]);
+
+  initI18n(initialLocale);
 
   return (
     <QueryClientProvider client={queryClient}>

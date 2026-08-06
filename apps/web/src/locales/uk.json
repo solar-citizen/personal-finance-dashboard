@@ -1,0 +1,28 @@
+{
+  "common": {
+    "loading": "Завантаження...",
+    "error": "Сталася помилка",
+    "save": "Зберегти",
+    "cancel": "Скасувати"
+  },
+  "nav": {
+    "dashboard": "Панель приладів",
+    "transactions": "Транзакції",
+    "settings": "Налаштування"
+  },
+  "dashboard": {
+    "title": "Панель приладів",
+    "welcome": "З поверненням"
+  },
+  "transactions": {
+    "title": "Транзакції",
+    "addTransaction": "Додати транзакцію"
+  },
+  "settings": {
+    "title": "Налаштування",
+    "language": "Мова",
+    "languageSelect": "Виберіть мову",
+    "english": "Англійська",
+    "ukrainian": "Українська"
+  }
+}
