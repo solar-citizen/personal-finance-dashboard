@@ -1,7 +1,7 @@
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
-import { MonoBankApiClient } from 'src/monobank/services';
+import { MonoBankApiClient } from 'src/monobank/services/monobank-api-client.service';
 
 import { CurrencyController } from './currency.controller';
 import { CurrencyService } from './currency.service';

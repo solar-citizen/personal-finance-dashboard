@@ -511,7 +511,7 @@ git commit -m "feat(privatbank): add PrivatBank category resolution service"
 - `PrivatBankService.inspectStatement(userId: string, buffer: Buffer)`
 - `PrivatBankService.uploadStatement(userId: string, buffer: Buffer, dto: UploadPrivatBankStatementDto)`
 
-- [ ] **Step 1: Define PrivatBank Zod Schemas**
+- [x] **Step 1: Define PrivatBank Zod Schemas**
 
 Create `apps/api/src/privatbank/privatbank.schema.ts`:
 ```ts
@@ -541,7 +541,7 @@ export const uploadPrivatBankResponseSchema = z.object({
 });
 ```
 
-- [ ] **Step 2: Implement `PrivatBankService`**
+- [x] **Step 2: Implement `PrivatBankService`**
 
 Create `apps/api/src/privatbank/privatbank.service.ts`:
 ```ts
@@ -674,7 +674,7 @@ export class PrivatBankService {
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/api/src/privatbank/privatbank.schema.ts apps/api/src/privatbank/privatbank.service.ts
