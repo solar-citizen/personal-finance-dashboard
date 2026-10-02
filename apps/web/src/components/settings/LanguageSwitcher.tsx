@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 
+import { cn } from '#src/lib/utils';
 import { AppLanguage } from '#src/locales/types';
 
 export default function LanguageSwitcher() {
@@ -25,22 +26,30 @@ export default function LanguageSwitcher() {
         <button
           type={'button'}
           onClick={() => handleLanguageChange(AppLanguage.EN)}
-          className={`px-4 py-2 text-sm font-medium rounded-md border transition-colors ${
-            currentLanguage === AppLanguage.EN
-              ? 'bg-primary text-primary-foreground border-primary'
-              : 'bg-background text-foreground border-border hover:bg-muted'
-          }`}
+          className={cn(
+            'px-4 py-2 text-sm font-medium rounded-md border transition-colors cursor-pointer',
+            {
+              'bg-primary text-primary-foreground border-primary':
+                currentLanguage === AppLanguage.EN,
+              'bg-background text-foreground border-border hover:bg-muted':
+                currentLanguage !== AppLanguage.EN,
+            },
+          )}
         >
           {t('settings.english')}
         </button>
         <button
           type={'button'}
           onClick={() => handleLanguageChange(AppLanguage.UK)}
-          className={`px-4 py-2 text-sm font-medium rounded-md border transition-colors ${
-            currentLanguage === AppLanguage.UK
-              ? 'bg-primary text-primary-foreground border-primary'
-              : 'bg-background text-foreground border-border hover:bg-muted'
-          }`}
+          className={cn(
+            'px-4 py-2 text-sm font-medium rounded-md border transition-colors cursor-pointer',
+            {
+              'bg-primary text-primary-foreground border-primary':
+                currentLanguage === AppLanguage.UK,
+              'bg-background text-foreground border-border hover:bg-muted':
+                currentLanguage !== AppLanguage.UK,
+            },
+          )}
         >
           {t('settings.ukrainian')}
         </button>
