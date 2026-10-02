@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/db/prisma.service';
 
+function includesIgnoreCase(value: string, search: string): boolean {
+  return value.toLowerCase().includes(search);
+}
+
 @Injectable()
 export class PrivatBankCategoryService {
   private categoryCache: { id: string; name: string }[] | null = null;
@@ -12,16 +16,14 @@ export class PrivatBankCategoryService {
       select: { id: true, name: true },
     });
 
-    const trimmed = categoryName.trim();
+    const trimmed = categoryName.trim().toLowerCase();
     const exact = this.categoryCache.find(
-      (c) => c.name.toLowerCase() === trimmed.toLowerCase(),
+      ({ name }) => name.toLowerCase() === trimmed,
     );
 
     if (exact) {
       return exact.id;
     }
-
-    const trimmedLower = trimmed.toLowerCase();
 
     // Keyword heuristics map
     const keywords: Record<string, string[]> = {
@@ -34,14 +36,11 @@ export class PrivatBankCategoryService {
     };
 
     for (const [key, aliases] of Object.entries(keywords)) {
-      if (
-        trimmedLower.includes(key) ||
-        aliases.some((a) => trimmedLower.includes(a))
-      ) {
+      if (trimmed.includes(key) || aliases.some((a) => trimmed.includes(a))) {
         const matched = this.categoryCache.find(
-          (c) =>
-            aliases.some((a) => c.name.toLowerCase().includes(a)) ||
-            c.name.toLowerCase().includes(key),
+          ({ name }) =>
+            aliases.some((a) => includesIgnoreCase(name, a)) ||
+            includesIgnoreCase(name, key),
         );
 
         if (matched) {
@@ -50,16 +49,16 @@ export class PrivatBankCategoryService {
       }
     }
 
-    for (const cat of this.categoryCache) {
-      const catLower = cat.name.toLowerCase();
+    for (const { id, name } of this.categoryCache) {
+      const catLower = name.toLowerCase();
 
-      if (trimmedLower.includes(catLower) || catLower.includes(trimmedLower)) {
-        return cat.id;
+      if (trimmed.includes(catLower) || catLower.includes(trimmed)) {
+        return id;
       }
     }
 
     // Fallback to "Інше"
-    const fallback = this.categoryCache.find((c) => c.name === 'Інше');
+    const fallback = this.categoryCache.find(({ name }) => name === 'Інше');
 
     return fallback ? fallback.id : null;
   }

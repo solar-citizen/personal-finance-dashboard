@@ -28,6 +28,7 @@ export type ParsedPrivatBankStatement = {
 export class PrivatBankParserService {
   async parseXlsx(buffer: Buffer): Promise<ParsedPrivatBankStatement> {
     const workbook = new ExcelJS.Workbook();
+
     await workbook.xlsx.load(buffer);
 
     if (workbook.worksheets.length === 0) {
@@ -100,6 +101,7 @@ export class PrivatBankParserService {
     const sorted = [...transactions].sort(
       (a, b) => a.time.getTime() - b.time.getTime(),
     );
+
     const periodFrom = sorted[0].time;
     const periodTo = sorted[sorted.length - 1].time;
     const latestBalance = sorted[sorted.length - 1].balance;
@@ -147,7 +149,10 @@ export class PrivatBankParserService {
   private parseDate(dateStr: string): Date {
     const parts = dateStr.split(' ');
 
-    if (parts.length < 2) return new Date(dateStr);
+    if (parts.length < 2) {
+      return new Date(dateStr);
+    }
+
     const [d, m, y] = parts[0].split('.').map(Number);
     const [h, min, s] = parts[1].split(':').map(Number);
 
@@ -157,7 +162,9 @@ export class PrivatBankParserService {
   private amountToKopiykas(valStr: string): bigint {
     const num = parseFloat(valStr.replace(',', '.').replace(/\s+/g, ''));
 
-    if (isNaN(num)) return 0n;
+    if (isNaN(num)) {
+      return 0n;
+    }
 
     return BigInt(Math.round(num * 100));
   }
