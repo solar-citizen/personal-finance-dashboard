@@ -16,6 +16,11 @@ enum Currency {
   eur
 }
 
+enum Bank {
+  monobank
+  privatbank
+}
+
 enum AccountType {
   black
   white
@@ -109,24 +114,25 @@ model SyncJob {
 }
 
 model Account {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String       @id @default(cuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  // MonoBank specific
-  accountId String
-  iban      String?
-  type      AccountType
-  currency  Currency
-  balance   BigInt   // in minimal units (kopiykas)
-  creditLimit BigInt @default(0)
+  bank        Bank         @default(monobank)
+  name        String?
+  maskedPan   String?
+
+  accountId   String
+  iban        String?
+  type        AccountType?
+  currency    Currency     @default(uah)
+  balance     BigInt
+  creditLimit BigInt       @default(0)
   
-  // Sync metadata
   monoToken    String?
   lastSyncedAt DateTime?
 
-  syncJobs  SyncJob[]
-  
+  syncJobs     SyncJob[]
   transactions Transaction[]
   
   createdAt DateTime @default(now())
@@ -154,22 +160,21 @@ model Transaction {
   accountId  String
   account    Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
   
-  // MonoBank data
-  externalId  String   // transaction ID
-  time        DateTime // transaction time
+  externalId  String
+  time        DateTime
   description String
   
-  mcc         Int
+  mcc         Int?
   originalMcc Int?
   hold        Boolean  @default(false)
   
-  amount            BigInt // in minimal units (kopiykas)
+  amount            BigInt
   operationAmount   BigInt
-  currencyCode      Int    // ISO 4217 numeric code
+  currencyCode      Int
   
   commissionRate    BigInt @default(0)
   cashbackAmount    BigInt @default(0)
-  balance           BigInt // balance after transaction
+  balance           BigInt
   
   comment           String?
   receiptId         String?
@@ -179,7 +184,6 @@ model Transaction {
   counterIban       String?
   counterName       String?
   
-  // Our categorization
   categoryId String?
   category   Category? @relation(fields: [categoryId], references: [id])
   
