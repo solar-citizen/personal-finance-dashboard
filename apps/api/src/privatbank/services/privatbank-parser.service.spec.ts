@@ -8,21 +8,11 @@ import { PrivatBankParserService } from './privatbank-parser.service';
 describe('PrivatBankParserService', () => {
   const service = new PrivatBankParserService();
   const possiblePaths = [
-    path.resolve(
-      __dirname,
-      '../../../../../Y2H6sDPKT2ONjps3leJlDx1GrRTJflI7ig7bSUQEtik.xlsx',
-    ),
+    path.resolve(__dirname, '../../../test/fixtures/privatbank-statement.xlsx'),
+    path.resolve(process.cwd(), 'test/fixtures/privatbank-statement.xlsx'),
     path.resolve(
       process.cwd(),
-      '../Y2H6sDPKT2ONjps3leJlDx1GrRTJflI7ig7bSUQEtik.xlsx',
-    ),
-    path.resolve(
-      process.cwd(),
-      'Y2H6sDPKT2ONjps3leJlDx1GrRTJflI7ig7bSUQEtik.xlsx',
-    ),
-    path.resolve(
-      process.cwd(),
-      '../../Y2H6sDPKT2ONjps3leJlDx1GrRTJflI7ig7bSUQEtik.xlsx',
+      'apps/api/test/fixtures/privatbank-statement.xlsx',
     ),
   ];
   const sampleFilePath =

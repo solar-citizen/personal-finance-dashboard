@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Post,
@@ -26,8 +27,12 @@ export class PrivatBankController {
   @UseInterceptors(FileInterceptor('file'))
   async inspectStatement(
     @CurrentUser('id') userId: string,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file?: Express.Multer.File,
   ): Promise<InspectPrivatBankResponseDto> {
+    if (!file?.buffer) {
+      throw new BadRequestException('Statement file is required');
+    }
+
     return await this.privatBankService.inspectStatement(userId, file.buffer);
   }
 
@@ -36,13 +41,17 @@ export class PrivatBankController {
   @UseInterceptors(FileInterceptor('file'))
   async uploadStatement(
     @CurrentUser('id') userId: string,
-    @UploadedFile() file: Express.Multer.File,
-    @Body() body: UploadPrivatBankStatementDto,
+    @UploadedFile() file?: Express.Multer.File,
+    @Body() body?: UploadPrivatBankStatementDto,
   ): Promise<UploadPrivatBankResponseDto> {
+    if (!file?.buffer) {
+      throw new BadRequestException('Statement file is required');
+    }
+
     return await this.privatBankService.uploadStatement(
       userId,
       file.buffer,
-      body,
+      body ?? {},
     );
   }
 }

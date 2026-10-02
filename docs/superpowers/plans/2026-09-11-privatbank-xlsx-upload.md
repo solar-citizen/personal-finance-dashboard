@@ -190,7 +190,7 @@ import { PrivatBankParserService } from './privatbank-parser.service';
 
 describe('PrivatBankParserService', () => {
   const service = new PrivatBankParserService();
-  const sampleFilePath = path.resolve(process.cwd(), '../../Y2H6sDPKT2ONjps3leJlDx1GrRTJflI7ig7bSUQEtik.xlsx');
+  const sampleFilePath = path.resolve(__dirname, '../../../test/fixtures/privatbank-statement.xlsx');
 
   it('should correctly parse the reference PrivatBank statement', async () => {
     const fileBuffer = fs.readFileSync(sampleFilePath);
@@ -973,7 +973,7 @@ git commit -m "feat(web): add PrivatBank upload modal and update AccountsSummary
 
 ### Task 8: End-to-End Verification & Sanity Test
 
-- [ ] **Step 1: Test with reference statement `Y2H6sDPKT2ONjps3leJlDx1GrRTJflI7ig7bSUQEtik.xlsx`**
+- [x] **Step 1: Test with reference statement `apps/api/test/fixtures/privatbank-statement.xlsx`**
 
 Run dev server or write integration script to inspect and upload the file. Verify:
 - Account created or matched correctly.
@@ -981,7 +981,7 @@ Run dev server or write integration script to inspect and upload the file. Verif
 - Re-uploading statement results in 0 new transactions and 286 updated.
 - Accounts and latest transactions render PrivatBank data seamlessly.
 
-- [ ] **Step 2: Commit final changes**
+- [x] **Step 2: Commit final changes**
 
 ```bash
 git commit --allow-empty -m "chore: verified privatbank statement import end-to-end"
