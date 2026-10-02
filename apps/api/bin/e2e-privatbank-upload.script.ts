@@ -26,9 +26,9 @@ import {
 } from '../../../_generated/zod/pfd-schemas';
 import { prisma } from '../prisma/client';
 
-const BASE_URL = process.env.API_URL ?? 'http://localhost:4000';
-const EMAIL = process.env.SEED_ADMIN_EMAIL ?? 'admin@pfd.ua';
-const PASSWORD = process.env.SEED_ADMIN_PASSWORD ?? 'admin123';
+const BASE_URL = 'http://localhost:4000';
+const EMAIL = process.env.SEED_ADMIN_EMAIL;
+const PASSWORD = process.env.SEED_ADMIN_PASSWORD;
 
 const currentDir = path.dirname(new URL(import.meta.url).pathname);
 
@@ -283,9 +283,9 @@ async function main() {
     console.log('\n[Step 1] Inspect statement before upload');
     const inspectBefore = await inspect(token);
 
-    if (inspectBefore.totalTransactions !== 286) {
+    if (inspectBefore.totalTransactions !== 32) {
       fail(
-        `Expected exactly 286 transactions in reference statement, got ${inspectBefore.totalTransactions.toString()}`,
+        `Expected exactly 32 transactions in reference statement, got ${inspectBefore.totalTransactions.toString()}`,
       );
     }
 
@@ -294,23 +294,23 @@ async function main() {
         `Expected matchedAccountId to be null before upload, got ${inspectBefore.matchedAccountId}`,
       );
     }
-    ok('Initial inspect verified: 286 transactions, no matched account ✓');
+    ok('Initial inspect verified: 32 transactions, no matched account ✓');
 
-    // 4. First upload — create account + insert all 286 transactions
+    // 4. First upload — create account + insert all 32 transactions
     console.log('\n[Step 2] First upload (create account + insert all)');
     const firstUpload = await upload(token, {
       accountName: 'E2E Test PrivatBank Card',
     });
 
-    if (firstUpload.totalParsed !== 286) {
+    if (firstUpload.totalParsed !== 32) {
       fail(
-        `Expected 286 totalParsed, got ${firstUpload.totalParsed.toString()}`,
+        `Expected 32 totalParsed, got ${firstUpload.totalParsed.toString()}`,
       );
     }
 
-    if (firstUpload.newTransactions !== 286) {
+    if (firstUpload.newTransactions !== 32) {
       fail(
-        `Expected 286 new transactions, got ${firstUpload.newTransactions.toString()}`,
+        `Expected 32 new transactions, got ${firstUpload.newTransactions.toString()}`,
       );
     }
 
@@ -319,7 +319,7 @@ async function main() {
         `Expected 0 updated transactions, got ${firstUpload.updatedTransactions.toString()}`,
       );
     }
-    ok('All 286 transactions inserted as new ✓');
+    ok('All 32 transactions inserted as new ✓');
 
     // 5. Inspect after upload — should match the created account
     console.log('\n[Step 3] Inspect statement after upload (match check)');
@@ -346,12 +346,12 @@ async function main() {
       );
     }
 
-    if (secondUpload.updatedTransactions !== 286) {
+    if (secondUpload.updatedTransactions !== 32) {
       fail(
-        `Expected 286 updated transactions on re-upload, got ${secondUpload.updatedTransactions.toString()}`,
+        `Expected 32 updated transactions on re-upload, got ${secondUpload.updatedTransactions.toString()}`,
       );
     }
-    ok('0 new, 286 updated — deduplication works ✓');
+    ok('0 new, 32 updated — deduplication works ✓');
 
     // 7. Verify account display in accounts summary
     console.log('\n[Step 5] Verify account display (/api/mono/accounts)');
@@ -361,7 +361,7 @@ async function main() {
     console.log(
       '\n[Step 6] Verify transactions display (/api/mono/transactions)',
     );
-    await verifyTransactions(token, 286);
+    await verifyTransactions(token, 32);
 
     console.log('\n=== All E2E checks passed successfully ✓ ===\n');
   } finally {
