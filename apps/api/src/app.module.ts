@@ -15,6 +15,7 @@ import { ConfigService } from './config/config.service';
 import { CurrencyModule } from './currency/currency.module';
 import { PrismaModule } from './db/prisma.module';
 import { MonoBankModule } from './monobank/monobank.module';
+import { PrivatBankModule } from './privatbank/privatbank.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { MonoBankModule } from './monobank/monobank.module';
     MonoBankModule,
     AiModule,
     CurrencyModule,
+    PrivatBankModule,
   ],
   providers: [
     {
