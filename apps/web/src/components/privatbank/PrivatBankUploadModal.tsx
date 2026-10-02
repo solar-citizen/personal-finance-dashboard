@@ -60,7 +60,7 @@ export default function PrivatBankUploadModal({ isOpen, onClose, onSuccess }: Pr
 
     if (useExisting && inspectData?.matchedAccountId) {
       formData.append('accountId', inspectData.matchedAccountId);
-    } else if (!useExisting && customName.trim()) {
+    } else {
       formData.append('accountName', customName.trim());
     }
 
@@ -174,7 +174,7 @@ export default function PrivatBankUploadModal({ isOpen, onClose, onSuccess }: Pr
                 type={'button'}
                 onClick={handleClose}
                 className={
-                  'px-4 py-2 border border-input rounded text-sm hover:bg-accent transition-colors'
+                  'px-4 py-2 border border-input rounded text-sm hover:bg-accent transition-colors cursor-pointer'
                 }
                 disabled={isUploading}
               >
@@ -185,7 +185,7 @@ export default function PrivatBankUploadModal({ isOpen, onClose, onSuccess }: Pr
                 onClick={handleConfirm}
                 disabled={isUploading}
                 className={
-                  'px-4 py-2 bg-primary text-primary-foreground rounded text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50'
+                  'px-4 py-2 bg-primary text-primary-foreground rounded text-sm font-medium hover:scale-105 transition-all duration-200 ease-out disabled:opacity-50 cursor-pointer'
                 }
               >
                 {isUploading ? t('privatbank.importing') : t('privatbank.confirmImport')}

@@ -83,7 +83,7 @@ export default function AccountsSummary({ data, isLoading, error }: Props) {
           type={'button'}
           onClick={() => setIsUploadOpen(true)}
           className={
-            'px-2.5 py-1 text-xs font-medium rounded border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors'
+            'px-2.5 py-1 text-xs font-medium rounded border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer'
           }
         >
           {t('privatbank.importButton')}
