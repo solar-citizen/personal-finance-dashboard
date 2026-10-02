@@ -94,7 +94,7 @@ export default function AccountAllocationBarChart({
     const normalized = convertToCurrency(rawBal, currency, baseCurrency);
 
     return {
-      name: `${accountTypeNames[acc.type] || acc.type} (${currency})`,
+      name: `${(acc.type ? accountTypeNames[acc.type] : null) ?? acc.type ?? 'Account'} (${currency})`,
       rawBalance: rawBal,
       rawCurrency: currency,
       normalizedBalance: Number(normalized.toFixed(2)),

@@ -30,7 +30,7 @@ function AccountsList({ accounts }: AccountsListProps) {
             className={`flex justify-between items-center border-b last:border-b-0 ${rowClassName}`}
           >
             <span>
-              {accountTypeNames[type] || type}
+              {(type ? accountTypeNames[type] : null) ?? type ?? 'Account'}
               {' ('} {currencyUpper} {')'}
             </span>
             <span className={'font-mono'}>

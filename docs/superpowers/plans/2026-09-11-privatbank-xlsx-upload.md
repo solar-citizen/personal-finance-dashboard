@@ -771,7 +771,7 @@ git commit -m "feat(privatbank): register PrivatBank controller and module"
 **Files:**
 - Run root codegen to update OpenAPI spec & generated web components/types.
 
-- [ ] **Step 1: Execute `bun run codegen`**
+- [x] **Step 1: Execute `bun run codegen`**
 
 Run from root:
 ```bash
@@ -779,7 +779,7 @@ bun run codegen
 ```
 Expected: `_generated/zod/pfd-dtos.ts`, OpenAPI spec, and `apps/web/src/_generated/api/pfd-components.ts` generated successfully without errors.
 
-- [ ] **Step 2: Commit generated code**
+- [x] **Step 2: Commit generated code**
 
 ```bash
 git add .
