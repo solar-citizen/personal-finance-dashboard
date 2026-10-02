@@ -19,7 +19,7 @@ export const MonoBankAccountResponseSchema = z.object({
   id: z.string().min(1),
   accountId: z.string().min(1),
   iban: z.string().min(1).nullable(),
-  type: z.string().min(1),
+  type: z.string().nullable(),
   currency: z.string().min(1),
   balance: z.string().min(1),
   creditLimit: z.string().min(1),
@@ -58,7 +58,7 @@ export const TransactionCategorySchema = z.object({
 export const TransactionResponseSchema = z.object({
   id: z.string(),
   category: TransactionCategorySchema.nullable(),
-  account: z.object({ id: z.string(), type: z.string() }),
+  account: z.object({ id: z.string(), type: z.string().nullable() }),
   amount: z.number(),
   currencyCode: z.string(),
   time: z.string(),

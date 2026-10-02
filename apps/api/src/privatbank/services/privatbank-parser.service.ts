@@ -1,4 +1,5 @@
 import * as crypto from 'node:crypto';
+import { Readable } from 'node:stream';
 
 import { BadRequestException, Injectable } from '@nestjs/common';
 import ExcelJS from 'exceljs';
@@ -29,7 +30,7 @@ export class PrivatBankParserService {
   async parseXlsx(buffer: Buffer): Promise<ParsedPrivatBankStatement> {
     const workbook = new ExcelJS.Workbook();
 
-    await workbook.xlsx.load(buffer);
+    await workbook.xlsx.read(Readable.from(buffer));
 
     if (workbook.worksheets.length === 0) {
       throw new BadRequestException('The uploaded file is empty or invalid.');
