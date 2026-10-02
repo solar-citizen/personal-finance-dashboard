@@ -690,7 +690,7 @@ git commit -m "feat(privatbank): add PrivatBank Zod schemas and service logic"
 - Create: `apps/api/src/privatbank/privatbank.module.ts`
 - Modify: `apps/api/src/app.module.ts`
 
-- [ ] **Step 1: Create `PrivatBankController`**
+- [x] **Step 1: Create `PrivatBankController`**
 
 Create `apps/api/src/privatbank/privatbank.controller.ts`:
 ```ts
@@ -732,7 +732,7 @@ export class PrivatBankController {
 }
 ```
 
-- [ ] **Step 2: Create `PrivatBankModule`**
+- [x] **Step 2: Create `PrivatBankModule`**
 
 Create `apps/api/src/privatbank/privatbank.module.ts`:
 ```ts
@@ -752,16 +752,17 @@ import { PrivatBankParserService } from './services/privatbank-parser.service';
 export class PrivatBankModule {}
 ```
 
-- [ ] **Step 3: Register `PrivatBankModule` in `AppModule`**
+- [x] **Step 3: Register `PrivatBankModule` in `AppModule`**
 
 Edit `apps/api/src/app.module.ts` to import and register `PrivatBankModule`.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/api/src/privatbank/ apps/api/src/app.module.ts
 git commit -m "feat(privatbank): register PrivatBank controller and module"
 ```
+
 
 ---
 
