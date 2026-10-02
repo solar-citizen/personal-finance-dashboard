@@ -795,7 +795,7 @@ git commit -m "chore(codegen): update generated DTOs, OpenAPI spec, and web Reac
 - Modify: `apps/web/src/components/dashboard/summary/AccountsSummary.tsx`
 - Modify: `apps/web/src/locales/en.json` & `apps/web/src/locales/uk.json`
 
-- [ ] **Step 1: Add Translations**
+- [x] **Step 1: Add Translations**
 
 Add to `apps/web/src/locales/en.json`:
 ```json
@@ -818,7 +818,7 @@ Add to `apps/web/src/locales/en.json`:
 
 Add corresponding Ukrainian translations to `apps/web/src/locales/uk.json`.
 
-- [ ] **Step 2: Create `PrivatBankUploadModal` Component**
+- [x] **Step 2: Create `PrivatBankUploadModal` Component**
 
 Create `apps/web/src/components/privatbank/PrivatBankUploadModal.tsx`:
 ```tsx
@@ -949,12 +949,12 @@ export default function PrivatBankUploadModal({ isOpen, onClose, onSuccess }: Pr
 }
 ```
 
-- [ ] **Step 3: Update `AccountsSummary.tsx` with Import Button & Bank Display**
+- [x] **Step 3: Update `AccountsSummary.tsx` with Import Button & Bank Display**
 
 Edit `apps/web/src/components/dashboard/summary/AccountsSummary.tsx`:
 Add "Import" button to the header and render account `name` (if available) with bank badge.
 
-- [ ] **Step 4: Verify Frontend Lint & Build**
+- [x] **Step 4: Verify Frontend Lint & Build**
 
 Run from root:
 ```bash
@@ -962,7 +962,7 @@ bun run lint && bun turbo build
 ```
 Expected: Build passes with zero errors.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/web/src/

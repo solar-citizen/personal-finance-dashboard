@@ -97,5 +97,20 @@
     "languageSelect": "Select Language",
     "english": "English",
     "ukrainian": "Ukrainian"
+  },
+  "privatbank": {
+    "importButton": "Import Statement",
+    "modalTitle": "Import PrivatBank Statement",
+    "selectFile": "Drag and drop your .xlsx statement here",
+    "fileSelected": "File loaded",
+    "card": "Card:",
+    "period": "Period:",
+    "transactionsFound": "Transactions:",
+    "useExistingAccount": "Import into existing account:",
+    "createNewAccount": "Create new account:",
+    "accountNameLabel": "Account name",
+    "importing": "Importing...",
+    "confirmImport": "Confirm & Import",
+    "success": "{{newCount}} new transactions imported, {{updatedCount}} updated."
   }
 }

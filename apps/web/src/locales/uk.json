@@ -97,5 +97,20 @@
     "languageSelect": "Виберіть мову",
     "english": "Англійська",
     "ukrainian": "Українська"
+  },
+  "privatbank": {
+    "importButton": "Імпорт виписки",
+    "modalTitle": "Імпорт виписки ПриватБанку",
+    "selectFile": "Перетягніть ваш .xlsx файл виписки сюди",
+    "fileSelected": "Файл завантажено",
+    "card": "Картка:",
+    "period": "Період:",
+    "transactionsFound": "Транзакцій:",
+    "useExistingAccount": "Імпортувати в наявний рахунок:",
+    "createNewAccount": "Створити новий рахунок:",
+    "accountNameLabel": "Назва рахунку",
+    "importing": "Імпортування...",
+    "confirmImport": "Підтвердити та імпортувати",
+    "success": "Імпортовано {{newCount}} нових транзакцій, оновлено {{updatedCount}}."
   }
 }
