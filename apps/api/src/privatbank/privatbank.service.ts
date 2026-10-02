@@ -48,25 +48,25 @@ export class PrivatBankService {
   async uploadStatement(
     userId: string,
     fileBuffer: Buffer,
-    dto: UploadPrivatBankStatementDto,
+    { accountId, accountName }: UploadPrivatBankStatementDto,
   ): Promise<UploadPrivatBankResponseDto> {
     const statement = await this.parserService.parseXlsx(fileBuffer);
 
-    let account = dto.accountId
+    let account = accountId
       ? await this.prismaService.account.findFirst({
-          where: { id: dto.accountId, userId },
+          where: { id: accountId, userId },
         })
       : await this.prismaService.account.findFirst({
           where: { userId, maskedPan: statement.maskedPan },
         });
 
-    if (dto.accountId && !account) {
+    if (accountId && !account) {
       throw new BadRequestException('Selected account not found.');
     }
 
     if (!account) {
       const defaultName = `ПриватБанк - ${statement.maskedPan.slice(-4)}`;
-      const name = dto.accountName?.trim() ?? defaultName;
+      const name = accountName?.trim() ?? defaultName;
 
       account = await this.prismaService.account.create({
         data: {
