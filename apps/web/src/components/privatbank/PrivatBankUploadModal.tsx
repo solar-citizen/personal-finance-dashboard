@@ -131,6 +131,8 @@ export default function PrivatBankUploadModal({ isOpen, onClose, onSuccess }: Pr
       >
         <button
           onClick={handleClose}
+          title={t('privatbank.closeModal')}
+          aria-label={t('privatbank.closeModal')}
           className={
             'absolute top-4 right-4 text-muted-foreground hover:text-destructive transition-colors cursor-pointer'
           }

@@ -276,7 +276,9 @@ export default function ChatWindow({ isOpen, onHide }: ChatWindowProps) {
           onClick={onHide}
           title={t('aiChat.hideChat')}
           aria-label={t('aiChat.hideChat')}
-          className={'text-muted-foreground hover:text-foreground cursor-pointer'}
+          className={
+            'text-muted-foreground hover:text-destructive transition-colors cursor-pointer'
+          }
         >
           {'✕'}
         </button>
