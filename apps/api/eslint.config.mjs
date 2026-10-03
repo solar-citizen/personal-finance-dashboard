@@ -31,4 +31,13 @@ export default defineConfig(
       '@typescript-eslint/no-extraneous-class': 'off',
     },
   },
+  {
+    files: ['src/**/*.spec.ts', 'src/**/*.test.ts'],
+    rules: {
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/consistent-type-assertions': 'off',
+    },
+  },
 );

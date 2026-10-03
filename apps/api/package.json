@@ -25,7 +25,8 @@
     "dtos:generate": "bun run bin/generate-dtos.script.ts",
     "codegen": "bun run db:generate && bun run dtos:generate && bun run openapi:generate",
     "mcc": "bun run prisma/scripts/analyze-mcc.script.ts",
-    "generate-key": "bun run bin/generate-key.script.ts"
+    "generate-key": "bun run bin/generate-key.script.ts",
+    "test:e2e:privatbank": "bun run bin/e2e-privatbank-upload.script.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -52,6 +53,7 @@
     "class-validator": "^0.15.1",
     "cookie-parser": "^1.4.7",
     "decimal.js": "^10.6.0",
+    "exceljs": "^4.4.0",
     "helmet": "^8.3.0",
     "nestjs-zod": "^5.5.0",
     "ollama": "^0.6.3",
@@ -69,6 +71,7 @@
     "@types/cookie-parser": "^1.4.10",
     "@types/cron": "^2.4.3",
     "@types/express": "^5.0.6",
+    "@types/multer": "^2.3.0",
     "@types/node": "^26.2.0",
     "@types/passport-jwt": "^4.0.1",
     "globals": "^17.11.0",

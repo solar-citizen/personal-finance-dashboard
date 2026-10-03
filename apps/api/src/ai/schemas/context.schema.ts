@@ -6,7 +6,7 @@ import { AccountType, Currency } from '../../_generated/prisma-client/browser';
 
 export const AccountSummarySchema = z.object({
   id: z.string(),
-  type: z.enum(AccountType),
+  type: z.enum(AccountType).nullable(),
   currency: z.enum(Currency),
   balance: z.bigint(),
   iban: z.string().nullable(),
@@ -24,7 +24,7 @@ export const TransactionWithRelationsSchema = z.object({
   externalId: z.string(),
   time: z.date(),
   description: z.string(),
-  mcc: z.number(),
+  mcc: z.number().nullable(),
   amount: z.bigint(),
   operationAmount: z.bigint(),
   currencyCode: z.number(),
@@ -32,7 +32,7 @@ export const TransactionWithRelationsSchema = z.object({
   balance: z.bigint(),
   category: CategorySummarySchema.nullable(),
   account: z.object({
-    type: z.enum(AccountType),
+    type: z.enum(AccountType).nullable(),
     currency: z.enum(Currency),
   }),
 });

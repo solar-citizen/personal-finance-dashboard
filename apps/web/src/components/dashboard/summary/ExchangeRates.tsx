@@ -21,13 +21,9 @@ export default function ExchangeRates({ data, isLoading, error }: Props) {
 
   return (
     <section
-      className={
-        'w-full py-1 px-4 bg-gray-100 dark:bg-gray-800 rounded flex items-center justify-center gap-6 text-xs'
-      }
+      className={'w-full py-1 px-4 bg-card rounded flex items-center justify-center gap-6 text-xs'}
     >
-      <h2 className={'font-bold text-gray-700 dark:text-gray-300'}>
-        {t('dashboard.exchangeRates')}
-      </h2>
+      <h2 className={'font-bold text-muted-foreground'}>{t('dashboard.exchangeRates')}</h2>
       <QueryState
         isLoading={isLoading}
         error={error}
@@ -43,12 +39,10 @@ export default function ExchangeRates({ data, isLoading, error }: Props) {
           <div className={'flex gap-4'}>
             {Object.entries(rates).map(([pair, value]) => (
               <div key={pair} className={'flex items-center gap-1'}>
-                <span className={'text-gray-500 dark:text-gray-400 font-medium'}>
+                <span className={'text-muted-foreground font-medium'}>
                   {currencyPairLabels[pair] || pair}
                 </span>
-                <span className={'font-bold text-gray-900 dark:text-gray-100'}>
-                  {value.toFixed(2)}
-                </span>
+                <span className={'font-bold text-foreground'}>{value.toFixed(2)}</span>
               </div>
             ))}
           </div>

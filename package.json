@@ -1,6 +1,6 @@
 {
   "name": "personal-finance-dashboard",
-  "version": "0.5.1",
+  "version": "0.6.1",
   "author": "solar_citizen",
   "private": true,
   "workspaces": [
@@ -27,7 +27,8 @@
     "lint:fix": "bun lint:api-fix & bun lint:web-fix",
     "lint:api-fix": "cd apps/api && bun run lint:fix",
     "lint:web-fix": "cd apps/web && bun run lint:fix",
-    "codegen": "cd apps/api && bun run codegen && cd ../web && bun run codegen"
+    "codegen": "cd apps/api && bun run codegen && cd ../web && bun run codegen",
+    "test:e2e:privatbank": "cd apps/api && bun run test:e2e:privatbank"
   },
   "dependencies": {
     "axios": "^1.19.0",

@@ -3,6 +3,8 @@
 import { type Period, periods } from '@pfd/shared';
 import { useTranslation } from 'react-i18next';
 
+import { cn } from '#src/lib/utils';
+
 type PeriodSwitcherProps = {
   value: Period;
   onChange: (period: Period) => void;
@@ -25,11 +27,12 @@ export default function PeriodSwitcher({ value, onChange }: PeriodSwitcherProps)
         <button
           key={p}
           onClick={() => onChange(p)}
-          className={`px-2.5 py-1 rounded-md font-medium transition-colors ${
+          className={cn(
+            'px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer',
             value === p
               ? 'bg-primary text-primary-foreground shadow-sm'
-              : 'text-muted-foreground hover:text-foreground'
-          }`}
+              : 'text-muted-foreground hover:text-foreground',
+          )}
         >
           {t(periodKeys[p])}
         </button>
