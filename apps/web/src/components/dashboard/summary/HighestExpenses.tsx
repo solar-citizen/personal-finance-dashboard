@@ -17,7 +17,7 @@ export default function HighestExpenses({ globalPeriod }: HighestExpensesProps) 
   const { t } = useTranslation();
 
   return (
-    <section className={'p-4 border rounded-lg shadow-sm max-h-80 h-full overflow-auto'}>
+    <section className={'p-4 border rounded-lg shadow-sm max-h-80 h-full overflow-auto bg-card'}>
       <div className={'flex justify-between items-center mb-4'}>
         <h2 className={'text-xl font-bold'}>{t('dashboard.highestExpenses')}</h2>
         <PeriodSwitcher value={period} onChange={setPeriod} />

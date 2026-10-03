@@ -244,7 +244,7 @@ export default function PrivatBankUploadModal({ isOpen, onClose, onSuccess }: Pr
                 onClick={handleConfirm}
                 disabled={isUploading}
                 className={
-                  'px-4 py-2 bg-primary text-primary-foreground rounded text-sm font-medium hover:scale-105 transition-all duration-200 ease-out disabled:opacity-50 cursor-pointer'
+                  'px-4 py-2 bg-primary text-primary-foreground rounded text-sm font-medium hover:scale-105 hover:bg-primary/90 transition-all duration-200 ease-out disabled:opacity-50 cursor-pointer'
                 }
               >
                 {isUploading ? t('privatbank.importing') : t('privatbank.confirmImport')}

@@ -21,7 +21,7 @@ export default function ExchangeRates({ data, isLoading, error }: Props) {
 
   return (
     <section
-      className={'w-full py-1 px-4 bg-muted rounded flex items-center justify-center gap-6 text-xs'}
+      className={'w-full py-1 px-4 bg-card rounded flex items-center justify-center gap-6 text-xs'}
     >
       <h2 className={'font-bold text-muted-foreground'}>{t('dashboard.exchangeRates')}</h2>
       <QueryState
