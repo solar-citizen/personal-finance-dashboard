@@ -28,3 +28,12 @@ export function amountToNumber(
 ): number {
   return new Decimal(amount.toString()).dividedBy(divisor).toNumber();
 }
+
+export function amountMinorUnits(valStr: string): bigint {
+  try {
+    const sanitized = valStr.replace(',', '.').replace(/\s+/g, '');
+    return BigInt(new Decimal(sanitized).times(100).round().toString());
+  } catch {
+    return 0n;
+  }
+}
