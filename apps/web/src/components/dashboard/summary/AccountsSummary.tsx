@@ -2,6 +2,7 @@
 
 import { accountTypeNames, bankNames } from '@pfd/shared';
 import { useQueryClient } from '@tanstack/react-query';
+import { HardDriveUpload } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -83,9 +84,10 @@ export default function AccountsSummary({ data, isLoading, error }: Props) {
           type={'button'}
           onClick={() => setIsUploadOpen(true)}
           className={
-            'px-2.5 py-1 text-xs font-medium rounded border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer'
+            'px-2.5 py-1 text-xs font-medium rounded border border-input bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer'
           }
         >
+          <HardDriveUpload className={'inline-block size-3.5 mr-1.5 -mt-0.5'} />
           {t('privatbank.importButton')}
         </button>
       </div>
