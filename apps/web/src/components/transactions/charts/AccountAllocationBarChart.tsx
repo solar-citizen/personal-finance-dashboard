@@ -14,6 +14,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '#src/components/ui/chart';
+import { cn } from '#src/lib/utils';
 
 type AccountBarPayload = {
   name: string;
@@ -114,11 +115,12 @@ export default function AccountAllocationBarChart({
               <button
                 key={currency}
                 onClick={() => setBaseCurrency(currency)}
-                className={`px-3 py-1 rounded-md font-medium transition-colors ${
+                className={cn(
+                  'px-3 py-1 rounded-md font-medium transition-colors hover:cursor-pointer',
                   baseCurrency === currency
                     ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
+                    : 'text-muted-foreground hover:text-foreground',
+                )}
               >
                 {currency}
               </button>
