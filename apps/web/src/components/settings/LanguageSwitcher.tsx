@@ -28,12 +28,9 @@ export default function LanguageSwitcher() {
           onClick={() => handleLanguageChange(AppLanguage.EN)}
           className={cn(
             'px-4 py-2 text-sm font-medium rounded-md border transition-colors cursor-pointer',
-            {
-              'bg-primary text-primary-foreground border-primary':
-                currentLanguage === AppLanguage.EN,
-              'bg-background text-foreground border-border hover:bg-muted':
-                currentLanguage !== AppLanguage.EN,
-            },
+            currentLanguage === AppLanguage.EN
+              ? 'bg-primary text-primary-foreground border-primary'
+              : 'bg-background text-foreground border-border hover:bg-muted',
           )}
         >
           {t('settings.english')}
@@ -43,12 +40,9 @@ export default function LanguageSwitcher() {
           onClick={() => handleLanguageChange(AppLanguage.UK)}
           className={cn(
             'px-4 py-2 text-sm font-medium rounded-md border transition-colors cursor-pointer',
-            {
-              'bg-primary text-primary-foreground border-primary':
-                currentLanguage === AppLanguage.UK,
-              'bg-background text-foreground border-border hover:bg-muted':
-                currentLanguage !== AppLanguage.UK,
-            },
+            currentLanguage === AppLanguage.UK
+              ? 'bg-primary text-primary-foreground border-primary'
+              : 'bg-background text-foreground border-border hover:bg-muted',
           )}
         >
           {t('settings.ukrainian')}
