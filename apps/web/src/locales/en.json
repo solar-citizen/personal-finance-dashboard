@@ -101,7 +101,7 @@
   "privatbank": {
     "importButton": "Import Statement",
     "modalTitle": "Import PrivatBank Statement",
-    "selectFile": "Drag and drop your .xlsx statement here",
+    "selectFile": "Click or drag and drop to upload your .xlsx statement here",
     "fileSelected": "File loaded",
     "card": "Card:",
     "period": "Period:",
