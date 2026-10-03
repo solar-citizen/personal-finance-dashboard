@@ -16,7 +16,7 @@ export default function LatestTransactions({ data, isLoading, error }: Props) {
   const { t } = useTranslation();
 
   return (
-    <section className={'p-4 border rounded-lg shadow-sm max-h-80 h-full overflow-auto'}>
+    <section className={'p-4 border rounded-lg shadow-sm max-h-80 h-full overflow-auto bg-card'}>
       <h2 className={'text-xl font-bold mb-4'}>{t('dashboard.latestTransactions')}</h2>
       <QueryState
         isLoading={isLoading}

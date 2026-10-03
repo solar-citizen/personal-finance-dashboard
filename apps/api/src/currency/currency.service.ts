@@ -9,7 +9,7 @@ import {
 } from 'src/_generated/zod/pfd-dtos';
 import { hourMs, weekMs } from 'src/_lib/utils';
 import { currencyToIso4217 } from 'src/monobank/lib/utils';
-import { MonoBankApiClient } from 'src/monobank/services';
+import { MonoBankApiClient } from 'src/monobank/services/monobank-api-client.service';
 
 const ratesFreshKey = 'currency:rates:fresh';
 const ratesStaleKey = 'currency:rates:stale';

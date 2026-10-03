@@ -13,6 +13,10 @@ patch('src/_generated/api/pfd-fetcher.ts', content =>
     .replace(
       /headers: requestHeaders,\s*\}/,
       "headers: requestHeaders,\n      credentials: 'include',\n    }",
+    )
+    .replace(
+      /if \(requestHeaders\['Content-Type'\]\?\.toLowerCase\(\)\.includes\('multipart\/form-data'\)\)/,
+      "if (body instanceof FormData || requestHeaders['Content-Type']?.toLowerCase().includes('multipart/form-data'))",
     ),
 );
 
@@ -23,3 +27,25 @@ patch('src/_generated/api/pfd-context.ts', content =>
 );
 
 console.log('✓  Context patched');
+
+patch('src/_generated/api/pfd-components.ts', content =>
+  content
+    .replace(
+      "export type InspectStatementVariables = PfdContext['fetcherOptions'];",
+      "export type InspectStatementVariables = {\n  body?: FormData | Record<string, unknown>;\n} & PfdContext['fetcherOptions'];",
+    )
+    .replace(
+      'pfdFetch<Schemas.InspectPrivatBankResponseDto, InspectStatementError, undefined, {}, {}, {}>',
+      'pfdFetch<Schemas.InspectPrivatBankResponseDto, InspectStatementError, FormData | Record<string, unknown> | undefined, {}, {}, {}>',
+    )
+    .replace(
+      'body?: Schemas.UploadPrivatBankStatementDto;',
+      'body?: FormData | Schemas.UploadPrivatBankStatementDto;',
+    )
+    .replace(
+      'UploadStatementError,\n    Schemas.UploadPrivatBankStatementDto,',
+      'UploadStatementError,\n    FormData | Schemas.UploadPrivatBankStatementDto,',
+    ),
+);
+
+console.log('✓  Components patched');

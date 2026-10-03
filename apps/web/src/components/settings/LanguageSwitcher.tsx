@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 
+import { cn } from '#src/lib/utils';
 import { AppLanguage } from '#src/locales/types';
 
 export default function LanguageSwitcher() {
@@ -25,22 +26,24 @@ export default function LanguageSwitcher() {
         <button
           type={'button'}
           onClick={() => handleLanguageChange(AppLanguage.EN)}
-          className={`px-4 py-2 text-sm font-medium rounded-md border transition-colors ${
+          className={cn(
+            'px-4 py-2 text-sm font-medium rounded-md border transition-colors cursor-pointer',
             currentLanguage === AppLanguage.EN
               ? 'bg-primary text-primary-foreground border-primary'
-              : 'bg-background text-foreground border-border hover:bg-muted'
-          }`}
+              : 'bg-background text-foreground border-border hover:bg-muted',
+          )}
         >
           {t('settings.english')}
         </button>
         <button
           type={'button'}
           onClick={() => handleLanguageChange(AppLanguage.UK)}
-          className={`px-4 py-2 text-sm font-medium rounded-md border transition-colors ${
+          className={cn(
+            'px-4 py-2 text-sm font-medium rounded-md border transition-colors cursor-pointer',
             currentLanguage === AppLanguage.UK
               ? 'bg-primary text-primary-foreground border-primary'
-              : 'bg-background text-foreground border-border hover:bg-muted'
-          }`}
+              : 'bg-background text-foreground border-border hover:bg-muted',
+          )}
         >
           {t('settings.ukrainian')}
         </button>

@@ -56,8 +56,11 @@ export class SystemPromptBuilderService {
           ? ` = ${amountInUah.toFixed(2)} UAH`
           : '';
 
+      const accountLabel =
+        (type ? accountTypeNames[type] : null) ?? type ?? 'Рахунок';
+
       return {
-        line: `- ${accountTypeNames[type] || type} (${currency.toUpperCase()}): ${formatCurrency(balance, currency)}${suffix}`,
+        line: `- ${accountLabel} (${currency.toUpperCase()}): ${formatCurrency(balance, currency)}${suffix}`,
         amount: amountInUah,
       };
     });
