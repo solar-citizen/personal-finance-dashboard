@@ -39,11 +39,14 @@ export class PrivatBankParserService {
     const worksheet = workbook.worksheets[0];
 
     const transactions: ParsedPrivatTransaction[] = [];
+
     let detectedPan = '';
     let currency: 'uah' | 'usd' | 'eur' = 'uah';
 
     worksheet.eachRow((row, rowNumber) => {
-      if (rowNumber <= 2) return;
+      if (rowNumber <= 2) {
+        return;
+      }
 
       const rawDate = this.getCellValue(row.getCell(1));
       const categoryName = this.getCellValue(row.getCell(2));
@@ -54,7 +57,9 @@ export class PrivatBankParserService {
       const rawTxAmount = this.getCellValue(row.getCell(7));
       const rawEndingBalance = this.getCellValue(row.getCell(9));
 
-      if (!rawDate || !maskedPan || !rawCardAmount) return;
+      if (!rawDate || !maskedPan || !rawCardAmount) {
+        return;
+      }
 
       if (!detectedPan) {
         detectedPan = maskedPan;
