@@ -2,9 +2,22 @@
 
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
+import { tv } from 'tailwind-variants';
 
-import { cn } from '#src/lib/utils';
 import { AppLanguage } from '#src/locales/types';
+
+const languageOption = tv({
+  base: 'px-4 py-2 text-sm font-medium rounded-md border transition-colors cursor-pointer',
+  variants: {
+    selected: {
+      true: 'bg-primary text-primary-foreground border-primary',
+      false: 'bg-background text-foreground border-border hover:bg-muted',
+    },
+  },
+  defaultVariants: {
+    selected: false,
+  },
+});
 
 export default function LanguageSwitcher() {
   const { t, i18n } = useTranslation();
@@ -26,24 +39,18 @@ export default function LanguageSwitcher() {
         <button
           type={'button'}
           onClick={() => handleLanguageChange(AppLanguage.EN)}
-          className={cn(
-            'px-4 py-2 text-sm font-medium rounded-md border transition-colors cursor-pointer',
-            currentLanguage === AppLanguage.EN
-              ? 'bg-primary text-primary-foreground border-primary'
-              : 'bg-background text-foreground border-border hover:bg-muted',
-          )}
+          className={languageOption({
+            selected: currentLanguage === AppLanguage.EN,
+          })}
         >
           {t('settings.english')}
         </button>
         <button
           type={'button'}
           onClick={() => handleLanguageChange(AppLanguage.UK)}
-          className={cn(
-            'px-4 py-2 text-sm font-medium rounded-md border transition-colors cursor-pointer',
-            currentLanguage === AppLanguage.UK
-              ? 'bg-primary text-primary-foreground border-primary'
-              : 'bg-background text-foreground border-border hover:bg-muted',
-          )}
+          className={languageOption({
+            selected: currentLanguage === AppLanguage.UK,
+          })}
         >
           {t('settings.ukrainian')}
         </button>
