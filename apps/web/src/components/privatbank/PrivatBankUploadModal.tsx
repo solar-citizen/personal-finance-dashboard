@@ -7,6 +7,7 @@ import { useInspectStatement, useUploadStatement } from '#src/_generated/api/pfd
 import { cn } from '#src/lib/utils';
 
 import Button from '../common/Button';
+import CloseButton from '../common/CloseButton';
 
 type Props = {
   isOpen: boolean;
@@ -131,16 +132,12 @@ export default function PrivatBankUploadModal({ isOpen, onClose, onSuccess }: Pr
         }
         onClick={e => e.stopPropagation()}
       >
-        <button
+        <CloseButton
           onClick={handleClose}
           title={t('privatbank.closeModal')}
           aria-label={t('privatbank.closeModal')}
-          className={
-            'absolute top-4 right-4 text-muted-foreground hover:text-destructive transition-colors cursor-pointer'
-          }
-        >
-          {'✕'}
-        </button>
+          className={'absolute top-4 right-4'}
+        />
         <h2 className={'text-xl font-bold'}>{t('privatbank.modalTitle')}</h2>
 
         {!inspectData ? (
