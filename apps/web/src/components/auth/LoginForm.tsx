@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { LoginSchema } from '#pfd-schemas';
 import { useLogin } from '#src/_generated/api/pfd-components';
 
+import Button from '../common/Button';
 import Form from '../form/Form';
 import FormInput from '../form/FormInput';
 import { type LoginFormData } from './auth.types';
@@ -71,16 +72,9 @@ export default function LoginForm() {
           className={'space-y-2'}
         />
 
-        {/* FIXME: Consider using shadcn/custom component */}
-        <button
-          type={'submit'}
-          disabled={isPending}
-          className={
-            'cursor-pointer inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full mt-4'
-          }
-        >
+        <Button type={'submit'} disabled={isPending} fullWidth={true} className={'mt-4'}>
           {t('auth.signIn')}
-        </button>
+        </Button>
       </Form>
     </AuthCard>
   );
