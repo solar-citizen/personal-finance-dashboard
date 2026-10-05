@@ -11,6 +11,8 @@ import QueryState from '#src/components/common/QueryState';
 import { SkeletonList } from '#src/components/common/Skeleton';
 import PrivatBankUploadModal from '#src/components/privatbank/PrivatBankUploadModal';
 
+import Button from '../../common/Button';
+
 type AccountsListProps = {
   accounts: MonoBankAccountResponseDto[] | undefined;
 };
@@ -80,16 +82,16 @@ export default function AccountsSummary({ data, isLoading, error }: Props) {
     <section className={'p-4 border rounded-lg shadow-sm max-h-80 h-full overflow-auto bg-card'}>
       <div className={'flex justify-between items-center mb-4'}>
         <h2 className={'text-xl font-bold'}>{t('dashboard.accountsTitle')}</h2>
-        <button
+        <Button
           type={'button'}
+          variant={'outline'}
+          size={'sm'}
           onClick={() => setIsUploadOpen(true)}
-          className={
-            'px-2.5 py-1 text-xs font-medium rounded border border-input bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer'
-          }
+          className={'bg-secondary text-muted-foreground hover:text-foreground'}
         >
           <HardDriveUpload className={'inline-block size-3.5 mr-1.5 -mt-0.5'} />
           {t('privatbank.importButton')}
-        </button>
+        </Button>
       </div>
       <QueryState
         isLoading={isLoading}
