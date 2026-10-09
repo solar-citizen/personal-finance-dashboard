@@ -57,7 +57,7 @@ export default function RegisterForm() {
         }}
         validationSchema={RegisterSchema}
         onSubmit={handleSubmit}
-        className={'[&>*:not(button)]:space-y-4'}
+        className={'space-y-4'}
       >
         <FormInput
           name={'name'}

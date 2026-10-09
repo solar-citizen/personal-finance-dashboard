@@ -4,19 +4,20 @@ import InputWrapper, { Props as InputWrapperProps } from './InputWrapper';
 
 const input = tv({
   slots: {
-    root: 'flex-1 text-left px-3 py-2 text-sm ring-offset-0 w-full focus-visible:ring-0 focus-visible:outline-none rounded-[9px] border-border',
+    root: 'flex-1 text-left px-3 py-2 text-sm ring-offset-0 w-full focus-visible:ring-0 focus-visible:outline-none rounded-[9px] border transition-colors',
   },
   variants: {
+    error: {
+      true: { root: 'border-destructive' },
+      false: { root: 'border-border' },
+    },
     disabled: {
-      true: {
-        root: 'bg-[--color-input-disabled] cursor-not-allowed opacity-60',
-      },
-      false: {
-        root: 'bg-input',
-      },
+      true: { root: 'bg-[--color-input-disabled] border-border cursor-not-allowed opacity-60' },
+      false: { root: 'bg-input' },
     },
   },
   defaultVariants: {
+    error: false,
     disabled: false,
   },
 });
@@ -32,11 +33,17 @@ export default function Input({
   tooltip,
   ...props
 }: Props) {
-  const { root } = input({ disabled });
+  const { root } = input({ error: !!error, disabled: !!disabled });
 
   return (
     <InputWrapper label={label} error={error} className={className} tooltip={tooltip}>
-      <input className={root()} onChange={onChange} disabled={disabled} {...props} />
+      <input
+        className={root()}
+        onChange={onChange}
+        disabled={disabled}
+        aria-invalid={error ? 'true' : undefined}
+        {...props}
+      />
     </InputWrapper>
   );
 }
