@@ -16,13 +16,15 @@ export default function Input({
     <InputWrapper label={label} error={error} className={className} tooltip={tooltip}>
       <input
         className={cn(
-          'flex-1 text-left px-3 py-2 text-sm ring-offset-0 w-full focus-visible:ring-0 focus-visible:outline-none rounded-[9px]',
+          'flex-1 text-left px-3 py-2 text-sm ring-offset-0 w-full focus-visible:ring-0 focus-visible:outline-none rounded-[9px] border transition-colors',
+          error ? 'border-destructive' : 'border-border',
           disabled
             ? 'bg-[--color-input-disabled] border-border cursor-not-allowed opacity-60'
-            : 'bg-input border-border',
+            : 'bg-input',
         )}
         onChange={onChange}
         disabled={disabled}
+        aria-invalid={error ? 'true' : undefined}
         {...props}
       />
     </InputWrapper>
