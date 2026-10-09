@@ -61,7 +61,6 @@ export default function LoginForm() {
           label={t('auth.email')}
           placeholder={'admin@finance.ua'}
           disabled={isPending}
-          className={'space-y-2'}
         />
 
         <FormInput
@@ -69,7 +68,6 @@ export default function LoginForm() {
           type={'password'}
           label={t('auth.password')}
           disabled={isPending}
-          className={'space-y-2'}
         />
 
         <Button type={'submit'} disabled={isPending} fullWidth={true} className={'mt-4'}>

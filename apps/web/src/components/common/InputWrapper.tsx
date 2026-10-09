@@ -2,10 +2,10 @@ import { tv } from 'tailwind-variants';
 
 const inputWrapper = tv({
   slots: {
-    root: 'block relative w-full',
-    label: 'text-sm font-medium leading-none text-foreground mb-2 block',
+    root: 'flex flex-col gap-1.5 w-full',
+    label: 'text-sm font-medium leading-none text-foreground',
     tooltip: 'text-xs text-muted-foreground ml-1',
-    error: 'absolute text-sm text-destructive mt-1 left-0',
+    error: 'text-xs text-destructive font-medium leading-tight',
   },
 });
 
