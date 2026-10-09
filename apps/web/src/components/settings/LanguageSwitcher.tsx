@@ -3,8 +3,9 @@
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 
-import { cn } from '#src/lib/utils';
 import { AppLanguage } from '#src/locales/types';
+
+import LanguageOptionButton from './LanguageOptionButton';
 
 export default function LanguageSwitcher() {
   const { t, i18n } = useTranslation();
@@ -23,30 +24,18 @@ export default function LanguageSwitcher() {
       <label className={'text-sm font-medium text-foreground'}>{t('settings.language')}</label>
       <p className={'text-xs text-muted-foreground'}>{t('settings.languageSelect')}</p>
       <div className={'flex gap-2 mt-1'}>
-        <button
-          type={'button'}
+        <LanguageOptionButton
+          selected={currentLanguage === AppLanguage.EN}
           onClick={() => handleLanguageChange(AppLanguage.EN)}
-          className={cn(
-            'px-4 py-2 text-sm font-medium rounded-md border transition-colors cursor-pointer',
-            currentLanguage === AppLanguage.EN
-              ? 'bg-primary text-primary-foreground border-primary'
-              : 'bg-background text-foreground border-border hover:bg-muted',
-          )}
         >
           {t('settings.english')}
-        </button>
-        <button
-          type={'button'}
+        </LanguageOptionButton>
+        <LanguageOptionButton
+          selected={currentLanguage === AppLanguage.UK}
           onClick={() => handleLanguageChange(AppLanguage.UK)}
-          className={cn(
-            'px-4 py-2 text-sm font-medium rounded-md border transition-colors cursor-pointer',
-            currentLanguage === AppLanguage.UK
-              ? 'bg-primary text-primary-foreground border-primary'
-              : 'bg-background text-foreground border-border hover:bg-muted',
-          )}
         >
           {t('settings.ukrainian')}
-        </button>
+        </LanguageOptionButton>
       </div>
     </div>
   );

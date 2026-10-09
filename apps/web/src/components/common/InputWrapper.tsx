@@ -1,4 +1,13 @@
-import { cn } from '../../lib/utils';
+import { tv } from 'tailwind-variants';
+
+const inputWrapper = tv({
+  slots: {
+    root: 'flex flex-col gap-1.5 w-full',
+    label: 'text-sm font-medium leading-none text-foreground',
+    tooltip: 'text-xs text-muted-foreground ml-1',
+    error: 'text-xs text-destructive font-medium leading-tight',
+  },
+});
 
 export type Props = React.PropsWithChildren<
   React.HTMLAttributes<HTMLDivElement> & {
@@ -17,20 +26,20 @@ export default function InputWrapper({
   tooltip,
   ...props
 }: Props) {
+  const slots = inputWrapper();
+
   return (
-    <div className={cn('flex flex-col gap-1.5 w-full', className)} {...props}>
+    <div className={slots.root({ className })} {...props}>
       {label && (
-        <label className={'text-sm font-medium leading-none text-foreground'}>
+        <label className={slots.label()}>
           {label}
-          {tooltip && (
-            <span className={'text-xs text-muted-foreground ml-1'}>{`(${tooltip})`}</span>
-          )}
+          {tooltip && <span className={slots.tooltip()}>{`(${tooltip})`}</span>}
         </label>
       )}
 
       {children}
 
-      {error && <p className={'text-xs text-destructive font-medium leading-tight'}>{error}</p>}
+      {error && <p className={slots.error()}>{error}</p>}
     </div>
   );
 }

@@ -3,6 +3,8 @@ import { Readable } from 'node:stream';
 
 import { BadRequestException, Injectable } from '@nestjs/common';
 import ExcelJS from 'exceljs';
+import { amountMinorUnits } from 'src/_lib/utils/currency.util';
+import { parseDate } from 'src/_lib/utils/date.util';
 
 export type ParsedPrivatTransaction = {
   time: Date;
@@ -73,10 +75,10 @@ export class PrivatBankParserService {
         currency = cardCurrency;
       }
 
-      const time = this.parseDate(rawDate);
-      const amount = this.amountToKopiykas(rawCardAmount);
-      const opAmount = this.amountToKopiykas(rawTxAmount || rawCardAmount);
-      const balance = this.amountToKopiykas(rawEndingBalance || '0');
+      const time = parseDate(rawDate);
+      const amount = amountMinorUnits(rawCardAmount);
+      const opAmount = amountMinorUnits(rawTxAmount || rawCardAmount);
+      const balance = amountMinorUnits(rawEndingBalance || '0');
 
       const externalId = crypto
         .createHash('sha256')
@@ -150,29 +152,6 @@ export class PrivatBankParserService {
     }
 
     return '';
-  }
-
-  private parseDate(dateStr: string): Date {
-    const parts = dateStr.split(' ');
-
-    if (parts.length < 2) {
-      return new Date(dateStr);
-    }
-
-    const [d, m, y] = parts[0].split('.').map(Number);
-    const [h, min, s] = parts[1].split(':').map(Number);
-
-    return new Date(Date.UTC(y, m - 1, d, h, min, s));
-  }
-
-  private amountToKopiykas(valStr: string): bigint {
-    const num = parseFloat(valStr.replace(',', '.').replace(/\s+/g, ''));
-
-    if (isNaN(num)) {
-      return 0n;
-    }
-
-    return BigInt(Math.round(num * 100));
   }
 
   private currencyToNumericCode(code: string): number {

@@ -2,6 +2,8 @@
 
 import { useTranslation } from 'react-i18next';
 
+import Button from '../common/Button';
+
 type ChatBubbleProps = {
   onShow: () => void;
 };
@@ -10,13 +12,12 @@ export default function ChatBubble({ onShow }: ChatBubbleProps) {
   const { t } = useTranslation();
 
   return (
-    <button
+    <Button
       onClick={onShow}
-      className={
-        'fixed bottom-6 right-6 z-50 rounded-full bg-primary p-4 text-primary-foreground shadow-lg transition-transform hover:scale-105 cursor-pointer'
-      }
+      variant={'primary'}
+      className={'fixed bottom-6 right-6 z-50 rounded-full p-4 shadow-lg hover:scale-105'}
     >
       {t('aiChat.askAi')}
-    </button>
+    </Button>
   );
 }

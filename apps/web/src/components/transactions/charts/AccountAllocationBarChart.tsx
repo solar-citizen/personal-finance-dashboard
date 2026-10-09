@@ -7,6 +7,7 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
 import { MonoBankAccountResponseDto } from '#src/_generated/api/pfd-types';
 import QueryState from '#src/components/common/QueryState';
+import SegmentedControl, { SegmentedButton } from '#src/components/common/SegmentedControl';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#src/components/ui/card';
 import {
   type ChartConfig,
@@ -14,7 +15,6 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '#src/components/ui/chart';
-import { cn } from '#src/lib/utils';
 
 type AccountBarPayload = {
   name: string;
@@ -110,22 +110,17 @@ export default function AccountAllocationBarChart({
             <CardTitle>{t('transactions.accountAllocationTitle')}</CardTitle>
             <CardDescription>{t('transactions.accountAllocationDesc')}</CardDescription>
           </div>
-          <div className={'flex gap-1 bg-secondary p-1 rounded-lg text-xs self-start'}>
+          <SegmentedControl className={'self-start'}>
             {currencyOptions.map(currency => (
-              <button
+              <SegmentedButton
                 key={currency}
+                active={baseCurrency === currency}
                 onClick={() => setBaseCurrency(currency)}
-                className={cn(
-                  'px-3 py-1 rounded-md font-medium transition-colors hover:cursor-pointer',
-                  baseCurrency === currency
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground',
-                )}
               >
                 {currency}
-              </button>
+              </SegmentedButton>
             ))}
-          </div>
+          </SegmentedControl>
         </div>
       </CardHeader>
       <CardContent>

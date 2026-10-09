@@ -10,6 +10,7 @@ import { getConversationQuery, useGetConversation } from '#src/_generated/api/pf
 import QueryState from '#src/components/common/QueryState';
 import { cn } from '#src/lib/utils';
 
+import CloseButton from '../common/CloseButton';
 import ChatHistory from './ChatHistory';
 
 function isStreamResponse(obj: Record<string, unknown>): obj is StreamResponse {
@@ -272,16 +273,11 @@ export default function ChatWindow({ isOpen, onHide }: ChatWindowProps) {
           {t('aiChat.title')}
         </h2>
 
-        <button
+        <CloseButton
           onClick={onHide}
           title={t('aiChat.hideChat')}
           aria-label={t('aiChat.hideChat')}
-          className={
-            'text-muted-foreground hover:text-destructive transition-colors cursor-pointer'
-          }
-        >
-          {'✕'}
-        </button>
+        />
       </div>
 
       {showHistory ? (
