@@ -1,58 +1,69 @@
 ---
 name: typescript-pro
-description: Implements advanced TypeScript type systems, creates custom type guards, utility types, and branded types, and configures tRPC for end-to-end type safety. Use when building TypeScript applications requiring advanced generics, conditional or mapped types, discriminated unions, monorepo setup, or full-stack type safety with tRPC.
+description: Implements advanced TypeScript types, custom type guards and utility types. Use for advanced generics, conditional or mapped types, discriminated unions, strict tsconfig work and monorepo type setup.
 license: MIT
 metadata:
-  author: https://github.com/Jeffallan
-  version: '1.1.0'
+  author: https://github.com/Jeffallan refined by solar._.citizen
+  version: '1.2.0-trimmed'
   domain: language
-  triggers: TypeScript, generics, type safety, conditional types, mapped types, tRPC, tsconfig, type guards, discriminated unions
+  triggers: TypeScript, generics, type safety, conditional types, mapped types, tsconfig, type guards, discriminated unions
   role: specialist
   scope: implementation
   output-format: code
-  related-skills: fullstack-guardian, api-designer
 ---
 
 # TypeScript Pro
 
 ## Core Workflow
 
-1. **Analyze type architecture** - Review tsconfig, type coverage, build performance
-2. **Design type-first APIs** - Create branded types, generics, utility types
-3. **Implement with type safety** - Write type guards, discriminated unions, conditional types; run `tsc --noEmit` to catch type errors before proceeding
-4. **Optimize build** - Configure project references, incremental compilation, tree shaking; re-run `tsc --noEmit` to confirm zero errors after changes
-5. **Test types** - Confirm type coverage with a tool like `type-coverage`; validate that all public APIs have explicit return types; iterate on steps 3–4 until all checks pass
+1. **Analyze existing types** - Review the package's tsconfig and the types already in use (generated Zod schemas, Prisma types)
+2. **Design type-first** - Prefer inference and existing generated types; add generics, utility types or custom types only where needed
+3. **Implement with type safety** - Write type guards, discriminated unions, conditional types
+4. **Verify** - Run `tsc --noEmit` and fix all errors before moving on
 
 ## Reference Guide
 
 Load detailed guidance based on context:
 
-| Topic                   | Reference                      | Load When                                                    |
-| ----------------------- | ------------------------------ | ------------------------------------------------------------ |
-| Advanced Types          | `references/advanced-types.md` | Generics, conditional types, mapped types, template literals |
-| Type Guards             | `references/type-guards.md`    | Type narrowing, discriminated unions, assertion functions    |
-| Utility Types           | `references/utility-types.md`  | Partial, Pick, Omit, Record, custom utilities                |
-| Configuration           | `references/configuration.md`  | tsconfig options, strict mode, project references            |
-| Patterns                | `references/patterns.md`       | Builder pattern, factory pattern, type-safe APIs             |
-| Additional Style Guides | `references/style-guides.md`   | Consistent coding practices (any, destructuring)             |
+| Topic                   | Reference                                | Load When                                                    |
+| ----------------------- | ---------------------------------------- | ------------------------------------------------------------ |
+| Advanced Types          | `references/advanced-types.md`           | Generics, conditional types, mapped types, template literals |
+| Type Guards             | `references/type-guards.md`              | Type narrowing, discriminated unions, assertion functions    |
+| Utility Types           | `references/utility-types.md`            | Partial, Pick, Omit, Record, custom utilities                |
+| Configuration           | `references/configuration.md`            | tsconfig options, strict mode, project references            |
+| Patterns                | `references/patterns.md`                 | Builder pattern, factory pattern, type-safe APIs             |
+| Additional Style Guides | `references/additional-style-guiding.md` | Consistent coding practices (any, destructuring)             |
+
+## Stack Conventions
+
+- API types come from generated Zod schemas: use `z.infer<typeof Schema>`, never hand-write them.
+- Prisma types: use `Prisma.XGetPayload` / `Prisma.validator` instead of redefining shapes.
+- Validate at boundaries with Zod. Don't add runtime type libraries (tRPC, io-ts).
+- Don't change tsconfig compiler options unprompted. Match the existing config of the package you're
+  editing (web uses bundler resolution, API uses Nest defaults). Suggest `noUncheckedIndexedAccess`
+  if it isn't already on.
 
 ## Code Examples
 
-### Branded Types
+### Avoiding ID mix-ups
+
+Prefer object parameters over positional ones when several arguments share a type:
 
 ```typescript
-// Branded type for domain modeling
-type Brand<T, B extends string> = T & { readonly __brand: B };
-type UserId = Brand<string, 'UserId'>;
-type OrderId = Brand<number, 'OrderId'>;
-
-const toUserId = (id: string): UserId => id as UserId;
-const toOrderId = (id: number): OrderId => id as OrderId;
-
-// Usage — prevents accidental id mix-ups at compile time
-function getOrder(userId: UserId, orderId: OrderId) {
+// Hard to get wrong: swapping the two IDs is visible at the call site
+function getOrder({ userId, orderId }: { userId: string; orderId: string }) {
   /* ... */
 }
+
+getOrder({ userId, orderId });
+```
+
+Only when a mix-up would be genuinely dangerous (ownership checks, money), brand at the Zod
+boundary instead of casting:
+
+```typescript
+const UserIdSchema = z.string().uuid().brand<'UserId'>();
+type UserId = z.infer<typeof UserIdSchema>;
 ```
 
 ### Discriminated Unions & Type Guards
@@ -98,50 +109,25 @@ type RequireExactlyOne<T, Keys extends keyof T = keyof T> = Pick<T, Exclude<keyo
   { [K in Keys]-?: Required<Pick<T, K>> & Partial<Record<Exclude<Keys, K>, never>> }[Keys];
 ```
 
-### Recommended tsconfig.json
-
-```json
-{
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "exactOptionalPropertyTypes": true,
-    "isolatedModules": true,
-    "declaration": true,
-    "declarationMap": true,
-    "incremental": true,
-    "skipLibCheck": false
-  }
-}
-```
-
 ## Constraints
 
 ### MUST DO
 
-- Enable strict mode with all compiler flags
-- Use type-first API design
-- Implement branded types for domain modeling
-- Use `satisfies` operator for type validation
+- Keep strict mode on; never loosen it
+- Use `import type` for type-only imports
+- Give exported functions and service methods explicit return types
+- Use type-first API design and let inference do the rest
+- Use the `satisfies` operator for type validation
 - Create discriminated unions for state machines
-- Use `Annotated` pattern with type predicates
-- Generate declaration files for libraries
-- Optimize for type inference
+- Consider branded types (via Zod `.brand()`) only where IDs are easily and dangerously mixed up
 
 ### MUST NOT DO
 
 - Use explicit `any` without justification
-- Skip type coverage for public APIs
-- Mix type-only and value imports
+- Use `as` assertions without necessity (prefer `satisfies`, type guards or Zod parsing)
 - Disable strict null checks
-- Use `as` assertions without necessity
-- Ignore compiler performance warnings
-- Skip declaration file generation
-- Use enums (prefer const objects with `as const`)
+- Hand-write types that already exist as generated Zod or Prisma types
+- Use enums in hand-written code (prefer `as const` objects). Prisma/Zod-generated enums are fine.
 
 ## Output Templates
 
@@ -149,11 +135,10 @@ When implementing TypeScript features, provide:
 
 1. Type definitions (interfaces, types, generics)
 2. Implementation with type guards
-3. tsconfig configuration if needed
+3. tsconfig changes only if explicitly requested
 4. Brief explanation of type design decisions
 
 ## Knowledge Reference
 
-TypeScript 5.0+, generics, conditional types, mapped types, template literal types, discriminated unions, type guards, branded types, tRPC, project references, incremental compilation, declaration files, const assertions, satisfies operator
-
-[Documentation](https://jeffallan.github.io/claude-skills/skills/language/typescript-pro/)
+TypeScript 5.0+, generics, conditional types, mapped types, template literal types, discriminated
+unions, type guards, const assertions, satisfies operator, Zod inference, Prisma generated types

@@ -1,6 +1,6 @@
 {
   "name": "personal-finance-dashboard",
-  "version": "0.6.1",
+  "version": "0.6.3",
   "author": "solar_citizen",
   "private": true,
   "workspaces": [

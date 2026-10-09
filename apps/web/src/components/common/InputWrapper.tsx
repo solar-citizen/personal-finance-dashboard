@@ -18,9 +18,9 @@ export default function InputWrapper({
   ...props
 }: Props) {
   return (
-    <div className={cn('block relative w-full', className)} {...props}>
+    <div className={cn('flex flex-col gap-1.5 w-full', className)} {...props}>
       {label && (
-        <label className={'text-sm font-medium leading-none text-foreground mb-2 block'}>
+        <label className={'text-sm font-medium leading-none text-foreground'}>
           {label}
           {tooltip && (
             <span className={'text-xs text-muted-foreground ml-1'}>{`(${tooltip})`}</span>
@@ -30,7 +30,7 @@ export default function InputWrapper({
 
       {children}
 
-      {error && <p className={'absolute text-sm text-destructive mt-1 left-0'}>{error}</p>}
+      {error && <p className={'text-xs text-destructive font-medium leading-tight'}>{error}</p>}
     </div>
   );
 }

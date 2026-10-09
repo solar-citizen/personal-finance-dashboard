@@ -60,7 +60,6 @@ export default function LoginForm() {
           label={t('auth.email')}
           placeholder={'admin@finance.ua'}
           disabled={isPending}
-          className={'space-y-2'}
         />
 
         <FormInput
@@ -68,7 +67,6 @@ export default function LoginForm() {
           type={'password'}
           label={t('auth.password')}
           disabled={isPending}
-          className={'space-y-2'}
         />
 
         {/* FIXME: Consider using shadcn/custom component */}
@@ -76,7 +74,7 @@ export default function LoginForm() {
           type={'submit'}
           disabled={isPending}
           className={
-            'cursor-pointer inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full mt-4'
+            'cursor-pointer inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full mt-2'
           }
         >
           {t('auth.signIn')}
