@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { RegisterSchema } from '#pfd-schemas';
 import { useRegister } from '#src/_generated/api/pfd-components';
 
+import Button from '../common/Button';
 import Form from '../form/Form';
 import FormInput from '../form/FormInput';
 import { type RegisterFormData } from './auth.types';
@@ -56,7 +57,7 @@ export default function RegisterForm() {
         }}
         validationSchema={RegisterSchema}
         onSubmit={handleSubmit}
-        className={'[&>*:not(button)]:space-y-4'}
+        className={'space-y-4'}
       >
         <FormInput
           name={'name'}
@@ -91,16 +92,9 @@ export default function RegisterForm() {
           disabled={isPending}
         />
 
-        {/* FIXME: Consider using shadcn/custom component */}
-        <button
-          type={'submit'}
-          disabled={isPending}
-          className={
-            'cursor-pointer inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full mt-4'
-          }
-        >
+        <Button type={'submit'} disabled={isPending} fullWidth={true} className={'mt-4'}>
           {t('auth.createAccount')}
-        </button>
+        </Button>
       </Form>
     </AuthCard>
   );

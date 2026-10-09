@@ -21,14 +21,18 @@ Go deep on one topic. Come back with facts, not fluff.
 ## Process
 
 ### 1. Scope
+
 Ask or confirm:
+
 - What's the question?
 - How deep? (quick scan vs full report)
 - Any angle? (tech, business, user behavior, etc.)
 - Who's the audience? (self, team, investors, public)
 
 ### 2. Research
+
 Run multiple web searches. Look for:
+
 - Industry reports and data
 - Academic papers or studies
 - News articles (last 12 months)
@@ -37,13 +41,16 @@ Run multiple web searches. Look for:
 - Company blogs and case studies
 
 ### 3. Verify
+
 - Cross-check numbers across sources
 - Flag conflicting data
 - Note the source quality (press release vs research paper)
 - Check dates. Flag anything older than 2 years.
 
 ### 4. Synthesize
+
 Don't just list what you found. Connect the dots:
+
 - What do the facts add up to?
 - What's the pattern?
 - What's missing from the data?
@@ -52,6 +59,7 @@ Don't just list what you found. Connect the dots:
 ### 5. Write Report
 
 Structure:
+
 1. **TL;DR** - 3 sentences max
 2. **Background** - Context someone needs to understand
 3. **Key Findings** - The meat. Numbered, sourced.
@@ -77,4 +85,4 @@ Structure:
 
 ## Output
 
-Save to the project's `02-research/` folder.
+Save to the project's `docs/deep-research` folder.

@@ -45,3 +45,7 @@ test_amount.ts
 
 # Spartan AI config (contains API keys)
 .spartan/ai.env
+
+# Docs
+docs/legacy-archive/
+docs/deep-research/

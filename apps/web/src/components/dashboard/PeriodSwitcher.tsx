@@ -3,7 +3,7 @@
 import { type Period, periods } from '@pfd/shared';
 import { useTranslation } from 'react-i18next';
 
-import { cn } from '#src/lib/utils';
+import SegmentedControl, { SegmentedButton } from '../common/SegmentedControl';
 
 type PeriodSwitcherProps = {
   value: Period;
@@ -22,21 +22,12 @@ export default function PeriodSwitcher({ value, onChange }: PeriodSwitcherProps)
   const { t } = useTranslation();
 
   return (
-    <div className={'flex gap-1 bg-secondary p-1 rounded-lg text-xs'}>
+    <SegmentedControl>
       {periods.map(p => (
-        <button
-          key={p}
-          onClick={() => onChange(p)}
-          className={cn(
-            'px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer',
-            value === p
-              ? 'bg-primary text-primary-foreground shadow-sm'
-              : 'text-muted-foreground hover:text-foreground',
-          )}
-        >
+        <SegmentedButton key={p} active={value === p} onClick={() => onChange(p)}>
           {t(periodKeys[p])}
-        </button>
+        </SegmentedButton>
       ))}
-    </div>
+    </SegmentedControl>
   );
 }

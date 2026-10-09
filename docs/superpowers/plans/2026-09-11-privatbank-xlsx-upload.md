@@ -280,10 +280,10 @@ export class PrivatBankParserService {
         currency = cardCurrency;
       }
 
-      const time = this.parseDate(rawDate);
-      const amount = this.amountToKopiykas(rawCardAmount);
-      const opAmount = this.amountToKopiykas(rawTxAmount || rawCardAmount);
-      const balance = this.amountToKopiykas(rawEndingBalance || '0');
+      const time = parseDate(rawDate);
+      const amount = amountMinorUnits(rawCardAmount);
+      const opAmount = amountMinorUnits(rawTxAmount || rawCardAmount);
+      const balance = amountMinorUnits(rawEndingBalance || '0');
 
       const externalId = crypto
         .createHash('sha256')
@@ -329,21 +329,6 @@ export class PrivatBankParserService {
       return String(cell.value.result ?? '').trim();
     }
     return String(cell.value).trim();
-  }
-
-  private parseDate(dateStr: string): Date {
-    // Format: "29.05.2026 19:44:03"
-    const parts = dateStr.split(' ');
-    if (parts.length < 2) return new Date(dateStr);
-    const [d, m, y] = parts[0].split('.').map(Number);
-    const [h, min, s] = parts[1].split(':').map(Number);
-    return new Date(Date.UTC(y, m - 1, d, h, min, s));
-  }
-
-  private amountToKopiykas(valStr: string): bigint {
-    const num = parseFloat(valStr.replace(',', '.').replace(/\s+/g, ''));
-    if (isNaN(num)) return 0n;
-    return BigInt(Math.round(num * 100));
   }
 
   private currencyToNumericCode(code: string): number {

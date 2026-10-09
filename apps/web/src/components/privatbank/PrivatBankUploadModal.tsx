@@ -6,6 +6,9 @@ import { useTranslation } from 'react-i18next';
 import { useInspectStatement, useUploadStatement } from '#src/_generated/api/pfd-components';
 import { cn } from '#src/lib/utils';
 
+import Button from '../common/Button';
+import CloseButton from '../common/CloseButton';
+
 type Props = {
   isOpen: boolean;
   onClose: () => void;
@@ -129,16 +132,12 @@ export default function PrivatBankUploadModal({ isOpen, onClose, onSuccess }: Pr
         }
         onClick={e => e.stopPropagation()}
       >
-        <button
+        <CloseButton
           onClick={handleClose}
           title={t('privatbank.closeModal')}
           aria-label={t('privatbank.closeModal')}
-          className={
-            'absolute top-4 right-4 text-muted-foreground hover:text-destructive transition-colors cursor-pointer'
-          }
-        >
-          {'✕'}
-        </button>
+          className={'absolute top-4 right-4'}
+        />
         <h2 className={'text-xl font-bold'}>{t('privatbank.modalTitle')}</h2>
 
         {!inspectData ? (
@@ -231,26 +230,25 @@ export default function PrivatBankUploadModal({ isOpen, onClose, onSuccess }: Pr
             </div>
 
             <div className={'flex justify-end gap-2 pt-2'}>
-              <button
+              <Button
                 type={'button'}
+                variant={'outline'}
+                size={'md'}
                 onClick={handleClose}
-                className={
-                  'px-4 py-2 border border-input rounded text-sm hover:bg-accent transition-colors cursor-pointer'
-                }
                 disabled={isUploading}
               >
                 {t('common.cancel')}
-              </button>
-              <button
+              </Button>
+              <Button
                 type={'button'}
+                variant={'primary'}
+                size={'md'}
                 onClick={handleConfirm}
                 disabled={isUploading}
-                className={
-                  'px-4 py-2 bg-primary text-primary-foreground rounded text-sm font-medium hover:scale-105 hover:bg-primary/90 transition-all duration-200 ease-out disabled:opacity-50 cursor-pointer'
-                }
+                className={'hover:scale-105'}
               >
                 {isUploading ? t('privatbank.importing') : t('privatbank.confirmImport')}
-              </button>
+              </Button>
             </div>
           </div>
         )}
