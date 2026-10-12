@@ -233,8 +233,8 @@ export class MonoBankService {
 
     return jobs.map((job) => ({
       ...job,
-      from: job.from.toISOString(),
-      to: job.to.toISOString(),
+      from: job.from?.toISOString() ?? null,
+      to: job.to?.toISOString() ?? null,
       createdAt: job.createdAt.toISOString(),
       updatedAt: job.updatedAt.toISOString(),
       errorMessage: job.errorMessage ?? null,

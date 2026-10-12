@@ -10,8 +10,8 @@ export const ConnectMonoBankSchema = z.object({
 });
 
 export const SyncTransactionsSchema = z.object({
-  from: z.iso.datetime().optional(),
-  to: z.iso.datetime().optional(),
+  from: z.string().optional(),
+  to: z.string().optional(),
   fullHistory: z.boolean().optional(),
 });
 
@@ -26,7 +26,7 @@ export const MonoBankAccountResponseSchema = z.object({
   currency: z.string().min(1),
   balance: z.string().min(1),
   creditLimit: z.string().min(1),
-  lastSyncedAt: z.iso.datetime().nullable(),
+  lastSyncedAt: z.string().nullable(),
 });
 
 export const SyncResultResponseSchema = z.object({
@@ -103,12 +103,10 @@ export const SyncJobListItemResponseSchema = z.object({
   newCount: z.number(),
   updatedCount: z.number(),
   errorMessage: z.string().nullable().optional(),
-  from: z.iso.datetime().nullable().optional(),
-  to: z.iso.datetime().nullable().optional(),
-  createdAt: z.iso.datetime(),
-  updatedAt: z.iso.datetime(),
+  from: z.string().nullable().optional(),
+  to: z.string().nullable().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
 });
 
 export const SyncJobListResponseSchema = z.array(SyncJobListItemResponseSchema);
-
-
