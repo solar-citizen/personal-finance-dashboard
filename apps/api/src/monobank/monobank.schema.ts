@@ -93,3 +93,22 @@ export const CashFlowPointResponseSchema = z.object({
 export const GetCashFlowQuerySchema = z.object({
   period: z.enum(periods).default('month'),
 });
+
+export const SyncJobListItemResponseSchema = z.object({
+  id: z.string(),
+  accountId: z.string(),
+  status: z.enum(SyncJobStatus),
+  progress: z.number(),
+  total: z.number(),
+  newCount: z.number(),
+  updatedCount: z.number(),
+  errorMessage: z.string().nullable().optional(),
+  from: z.iso.datetime().nullable().optional(),
+  to: z.iso.datetime().nullable().optional(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+});
+
+export const SyncJobListResponseSchema = z.array(SyncJobListItemResponseSchema);
+
+

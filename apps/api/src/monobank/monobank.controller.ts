@@ -10,6 +10,7 @@ import {
   GetExpensesQueryDto,
   GetTransactionsQueryDto,
   MonoBankAccountResponseDto,
+  SyncJobListItemResponseDto,
   SyncJobResponseDto,
   SyncProgressResponseDto,
   SyncResultResponseDto,
@@ -84,6 +85,13 @@ export class MonoBankController {
     @Param('jobId') jobId: string,
   ): Promise<SyncProgressResponseDto> {
     return await this.monoBankService.getSyncJobStatus(jobId);
+  }
+
+  @Get('jobs')
+  async getRecentSyncJobs(
+    @CurrentUser('id') userId: string,
+  ): Promise<SyncJobListItemResponseDto[]> {
+    return await this.monoBankService.getRecentSyncJobs(userId);
   }
 
   @Get('exchange-rates')

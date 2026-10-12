@@ -7,6 +7,7 @@ import {
   ConnectMonoBankDto,
   ExpenseCategoryResponseDto,
   MonoBankAccountResponseDto,
+  SyncJobListItemResponseDto,
   SyncJobResponseDto,
   SyncProgressResponseDto,
   SyncResultResponseDto,
@@ -211,6 +212,33 @@ export class MonoBankService {
 
   async getSyncJobStatus(jobId: string): Promise<SyncProgressResponseDto> {
     return await this.syncJobManager.getJobStatus(jobId);
+  }
+
+  async getRecentSyncJobs(userId: string): Promise<SyncJobListItemResponseDto[]> {
+    const accounts = await this.prismaService.account.findMany({
+      where: { userId },
+      select: { id: true },
+    });
+    const accountIds = accounts.map((a) => a.id);
+
+    if (accountIds.length === 0) {
+      return [];
+    }
+
+    const jobs = await this.prismaService.syncJob.findMany({
+      where: { accountId: { in: accountIds } },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    });
+
+    return jobs.map((job) => ({
+      ...job,
+      from: job.from.toISOString(),
+      to: job.to.toISOString(),
+      createdAt: job.createdAt.toISOString(),
+      updatedAt: job.updatedAt.toISOString(),
+      errorMessage: job.errorMessage ?? null,
+    }));
   }
 
   async getLatestTransactions(

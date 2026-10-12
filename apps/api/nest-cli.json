@@ -4,8 +4,7 @@
   "sourceRoot": "src",
   "entryFile": "apps/api/src/main",
   "compilerOptions": {
-    "deleteOutDir": true,
-    "plugins": ["@nestjs/swagger"]
+    "deleteOutDir": true
   },
   "exec": "bun"
 }
