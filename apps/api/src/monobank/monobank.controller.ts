@@ -8,9 +8,11 @@ import {
   ExpenseCategoryResponseDto,
   GetCashFlowQueryDto,
   GetExpensesQueryDto,
+  GetJobsQueryDto,
   GetTransactionsQueryDto,
   MonoBankAccountResponseDto,
   SyncJobResponseDto,
+  SyncJobsPageResponseDto,
   SyncProgressResponseDto,
   SyncResultResponseDto,
   SyncTransactionsDto,
@@ -84,6 +86,46 @@ export class MonoBankController {
     @Param('jobId') jobId: string,
   ): Promise<SyncProgressResponseDto> {
     return await this.monoBankService.getSyncJobStatus(jobId);
+  }
+
+  @Get('jobs')
+  async getSyncJobs(
+    @CurrentUser('id') userId: string,
+    @Query() { page, limit }: GetJobsQueryDto,
+  ): Promise<SyncJobsPageResponseDto> {
+    return await this.monoBankService.getSyncJobs(userId, page, limit);
+  }
+
+  @Post('jobs/:jobId/cancel')
+  async cancelSyncJob(
+    @CurrentUser('id') userId: string,
+    @Param('jobId') jobId: string,
+  ): Promise<SyncJobResponseDto> {
+    return await this.monoBankService.cancelSyncJob(userId, jobId);
+  }
+
+  @Post('jobs/:jobId/retry')
+  async retrySyncJob(
+    @CurrentUser('id') userId: string,
+    @Param('jobId') jobId: string,
+  ): Promise<SyncResultResponseDto | SyncJobResponseDto> {
+    return await this.monoBankService.retrySyncJob(userId, jobId);
+  }
+
+  @Post('jobs/:jobId/pause')
+  async pauseSyncJob(
+    @CurrentUser('id') userId: string,
+    @Param('jobId') jobId: string,
+  ): Promise<SyncJobResponseDto> {
+    return await this.monoBankService.pauseSyncJob(userId, jobId);
+  }
+
+  @Post('jobs/:jobId/resume')
+  async resumeSyncJob(
+    @CurrentUser('id') userId: string,
+    @Param('jobId') jobId: string,
+  ): Promise<SyncJobResponseDto> {
+    return await this.monoBankService.resumeSyncJob(userId, jobId);
   }
 
   @Get('exchange-rates')

@@ -14,7 +14,8 @@
   "nav": {
     "dashboard": "Огляд",
     "transactions": "Транзакції",
-    "settings": "Налаштування"
+    "settings": "Налаштування",
+    "dataSync": "Синхронізація даних"
   },
   "periods": {
     "day": "День",
@@ -97,6 +98,44 @@
     "languageSelect": "Виберіть мову",
     "english": "Англійська",
     "ukrainian": "Українська"
+  },
+  "dataSync": {
+    "title": "Синхронізація даних та фонові завдання",
+    "triggerMonobankSync": "Запустити синхронізацію Monobank",
+    "fullHistorySync": "Синхронізація всієї історії",
+    "startSync": "Почати синхронізацію",
+    "starting": "Запуск...",
+    "actionFailed": "Не вдалося виконати дію. Оновіть список завдань і спробуйте ще раз.",
+    "recentJobs": "Історія задач синхронізації",
+    "jobId": "ID задачі",
+    "status": "Статус",
+    "progress": "Прогрес",
+    "newUpdated": "Нові / Оновлені",
+    "startedAt": "Час початку",
+    "chunks": "частини",
+    "noJobs": "Задач синхронізації не знайдено.",
+    "actions": "Дії",
+    "cancel": "Скасувати",
+    "retry": "Повторити",
+    "pause": "Призупинити",
+    "resume": "Відновити",
+    "rowsPerPage": "Рядків на сторінці:",
+    "total": "Всього:",
+    "jobs": "задач",
+    "previous": "Попередня",
+    "next": "Наступна",
+    "pageOf": "Сторінка {{page}} з {{totalPages}}",
+    "columns": "Стовпці",
+    "toggleColumns": "Перемикати стовпці",
+    "statuses": {
+      "pending": "Очікує",
+      "running": "Виконується",
+      "saving": "Збереження транзакцій",
+      "completed": "Завершено",
+      "failed": "Помилка",
+      "cancelled": "Скасовано",
+      "paused": "Призупинено"
+    }
   },
   "privatbank": {
     "importButton": "Імпорт виписки",

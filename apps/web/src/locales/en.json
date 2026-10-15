@@ -14,7 +14,8 @@
   "nav": {
     "dashboard": "Dashboard",
     "transactions": "Transactions",
-    "settings": "Settings"
+    "settings": "Settings",
+    "dataSync": "Data Sync"
   },
   "periods": {
     "day": "Day",
@@ -97,6 +98,44 @@
     "languageSelect": "Select Language",
     "english": "English",
     "ukrainian": "Ukrainian"
+  },
+  "dataSync": {
+    "title": "Data Sync & Background Jobs",
+    "triggerMonobankSync": "Trigger Monobank Sync",
+    "fullHistorySync": "Full History Sync",
+    "startSync": "Start Sync",
+    "starting": "Starting...",
+    "actionFailed": "The operation failed. Refresh the job list and try again.",
+    "recentJobs": "Sync Job History",
+    "jobId": "Job ID",
+    "status": "Status",
+    "progress": "Progress",
+    "newUpdated": "New / Updated",
+    "startedAt": "Started At",
+    "chunks": "chunks",
+    "noJobs": "No sync jobs found.",
+    "actions": "Actions",
+    "cancel": "Cancel",
+    "retry": "Retry",
+    "pause": "Pause",
+    "resume": "Resume",
+    "rowsPerPage": "Rows per page:",
+    "total": "Total:",
+    "jobs": "jobs",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {{page}} of {{totalPages}}",
+    "columns": "Columns",
+    "toggleColumns": "Toggle Columns",
+    "statuses": {
+      "pending": "Pending",
+      "running": "Running",
+      "saving": "Saving transactions",
+      "completed": "Completed",
+      "failed": "Failed",
+      "cancelled": "Cancelled",
+      "paused": "Paused"
+    }
   },
   "privatbank": {
     "importButton": "Import Statement",

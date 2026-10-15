@@ -10,8 +10,8 @@ export const ConnectMonoBankSchema = z.object({
 });
 
 export const SyncTransactionsSchema = z.object({
-  from: z.iso.datetime().optional(),
-  to: z.iso.datetime().optional(),
+  from: z.string().optional(),
+  to: z.string().optional(),
   fullHistory: z.boolean().optional(),
 });
 
@@ -26,7 +26,7 @@ export const MonoBankAccountResponseSchema = z.object({
   currency: z.string().min(1),
   balance: z.string().min(1),
   creditLimit: z.string().min(1),
-  lastSyncedAt: z.iso.datetime().nullable(),
+  lastSyncedAt: z.string().nullable(),
 });
 
 export const SyncResultResponseSchema = z.object({
@@ -93,3 +93,32 @@ export const CashFlowPointResponseSchema = z.object({
 export const GetCashFlowQuerySchema = z.object({
   period: z.enum(periods).default('month'),
 });
+
+export const GetJobsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).max(1_000_000).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(10),
+});
+
+export const SyncJobListItemResponseSchema = z.object({
+  id: z.string(),
+  accountId: z.string(),
+  status: z.enum(SyncJobStatus),
+  progress: z.number(),
+  total: z.number(),
+  newCount: z.number(),
+  updatedCount: z.number(),
+  errorMessage: z.string().nullable().optional(),
+  from: z.string().nullable().optional(),
+  to: z.string().nullable().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export const SyncJobsPageResponseSchema = z.object({
+  items: z.array(SyncJobListItemResponseSchema),
+  total: z.number().int().nonnegative(),
+  page: z.number().int().positive(),
+  limit: z.number().int().positive(),
+});
+
+export const SyncJobListResponseSchema = z.array(SyncJobListItemResponseSchema);
