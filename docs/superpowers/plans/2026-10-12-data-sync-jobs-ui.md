@@ -13,6 +13,7 @@
 - camelCase for variables/functions/keys, PascalCase for types/schemas, SCREAMING_SNAKE_CASE only for env vars.
 - All datetimes stored/sent as UTC / ISO 8601.
 - Never hand-write API fetchers — use OpenAPI codegen (`bun run codegen`) and generated hooks from `apps/web/src/_generated/api/pfd-components.ts`.
+- Before deploying Prisma enum changes, apply the schema with `cd apps/api && bun run db:push`; code generation does not update the database.
 
 ---
 
@@ -26,7 +27,7 @@
 **Interfaces:**
 - Produces: `SyncJobListItemResponseDto` and endpoint `GET /api/mono/jobs` returning a list of recent sync jobs.
 
-- [ ] **Step 1: Add Zod schema for sync job list response**
+- [x] **Step 1: Add Zod schema for sync job list response**
 
 Modify `apps/api/src/monobank/monobank.schema.ts`:
 ```typescript
@@ -48,7 +49,7 @@ export const SyncJobListItemResponseSchema = z.object({
 export const SyncJobListResponseSchema = z.array(SyncJobListItemResponseSchema);
 ```
 
-- [ ] **Step 2: Add service method to fetch recent sync jobs**
+- [x] **Step 2: Add service method to fetch recent sync jobs**
 
 Modify `apps/api/src/monobank/monobank.service.ts`:
 ```typescript
@@ -72,7 +73,7 @@ Modify `apps/api/src/monobank/monobank.service.ts`:
   }
 ```
 
-- [ ] **Step 3: Add controller endpoint**
+- [x] **Step 3: Add controller endpoint**
 
 Modify `apps/api/src/monobank/monobank.controller.ts`:
 ```typescript
@@ -84,7 +85,7 @@ Modify `apps/api/src/monobank/monobank.controller.ts`:
   }
 ```
 
-- [ ] **Step 4: Run codegen to update OpenAPI and frontend SDK**
+- [x] **Step 4: Run codegen to update OpenAPI and frontend SDK**
 
 Run: `bun run codegen`
 Expected: Success, generated types/hooks updated.
@@ -107,11 +108,11 @@ git commit -m "feat(api): add GET /api/mono/jobs endpoint for recent sync jobs"
 **Interfaces:**
 - Consumes: Generated hooks `useGetMonoJobsQuery`, `useSyncTransactionsMutation`, `useGetAccountsQuery`
 
-- [ ] **Step 1: Update MainNav to include Data Sync link**
+- [x] **Step 1: Update MainNav to include Data Sync link**
 
 Modify `apps/web/src/components/MainNav.tsx` to add a navigation entry for Data Sync (`/data-sync`).
 
-- [ ] **Step 2: Create Data Sync page component**
+- [x] **Step 2: Create Data Sync page component**
 
 Create `apps/web/src/app/(main)/data-sync/page.tsx`:
 ```tsx

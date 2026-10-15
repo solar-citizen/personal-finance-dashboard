@@ -44,6 +44,7 @@ export default function MainNav() {
   const links = [
     { name: t('nav.dashboard'), href: '/dashboard' },
     { name: t('nav.transactions'), href: '/transactions' },
+    { name: t('nav.dataSync'), href: '/data-sync' },
     { name: t('nav.settings'), href: '/settings' },
   ];
 

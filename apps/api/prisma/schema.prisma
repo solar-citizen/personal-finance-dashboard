@@ -35,8 +35,11 @@ enum AccountType {
 enum SyncJobStatus {
   pending
   running
+  saving
   completed
   failed
+  cancelled
+  paused
 }
 
 enum MessageRole {
@@ -46,81 +49,81 @@ enum MessageRole {
 }
 
 model Conversation {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  title     String?
-  
-  messages  Message[]
-  
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title String?
+
+  messages Message[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@index([userId, createdAt])
 }
 
 model Message {
-  id             String   @id @default(cuid())
+  id             String       @id @default(cuid())
   conversationId String
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  
-  role           MessageRole
-  content        String   // The actual message text
-  
+
+  role    MessageRole
+  content String // The actual message text
+
   // Store context that was used for this message
-  contextUsed    Json?    // { transactionCount: 5, categories: [...], dateRange: {...} }
-  
+  contextUsed Json? // { transactionCount: 5, categories: [...], dateRange: {...} }
+
   // Store embedding for semantic search of chat history
-  embedding      Unsupported("vector(768)")?
-  
+  embedding Unsupported("vector(768)")?
+
   // Performance metrics
   tokensUsed     Int?
   responseTimeMs Int?
-  
-  createdAt      DateTime @default(now())
-  
+
+  createdAt DateTime @default(now())
+
   @@index([conversationId, createdAt])
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  passwordHash  String
-  name          String
-  
+  id           String @id @default(cuid())
+  email        String @unique
+  passwordHash String
+  name         String
+
   accounts      Account[]
   conversations Conversation[]
-  
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model SyncJob {
-  id            String   @id @default(cuid())
-  accountId     String
-  account       Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  status        SyncJobStatus
-  progress      Int      @default(0)
-  total         Int      @default(0)
-  from          DateTime
-  to            DateTime
-  newCount      Int      @default(0)
-  updatedCount  Int      @default(0)
-  errorMessage  String?
-  
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String        @id @default(cuid())
+  accountId    String
+  account      Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  status       SyncJobStatus
+  progress     Int           @default(0)
+  total        Int           @default(0)
+  from         DateTime
+  to           DateTime
+  newCount     Int           @default(0)
+  updatedCount Int           @default(0)
+  errorMessage String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Account {
-  id          String       @id @default(cuid())
-  userId      String
-  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  bank        Bank         @default(monobank)
-  name        String?
-  maskedPan   String?
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  bank      Bank    @default(monobank)
+  name      String?
+  maskedPan String?
 
   accountId   String
   iban        String?
@@ -128,16 +131,16 @@ model Account {
   currency    Currency     @default(uah)
   balance     BigInt
   creditLimit BigInt       @default(0)
-  
+
   monoToken    String?
   lastSyncedAt DateTime?
 
   syncJobs     SyncJob[]
   transactions Transaction[]
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@unique([userId, accountId])
   @@index([userId])
 }
@@ -148,60 +151,60 @@ model Category {
   mcc   Int    @unique // Merchant Category Code
   icon  String
   color String
-  
+
   transactions Transaction[]
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 }
 
 model Transaction {
-  id         String   @id @default(cuid())
-  accountId  String
-  account    Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  
+  id        String  @id @default(cuid())
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
   externalId  String
   time        DateTime
   description String
-  
+
   mcc         Int?
   originalMcc Int?
-  hold        Boolean  @default(false)
-  
-  amount            BigInt
-  operationAmount   BigInt
-  currencyCode      Int
-  
-  commissionRate    BigInt @default(0)
-  cashbackAmount    BigInt @default(0)
-  balance           BigInt
-  
-  comment           String?
-  receiptId         String?
-  invoiceId         String?
-  
-  counterEdrpou     String?
-  counterIban       String?
-  counterName       String?
-  
+  hold        Boolean @default(false)
+
+  amount          BigInt
+  operationAmount BigInt
+  currencyCode    Int
+
+  commissionRate BigInt @default(0)
+  cashbackAmount BigInt @default(0)
+  balance        BigInt
+
+  comment   String?
+  receiptId String?
+  invoiceId String?
+
+  counterEdrpou String?
+  counterIban   String?
+  counterName   String?
+
   categoryId String?
   category   Category? @relation(fields: [categoryId], references: [id])
-  
+
   createdAt DateTime @default(now())
-  
+
   @@unique([accountId, externalId])
   @@index([accountId, time])
   @@index([categoryId])
 }
 
 model KnowledgeBase {
-  id        String                 @id @default(cuid())
+  id        String                     @id @default(cuid())
   content   String
   metadata  Json?
   embedding Unsupported("vector(768)") // nomic-embed-text dimension
-  
+
   createdAt DateTime @default(now())
-  
+
   @@index([embedding], name: "knowledge_base_embedding_idx")
 }
 

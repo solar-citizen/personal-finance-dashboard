@@ -94,6 +94,11 @@ export const GetCashFlowQuerySchema = z.object({
   period: z.enum(periods).default('month'),
 });
 
+export const GetJobsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).max(1_000_000).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(10),
+});
+
 export const SyncJobListItemResponseSchema = z.object({
   id: z.string(),
   accountId: z.string(),
@@ -107,6 +112,13 @@ export const SyncJobListItemResponseSchema = z.object({
   to: z.string().nullable().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
+});
+
+export const SyncJobsPageResponseSchema = z.object({
+  items: z.array(SyncJobListItemResponseSchema),
+  total: z.number().int().nonnegative(),
+  page: z.number().int().positive(),
+  limit: z.number().int().positive(),
 });
 
 export const SyncJobListResponseSchema = z.array(SyncJobListItemResponseSchema);

@@ -87,21 +87,40 @@ export class SyncJobManager {
     };
   }
 
+  async claimJobForSaving(jobId: string): Promise<boolean> {
+    while (await this.waitForRunningJob(jobId)) {
+      const { count } = await this.prismaService.syncJob.updateMany({
+        where: { id: jobId, status: SyncJobStatus.running },
+        data: { status: SyncJobStatus.saving },
+      });
+
+      if (count === 1) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   private async processSyncJob(
     jobId: string,
     { monoToken, accountId, id, userId }: Account,
     from: Date,
     to: Date,
   ): Promise<void> {
-    if (!monoToken) {
-      throw new Error('MonoBank token is missing for the account');
-    }
-
     try {
-      await this.prismaService.syncJob.update({
-        where: { id: jobId },
+      const started = await this.prismaService.syncJob.updateMany({
+        where: { id: jobId, status: SyncJobStatus.pending },
         data: { status: SyncJobStatus.running },
       });
+
+      if (started.count === 0) {
+        return;
+      }
+
+      if (!monoToken) {
+        throw new Error('MonoBank token is missing for the account');
+      }
 
       const allTransactions = await this.fetchAllTransactionsWithProgress({
         jobId,
@@ -110,6 +129,11 @@ export class SyncJobManager {
         from,
         to,
       });
+
+      if (!(await this.claimJobForSaving(jobId))) {
+        this.logger.log(`Job ${jobId} stopped before saving transactions.`);
+        return;
+      }
 
       this.logger.log(
         `Job ${jobId}: Fetched ${allTransactions.length} total transactions`,
@@ -129,8 +153,8 @@ export class SyncJobManager {
         `Cleared context cache for user ${userId} after background sync`,
       );
 
-      await this.prismaService.syncJob.update({
-        where: { id: jobId },
+      const completed = await this.prismaService.syncJob.updateMany({
+        where: { id: jobId, status: SyncJobStatus.saving },
         data: {
           status: SyncJobStatus.completed,
           newCount: newTransactions,
@@ -139,12 +163,26 @@ export class SyncJobManager {
         },
       });
 
+      if (completed.count === 0) {
+        throw new Error(`Sync job ${jobId} could not be marked completed`);
+      }
+
       this.logger.log(`Job ${jobId}: Completed successfully`);
     } catch (err: unknown) {
       this.logger.error(`Job ${jobId}: Failed with error:`, err);
 
-      await this.prismaService.syncJob.update({
-        where: { id: jobId },
+      await this.prismaService.syncJob.updateMany({
+        where: {
+          id: jobId,
+          status: {
+            in: [
+              SyncJobStatus.pending,
+              SyncJobStatus.running,
+              SyncJobStatus.paused,
+              SyncJobStatus.saving,
+            ],
+          },
+        },
         data: {
           status: SyncJobStatus.failed,
           errorMessage: getErrorMessage(err),
@@ -167,6 +205,10 @@ export class SyncJobManager {
       to,
       this.maxDaysPerRequest,
     )) {
+      if (!(await this.waitForRunningJob(jobId))) {
+        break;
+      }
+
       this.logger.log(
         `Job ${jobId}: Fetching chunk ${chunk.chunkIndex + 1} from ${formatDateToIso(chunk.from)} to ${formatDateToIso(chunk.to)}`,
       );
@@ -191,5 +233,23 @@ export class SyncJobManager {
     }
 
     return allTransactions;
+  }
+
+  private async waitForRunningJob(jobId: string): Promise<boolean> {
+    let job = await this.prismaService.syncJob.findUnique({
+      where: { id: jobId },
+      select: { status: true },
+    });
+
+    while (job?.status === SyncJobStatus.paused) {
+      this.logger.log(`Job ${jobId} is paused. Waiting...`);
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+      job = await this.prismaService.syncJob.findUnique({
+        where: { id: jobId },
+        select: { status: true },
+      });
+    }
+
+    return job?.status === SyncJobStatus.running;
   }
 }

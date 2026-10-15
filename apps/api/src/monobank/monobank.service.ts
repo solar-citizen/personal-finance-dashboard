@@ -1,20 +1,21 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { type Period } from '@pfd/shared';
 import dayjs from 'dayjs';
-import { Currency } from 'src/_generated/prisma-client/enums';
+import { SyncJobStatus } from 'src/_generated/prisma-client/client';
+import { Bank, Currency } from 'src/_generated/prisma-client/enums';
 import {
   CashFlowPointResponseDto,
   ConnectMonoBankDto,
   ExpenseCategoryResponseDto,
   MonoBankAccountResponseDto,
-  SyncJobListItemResponseDto,
   SyncJobResponseDto,
+  SyncJobsPageResponseDto,
   SyncProgressResponseDto,
   SyncResultResponseDto,
   SyncTransactionsDto,
   TransactionResponseDto,
 } from 'src/_generated/zod/pfd-dtos';
-import { formatDateToIso } from 'src/_lib/utils/date.util';
+import { formatDateToIso, getErrorMessage } from 'src/_lib/utils';
 import { decrypt, encrypt } from 'src/_lib/utils/encryption.util';
 
 import { ContextBuilderService } from '../ai/services/context-builder/context-builder.service';
@@ -114,7 +115,7 @@ export class MonoBankService {
 
   async getUserAccounts(userId: string): Promise<MonoBankAccountResponseDto[]> {
     const accounts = await this.prismaService.account.findMany({
-      where: { userId },
+      where: { userId, bank: Bank.monobank },
       orderBy: { createdAt: 'asc' },
     });
 
@@ -172,49 +173,106 @@ export class MonoBankService {
       return this.syncJobManager.createBackgroundSyncJob(account, from, to);
     }
 
-    const transactions = await this.apiClient.getStatement({
-      accountId: account.accountId,
-      token: decrypt(account.monoToken),
-      from,
-      to,
+    const job = await this.prismaService.syncJob.create({
+      data: {
+        accountId: account.id,
+        status: SyncJobStatus.running,
+        from,
+        to,
+        total: 1,
+        progress: 0,
+      },
     });
 
-    this.logger.log(
-      `Fetched ${transactions.length} transactions from MonoBank`,
-    );
+    try {
+      const transactions = await this.apiClient.getStatement({
+        accountId: account.accountId,
+        token: decrypt(account.monoToken),
+        from,
+        to,
+      });
 
-    const { newTransactions, updatedTransactions, errors } =
-      await this.transactionProcessor.saveTransactions(
-        account.id,
-        transactions,
+      this.logger.log(
+        `Fetched ${transactions.length} transactions from MonoBank`,
       );
 
-    await this.prismaService.account.update({
-      where: { id: account.id },
-      data: { lastSyncedAt: dayjs().toDate() },
-    });
+      if (!(await this.syncJobManager.claimJobForSaving(job.id))) {
+        return {
+          jobId: job.id,
+          message: `Sync job ${job.id} was cancelled before saving transactions.`,
+        };
+      }
 
-    await this.contextBuilder.clearCache(userId);
-    this.logger.log(`Cleared context cache for user ${userId} after sync`);
+      const { newTransactions, updatedTransactions, errors } =
+        await this.transactionProcessor.saveTransactions(
+          account.id,
+          transactions,
+        );
 
-    this.logger.log(
-      `Sync complete: ${newTransactions} new, ${updatedTransactions} updated, ${errors.length} errors`,
-    );
+      await this.prismaService.account.update({
+        where: { id: account.id },
+        data: { lastSyncedAt: dayjs().toDate() },
+      });
 
-    return {
-      success: true,
-      synced: transactions.length,
-      newTransactions,
-      updatedTransactions,
-      errors: errors.length > 0 ? errors : undefined,
-    };
+      await this.contextBuilder.clearCache(userId);
+      this.logger.log(`Cleared context cache for user ${userId} after sync`);
+
+      const completed = await this.prismaService.syncJob.updateMany({
+        where: { id: job.id, status: SyncJobStatus.saving },
+        data: {
+          status: SyncJobStatus.completed,
+          progress: 1,
+          newCount: newTransactions,
+          updatedCount: updatedTransactions,
+          errorMessage: errors.length > 0 ? errors.join('; ') : null,
+        },
+      });
+
+      if (completed.count === 0) {
+        throw new Error(`Sync job ${job.id} could not be marked completed`);
+      }
+
+      this.logger.log(
+        `Sync complete: ${newTransactions} new, ${updatedTransactions} updated, ${errors.length} errors`,
+      );
+
+      return {
+        success: true,
+        synced: transactions.length,
+        newTransactions,
+        updatedTransactions,
+        errors: errors.length > 0 ? errors : undefined,
+      };
+    } catch (err: unknown) {
+      await this.prismaService.syncJob.updateMany({
+        where: {
+          id: job.id,
+          status: {
+            in: [
+              SyncJobStatus.running,
+              SyncJobStatus.paused,
+              SyncJobStatus.saving,
+            ],
+          },
+        },
+        data: {
+          status: SyncJobStatus.failed,
+          errorMessage: getErrorMessage(err),
+        },
+      });
+      throw err;
+    }
   }
 
   async getSyncJobStatus(jobId: string): Promise<SyncProgressResponseDto> {
     return await this.syncJobManager.getJobStatus(jobId);
   }
 
-  async getRecentSyncJobs(userId: string): Promise<SyncJobListItemResponseDto[]> {
+  async getSyncJobs(
+    userId: string,
+    page: number,
+    limit: number,
+  ): Promise<SyncJobsPageResponseDto> {
     const accounts = await this.prismaService.account.findMany({
       where: { userId },
       select: { id: true },
@@ -222,23 +280,140 @@ export class MonoBankService {
     const accountIds = accounts.map((a) => a.id);
 
     if (accountIds.length === 0) {
-      return [];
+      return { items: [], total: 0, page, limit };
     }
 
-    const jobs = await this.prismaService.syncJob.findMany({
-      where: { accountId: { in: accountIds } },
-      orderBy: { createdAt: 'desc' },
-      take: 10,
+    const [total, jobs] = await this.prismaService.$transaction([
+      this.prismaService.syncJob.count({
+        where: { accountId: { in: accountIds } },
+      }),
+      this.prismaService.syncJob.findMany({
+        where: { accountId: { in: accountIds } },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+    ]);
+
+    return {
+      items: jobs.map((job) => ({
+        ...job,
+        from: job.from.toISOString(),
+        to: job.to.toISOString(),
+        createdAt: job.createdAt.toISOString(),
+        updatedAt: job.updatedAt.toISOString(),
+        errorMessage: job.errorMessage ?? null,
+      })),
+      total,
+      page,
+      limit,
+    };
+  }
+
+  async cancelSyncJob(
+    userId: string,
+    jobId: string,
+  ): Promise<SyncJobResponseDto> {
+    await this.getUserSyncJob(userId, jobId);
+
+    const { count } = await this.prismaService.syncJob.updateMany({
+      where: {
+        id: jobId,
+        status: {
+          in: [
+            SyncJobStatus.pending,
+            SyncJobStatus.running,
+            SyncJobStatus.paused,
+          ],
+        },
+      },
+      data: { status: SyncJobStatus.cancelled },
     });
 
-    return jobs.map((job) => ({
-      ...job,
-      from: job.from?.toISOString() ?? null,
-      to: job.to?.toISOString() ?? null,
-      createdAt: job.createdAt.toISOString(),
-      updatedAt: job.updatedAt.toISOString(),
-      errorMessage: job.errorMessage ?? null,
-    }));
+    if (count === 0) {
+      throw new BadRequestException('Only active sync jobs can be cancelled');
+    }
+
+    return {
+      jobId,
+      message: `Sync job ${jobId} cancelled.`,
+    };
+  }
+
+  async pauseSyncJob(
+    userId: string,
+    jobId: string,
+  ): Promise<SyncJobResponseDto> {
+    await this.getUserSyncJob(userId, jobId);
+
+    const { count } = await this.prismaService.syncJob.updateMany({
+      where: { id: jobId, status: SyncJobStatus.running },
+      data: { status: SyncJobStatus.paused },
+    });
+
+    if (count === 0) {
+      throw new BadRequestException('Only running sync jobs can be paused');
+    }
+
+    return {
+      jobId,
+      message: `Sync job ${jobId} paused.`,
+    };
+  }
+
+  async resumeSyncJob(
+    userId: string,
+    jobId: string,
+  ): Promise<SyncJobResponseDto> {
+    await this.getUserSyncJob(userId, jobId);
+
+    const { count } = await this.prismaService.syncJob.updateMany({
+      where: { id: jobId, status: SyncJobStatus.paused },
+      data: { status: SyncJobStatus.running },
+    });
+
+    if (count === 0) {
+      throw new BadRequestException('Only paused sync jobs can be resumed');
+    }
+
+    return {
+      jobId,
+      message: `Sync job ${jobId} resumed.`,
+    };
+  }
+
+  async retrySyncJob(
+    userId: string,
+    jobId: string,
+  ): Promise<SyncResultResponseDto | SyncJobResponseDto> {
+    const job = await this.getUserSyncJob(userId, jobId);
+
+    if (
+      job.status !== SyncJobStatus.failed &&
+      job.status !== SyncJobStatus.cancelled
+    ) {
+      throw new BadRequestException(
+        'Only failed or cancelled jobs can be retried',
+      );
+    }
+
+    return this.syncTransactions(userId, job.accountId, {
+      from: job.from.toISOString(),
+      to: job.to.toISOString(),
+    });
+  }
+
+  private async getUserSyncJob(userId: string, jobId: string) {
+    const job = await this.prismaService.syncJob.findUnique({
+      where: { id: jobId },
+      include: { account: true },
+    });
+
+    if (job?.account.userId !== userId) {
+      throw new BadRequestException('Sync job not found');
+    }
+
+    return job;
   }
 
   async getLatestTransactions(
